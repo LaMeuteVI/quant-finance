@@ -1,0 +1,10 @@
+name: aster
+version: 0.1.0
+description: "Aster: quant research & crypto trading desk agent (pre-registered research, DSR-validated backtests, coded risk gate, paper-first execution)"
+hermes_requires: ">=0.21.0"
+author: "Samuel"
+license: "proprietary"
+
+# Exchange keys are NOT Hermes env vars on purpose: they live in desk/config/.env,
+# read only by the desk CLI, never exposed to the model.
+env_requires: []

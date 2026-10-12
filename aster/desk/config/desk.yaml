@@ -1,0 +1,43 @@
+# Desk configuration (research + execution). Agent may propose edits; changes are reviewed.
+
+exchange: binance            # spot data + execution venue (ccxt id)
+perp_exchange: binanceusdm   # funding-rate history source
+timeframe: 1d
+history_start: "2019-01-01"
+
+# Research universe. Survivorship: this list is TODAY's liquid set. Any result
+# on it is biased upward (dead coins are missing). See policies/data_policy.md.
+universe: [BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT]
+perp_symbols:
+  BTC/USDT: BTC/USDT:USDT
+  ETH/USDT: ETH/USDT:USDT
+  SOL/USDT: SOL/USDT:USDT
+  BNB/USDT: BNB/USDT:USDT
+  XRP/USDT: XRP/USDT:USDT
+
+costs:
+  fee_bps: 10        # taker, per side. Use your real fee tier, never a VIP tier you do not have.
+  slippage_bps: 5    # per side for majors at small size; raise for alts and size.
+
+holdout_frac: 0.25   # most recent 25% of history is sealed per hypothesis
+
+# Dev-sample gate. A hypothesis's pre-registered prediction may only TIGHTEN these.
+gates:
+  min_obs: 500
+  sharpe_ann_min: 0.8
+  max_drawdown_floor: -0.35
+  dsr_min: 0.95
+  stress_sharpe_ann_min: 0.3
+
+holdout_gates:
+  sharpe_fraction_of_prediction: 0.5
+  psr_min: 0.80
+
+paper:
+  min_days: 28
+  min_z_vs_backtest: -2.0
+
+paper_initial_cash: 10000
+live_warmup_days: 400
+min_trade_usd: 10
+rebalance_band: 0.02
