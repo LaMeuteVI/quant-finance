@@ -1,0 +1,34 @@
+# Glossary — Risk Management and Financial Institutions (Hull)
+
+- **Almgren–Chriss trajectory** — the optimal execution path that balances impact and delay.
+- **AT 1 (Additional Tier 1)** — the Basel III capital tier; loss-absorbing in going concern.
+- **Backtesting exception** — a day when the loss exceeded the previous day's VaR.
+- **Basel I / II / III** — successive Basel Committee frameworks for capital adequacy.
+- **BCBS 457 / FRTB** — the Fundamental Review of the Trading Book; the 2019 binding standard.
+- **Capital add-on** — additional capital required by the supervisor for a deficient model.
+- **CCP (Central Counterparty)** — the entity that intermediates trades to reduce counterparty risk.
+- **Coherent risk measure** — Artzner 1999; satisfies translation invariance, subadditivity, positive homogeneity, monotonicity.
+- **Cornish-Fisher expansion** — a parametric correction to the normal quantile for non-normal returns.
+- **CVA (Credit Value Adjustment)** — the market value of counterparty credit risk.
+- **DRC (Default Risk Charge)** — the FRTB capital charge for default risk; required in addition to ES.
+- **DVA (Debit Value Adjustment)** — the market value of the institution's own credit risk to the counterparty.
+- **Expected Shortfall (ES)** — the expected loss conditional on exceeding VaR; the modern replacement for VaR.
+- **FRTB** — Fundamental Review of the Trading Book; the 2019 binding standard.
+- **IMA (Internal Models Approach)** — the FRTB-approved approach using the bank's internal model.
+- **Incremental VaR** — the change in portfolio VaR from adding or removing a position.
+- **IRC (Incremental Risk Charge)** — the Basel's pre-FRTB capital charge for default and credit migration risk.
+- **Kupiec POF test** — the formal likelihood-ratio test of the VaR exception rate.
+- **Liquidity horizon** — the time to unwind a position without affecting the market.
+- **LGD (Loss Given Default)** — the fraction of exposure lost in default.
+- **Merton model** — the structural model of default; equity as a call option on the firm's assets.
+- **Model risk** — the risk that a model is wrong, and the consequences.
+- **Operational risk** — the risk of loss from inadequate internal processes, people, systems, or external events.
+- **PD (Probability of Default)** — the probability that a counterparty defaults within a year.
+- **RAROC (Risk-Adjusted Return on Capital)** — economic profit / economic capital.
+- **Risk-neutral vs real-world** — the distinction between the pricing measure and the actual measure.
+- **SA (Standardised Approach)** — the FRTB default approach; uses regulator-prescribed risk weights.
+- **Sensitivities-based method** — the FRTB SA component for delta, vega, and curvature risks.
+- **Stressed VaR** — VaR computed over a 12-month stressed window.
+- **Traffic-light zones** — green (0–4), yellow (5–9), red (10+) for 99% VaR, 250 days.
+- **Value at Risk (VaR)** — the loss threshold exceeded with probability `1 − α`.
+- **Wrong-way risk** — exposure increases when the counterparty's credit quality deteriorates.

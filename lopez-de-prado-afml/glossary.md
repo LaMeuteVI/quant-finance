@@ -1,0 +1,58 @@
+# Glossary — Advances in Financial Machine Learning (López de Prado)
+
+> All terms defined per López de Prado, *Advances in Financial Machine Learning*, Wiley 2018. Cross-references to chapters.
+
+- **Bagging** — Bootstrap-aggregating; variance reduction via averaging over bootstrap samples (ch06).
+- **Bar (information-driven)** — a bar whose sampling is driven by an information-arrival proxy (ch02).
+- **Bar sign rule** — `b_t = +1` if cumulative signed-volume imbalance > 0 (ch02).
+- **Bayesian False Discovery Probability** — the probability that a "significant" result is a false positive (ch11).
+- **Bayesian Sharpe Ratio (BSR)** — the posterior probability that the true SR > 0 (ch14).
+- **Brown–Kleiman correction** — `R²_OOS ≈ R²_IS − K/N`; the in-sample R² overstates the OOS R² by K/N (ch07, ch11; cf. `grinold-kahn-apm` ch10).
+- **Carino smoothing** — scaling the raw Brinson decomposition to match the total active return (cf. `grinold-kahn-apm` ch17).
+- **Combinatorial Purged Cross-Validation (CPCV)** — the multi-path version of purged k-fold (ch07, ch12).
+- **Combinatorially Symmetric Cross-Validation (CSCV)** — the basis for the PBO; uses the rank correlation between IS and OOS (ch14).
+- **CUSUM test** — for a single unknown break in the mean (ch17).
+- **Deflated Sharpe Ratio (DSR)** — the SR corrected for the number of trials, skew, and kurtosis (ch14).
+- **Dollar bar** — a bar created when a fixed dollar volume is reached (ch02).
+- **Embargo** — a gap between train and test in purged CV (ch07).
+- **Ensemble** — a combination of multiple models (ch06).
+- **Entropy features** — features based on the entropy of the price/volume process (ch18).
+- **Feature importance** — a measure of how much the model relies on a feature (ch08).
+- **Financial Machine Learning (FML)** — the discipline of applying ML to financial data (ch01).
+- **Fractional differentiation (FFD)** — a memory-preserving differencing (ch05).
+- **Harvey–Liu 3.0 t-stat** — the modern threshold for statistical significance in finance (ch11, ch14; cf. `grinold-kahn-apm` ch20).
+- **Hierarchical Risk Parity (HRP)** — the ML-based asset allocation algorithm (ch16).
+- **Imbalance bar** — a bar created when the cumulative signed-volume imbalance exceeds a threshold (ch02).
+- **Information-driven bar** — see "Bar (information-driven)".
+- **K-fold cross-validation** — the standard ML CV scheme; not appropriate for financial time series (ch07).
+- **Kelly criterion** — the optimal bet sizing for a binary bet; the fractional Kelly is the institutional default (ch10).
+- **Label** — the target of a supervised learning model (ch03).
+- **Lee-Ready algorithm** — the standard for buy/sell classification (ch02).
+- **Mark-to-market** vs **Mark-to-model** — the institutional distinction (cf. `hull-risk-management` ch25).
+- **Masking effect** — informative feature combinations are missed by single-feature measures (ch08).
+- **Mean Decrease Accuracy (MDA)** — permutation importance (ch08).
+- **Mean Decrease Impurity (MDI)** — the total reduction in impurity from splits on a feature (ch08).
+- **Meta-labeling** — using a secondary model to size a bet (ch03, ch10).
+- **Microstructural features** — features based on order flow (ch19).
+- **Minimum Track Record Length (MinTRL)** — the minimum number of bets needed to confirm a strategy (ch14, ch15).
+- **Multiple testing haircut** — the correction for the number of trials (ch11, ch14).
+- **Nested Clustered Optimisation (NCO)** — the generalisation of HRP (ch16).
+- **Out-of-bag (OOB) error** — the error of a bagged model on the observations not in its bootstrap sample (ch06).
+- **Out-of-sample (OOS) test** — the backtest on data not used in the optimisation (ch07, ch11, ch12, ch14).
+- **Probability of Backtest Overfitting (PBO)** — the probability that the best IS strategy is the worst OOS strategy (ch14).
+- **Purged k-fold** — the CV scheme for financial time series (ch07).
+- **Realised volatility** — the square root of the sum of squared log-returns (ch02, ch05).
+- **Sample uniqueness** — the measure of how much an observation "owns" its label (ch03, ch04).
+- **Sample weight** — a number attached to each observation; the model trusts more-weighted observations more (ch04).
+- **Sequential bootstrap** — a Markov chain that draws observations respecting the uniqueness (ch04).
+- **Single Feature Importance (SFI)** — the OOS accuracy of a model trained on a single feature (ch08).
+- **Snippet** — a contiguous block of observations; an alternative unit of sampling (ch04).
+- **Stacking** — meta-learning over the predictions of base models (ch06).
+- **Structural break** — a sudden change in the data distribution (ch17).
+- **Substitution effect** — correlated features can be substituted; MDI over-credits both (ch08).
+- **Synthetic data** — artificially generated data that preserves the statistical properties of the real data (ch13).
+- **Tick Imbalance Bar (TIB)** — a bar created when the cumulative signed-volume imbalance exceeds a threshold (ch02).
+- **Tick rule** — a heuristic for inferring the sign of a trade (ch02).
+- **Time bar** — a fixed interval of time (ch02).
+- **Triple-barrier method** — a labelling rule with two horizontal barriers (profit-taking, stop-loss) and a vertical barrier (time limit) (ch03).
+- **Volume bar** — a bar created when a fixed volume is reached (ch02).

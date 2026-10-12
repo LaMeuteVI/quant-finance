@@ -1,0 +1,65 @@
+# Glossary — Active Portfolio Management (Grinold & Kahn)
+
+> All terms defined per Grinold & Kahn, *Active Portfolio Management*, 2nd ed. (McGraw-Hill, 1999). Cross-references to chapters.
+
+- **Active return** — realised return − benchmark return; the random walk of active return has the consensus as the expected value and the residual alpha as the deviation (ch05).
+- **Active weight `h`** — the deviation of portfolio weights from benchmark weights; the decision variable in construction (ch14).
+- **Alpha (`α`)** — the deviation of a manager's forecast from the consensus expected return; the *active bet* per asset (ch01, ch05, ch08).
+- **APT pricing equation** — `E[R_i] = R_f + Σ_k β_{i,k} λ_k`; the consensus expected return as a linear function of factor premia (ch07, ch08).
+- **Bayesian shrinkage** — combining a prior (e.g. zero alpha) with the observed alpha; reduces the impact of noisy estimates (ch14).
+- **Beta (`β`)** — the sensitivity of an asset's return to a factor; in the CAPM, the sensitivity to the market (ch02).
+- **Bias (forecast)** — the systematic component of forecast error; removable by recalibration (ch10).
+- **Black–Litterman** — the institutional implementation of the Bayesian view; combines equilibrium returns with manager's views (ch14).
+- **Breadth (`B`)** — the number of independent bets per period; the square-root lever in the Fundamental Law (ch06).
+- **Breakeven Information Ratio (BEIR)** — `√(cost / breadth)`; the IC needed for a research project to break even (ch10).
+- **Breakeven Horizon** — the minimum holding period at which gross alpha exceeds trading cost (ch13, ch16).
+- **Brown–Kleiman correction** — `R²_OOS ≈ R²_IS − K/N`; the in-sample R² overstates out-of-sample by K/N (ch10, ch11).
+- **CAPM** — Capital Asset Pricing Model; `E[R_i] = R_f + β_i (E[R_M] − R_f)` (ch02).
+- **Coherent risk measure** — satisfies translation invariance, subadditivity, positive homogeneity, monotonicity (cross-ref `hull-risk-management` ch12).
+- **Consensus expected return** — the cross-section of expected returns; the *anchor* against which alpha is measured (ch08, ch09).
+- **Constraint** — limits on the active portfolio (long-only, sector neutrality, turnover); modern construction adds constraints to the unconstrained optimum (ch14).
+- **Cost (transaction)** — fixed cost (commissions), bid-ask spread, market impact, delay cost (ch16).
+- **DCF (discounted cash flow)** — the fundamental view's expected return (ch08, ch09).
+- **Dollar neutral** — long and short notional are equal in dollar terms (ch15).
+- **Earnings yield** — the inverse of the P/E; the simplest fundamental signal (ch09).
+- **Effective number of signals (`K_eff`)** — the *true* breadth of a K-signal strategy after correlation; `K_eff < K` (ch11).
+- **Factor-mimicking portfolio** — a tradable portfolio whose returns are perfectly correlated with one factor and uncorrelated with the others (ch08).
+- **Forecast efficiency** — the ratio of out-of-sample R² to in-sample R² (ch10).
+- **Forecast uncertainty covariance (`P`)** — the covariance of the forecast error; a measure of how much the manager does not trust their own alpha (ch14).
+- **Fundamental Law of Active Management** — `IR = IC × √B × TC`; the central result of the book (ch06).
+- **Graham's formula** — `V = (EPS × (8.5 + 2g) × 4.4) / Y`; the empirical anchor for the fundamental view (ch09).
+- **Historical consensus** — the average realised return over a long window; the simplest consensus construction (ch09).
+- **Holdings-based attribution** — attribution using the actual portfolio weights (ch17).
+- **Implementation shortfall** — the difference between the decision price and the actual execution price (cross-ref `hull-risk-management` ch16, ch18).
+- **Implied cost of capital** — the discount rate that equates a stock's price to the present value of forecasted cash flows; the modern consensus of choice (ch09).
+- **Information Coefficient (IC)** — the correlation between a forecast and the subsequent return; the measure of forecasting skill (ch06, ch10).
+- **Information horizon** — the time between forecast and outcome (ch13).
+- **Information matrix (`R`)** — the matrix that projects raw alpha onto refined alpha (ch11).
+- **Information Ratio (IR)** — expected active return ÷ tracking error; the single statistic of active management (ch05, ch06, ch17).
+- **Investibility constraint** — the consensus must correspond to a portfolio an investor can actually hold (ch08).
+- **Long/short (LS) portfolio** — a portfolio with both long and short positions (ch15).
+- **Market neutral** — the portfolio has zero beta to the market (ch15).
+- **Net exposure** — the difference between long and short notional; the directional bet (ch15).
+- **Net IR** — the IR of the strategy after transaction costs (ch16).
+- **Noise** — the random component of forecast error; irreducible (ch10).
+- **Optimal turnover** — the turnover that balances trading cost against the value of re-balancing (ch16).
+- **Parameter uncertainty** — the uncertainty in the estimate of the model's parameters; a component of forecast uncertainty (ch14).
+- **Per-period IR** — the IR computed over a single forecast horizon (ch13).
+- **Portfolio construction** — the solution of the mean-variance problem given alpha and V (ch14).
+- **Position sizing** — the choice of `h_i` per asset; optimal at `h_i ∝ 1/√cost` (ch16).
+- **Residual alpha** — the deviation of a manager's return forecast from the consensus; the active bet (ch08).
+- **Residual return** — the component of excess return uncorrelated with the benchmark; the target of every active decision (ch01, ch05).
+- **Residualisation** — removing the common-factor component from the alpha (ch14).
+- **Residual volatility (`σ(θ)`)** — the volatility of an asset's residual return; the multiplier that turns the score into a dollar alpha (ch10).
+- **Returns-based attribution** — attribution using only the time series of returns (ch17).
+- **Risk aversion (`λ`)** — the multiplier on variance in the mean-variance objective (ch14).
+- **Risk premium (`λ_k`)** — the expected return of the factor-mimicking portfolio for factor `k` in excess of the risk-free rate (ch07, ch08).
+- **Score (`s_i`)** — the standardised signal value for asset `i`; zero mean, unit variance (ch10).
+- **Skill** — the persistent component of a manager's alpha; the IR of the *true* alpha process (ch17, ch20).
+- **Square-root law (market impact)** — `σ × √(Q/ADV) × Y`; the canonical impact model (ch16).
+- **Tracking error (TE)** — the standard deviation of the active return (ch14).
+- **Transaction cost** — the total cost of trading, including spread, market impact, commission, and delay (ch16).
+- **Transfer coefficient (TC)** — the efficiency of the translation from forecast to portfolio; ≤ 1 (ch06).
+- **Turnover** — the fraction of the portfolio traded per period (ch16).
+- **Valuation** — the discipline of producing the consensus expected return vector (ch08, ch09).
+- **Value-added (VA)** — `α' h − (λ/2) h' V h`; the mean-variance objective in active space (ch14).

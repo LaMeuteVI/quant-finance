@@ -1,0 +1,45 @@
+# Glossary — Volatility Surface (Gatheral)
+
+- **Arbitrage-free conditions** — no-butterfly, no-calendar.
+- **Barrier option** — option with a knock-in or knock-out feature.
+- **Bergomi model** — stochastic implied vol; the vol is itself random.
+- **Butterfly arbitrage** — negative probability density.
+- **Calendar arbitrage** — negative total variance as maturity increases.
+- **Capital structure arbitrage** — exploiting the put-call parity violation between equity and credit.
+- **Characteristic function** — the Fourier transform of the log-price; closed-form for many SV models.
+- **Cliquet** — structured product with coupons based on realised performance.
+- **Continuous vs discrete monitoring** — barrier monitoring frequency.
+- **Convexity adjustment** — vol swap vs variance swap.
+- **CreditGrades** — a tractable structural credit model.
+- **Default** — the firm cannot meet its obligations.
+- **Digital cliquet** — sum of digital options.
+- **Digital option** — pays 1 if the price is above the strike, else 0.
+- **Dupire's formula** — the LV that exactly fits the market smile.
+- **Extreme strike** — the deep OTM or deep ITM region.
+- **Feller condition** — `2 κ θ > σ_v²`; ensures positive variance.
+- **Forward implied vol** — the implied vol for a forward-starting option.
+- **Heston model** — the workhorse SV model.
+- **Heston-Nandi** — the closed-form version of Heston.
+- **Hagan expansion** — the SABR short-maturity asymptotics.
+- **Jump-to-default** — the price jumps to zero at default.
+- **Knock-in / Knock-out** — the two barrier types.
+- **Lee's formula** — the asymptotic implied vol at extreme strikes.
+- **Local volatility (LV)** — the vol is a deterministic function of the price and time.
+- **Log contract** — the building block of the variance swap.
+- **Mean reversion** — the variance reverts to its long-run value.
+- **Merton structural model** — equity is a call on the firm's assets.
+- **Model-free replication** — the static replication of a variance swap.
+- **Napoleon** — a complex cliquet variant.
+- **Parisian option** — the option knocks out only after continuous time beyond the barrier.
+- **Quasi-static hedging** — hedging a digital option with options.
+- **Risk-neutral measure** — the pricing measure; expected return = risk-free rate.
+- **SABR model** — the standard rates model; `dF/F = σ F^β dW_1`, `dσ = ν σ dW_2`.
+- **Skew** — the slope of the smile; negative for equities.
+- **Smile** — the U-shape of the implied vol in strike.
+- **Stochastic volatility (SV)** — the vol is itself a random process.
+- **Survival probability** — the probability that the firm does not default.
+- **SVI parameterisation** — `w(k) = a + b(ρ(k - m) + sqrt((k - m)² + σ²))`; the 5-parameter vol surface fit.
+- **Term structure** — the maturity dependence of the smile.
+- **Variance swap** — payoff on realised variance; statically replicable.
+- **Volatility swap** — payoff on realised vol; convexity adjustment required.
+- **VIX** — the 30-day variance swap rate on the S&P 500.
