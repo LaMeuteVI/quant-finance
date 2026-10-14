@@ -11,6 +11,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -88,6 +89,73 @@ def cmd_data_check(a) -> None:
         res[s] = {"ok": r.ok, "errors": r.errors, "warnings": r.warnings,
                   "manifest": store.manifest("ohlcv", cfg["exchange"], s, cfg["timeframe"])}
     _print(res)
+
+
+def cmd_data_import(a) -> None:
+    from aster.data.binance_vision import import_root
+
+    _print(import_root(Path(a.root)))
+
+
+def cmd_data_import_r2(a) -> None:
+    from aster.data.r2_klines import SYMBOLS, import_r2
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else SYMBOLS
+    _print(import_r2(symbols))
+
+
+def cmd_data_check_r2(a) -> None:
+    from aster.data.r2_klines import SYMBOLS, audit_local
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else SYMBOLS
+    _print(audit_local(symbols, verify_sha256=a.sha256))
+
+
+def cmd_data_quality_r2(a) -> None:
+    """Profile pre-cutoff minute quality. Never reads post-cutoff values."""
+    from aster.data.minute_quality import profile_symbols
+
+    cfg = paths.load_config("desk")
+    defaults = cfg.get("minute_quality", {})
+    symbols = tuple(a.symbols.split(",")) if a.symbols else None
+    if symbols is None:
+        symbols = tuple(defaults.get("symbols", ())) or None
+    kwargs = {}
+    if a.max_frozen_share is not None:
+        kwargs["max_frozen_share"] = a.max_frozen_share
+    if a.min_coverage is not None:
+        kwargs["min_coverage"] = a.min_coverage
+    if a.max_staleness_days is not None:
+        kwargs["max_staleness_days"] = a.max_staleness_days
+    if symbols is None:
+        from aster.data.r2_klines import SYMBOLS
+        kwargs["symbols"] = SYMBOLS
+    else:
+        kwargs["symbols"] = symbols
+    _print(profile_symbols(**kwargs))
+
+
+def cmd_data_bars_r2(a) -> None:
+    """Build temporal + information bars from audited pre-cutoff minutes.
+
+    Read-only and pre-cutoff by construction: the reader refuses a frame that
+    crosses the exploration cutoff.  The clock repair is reported per symbol,
+    never applied silently.
+    """
+    from aster.data.bars import bars_frame_report, build_bars, normalise_clock
+    from aster.data.r2_klines import SYMBOLS, read_local
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else SYMBOLS
+    timeframes = a.timeframes.split(",") if a.timeframes else ["1h"]
+    out: dict = {"timeframes": timeframes, "symbols": {}}
+    for symbol in symbols:
+        frame, repair = normalise_clock(read_local(symbol))
+        out["symbols"][symbol] = {
+            "clock_repair": repair.as_dict(),
+            "bars": [bars_frame_report(symbol, frame, tf, drop_frozen=a.drop_frozen)
+                     for tf in timeframes],
+        }
+    _print(out)
 
 
 # ---- ledger ------------------------------------------------------------------
@@ -305,6 +373,34 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--since"); f.add_argument("--funding", action="store_true")
     f.set_defaults(fn=cmd_data_fetch)
     d.add_parser("check").set_defaults(fn=cmd_data_check)
+    imp = d.add_parser("import")
+    imp.add_argument("--root", required=True, help="directory containing Binance Vision monthly kline archives")
+    imp.set_defaults(fn=cmd_data_import)
+    r2 = d.add_parser("import-r2")
+    r2.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
+    r2.set_defaults(fn=cmd_data_import_r2)
+    r2_audit = d.add_parser("audit-r2", aliases=("check-r2",),
+                            help="audit only locally imported pre-cutoff R2 spot partitions")
+    r2_audit.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
+    r2_audit.add_argument("--sha256", action="store_true", help="recompute every local Parquet SHA-256")
+    r2_audit.set_defaults(fn=cmd_data_check_r2)
+    r2_q = d.add_parser("quality-r2",
+                        help="profile pre-cutoff R2 minute bars: coverage, frozen minutes, price integrity")
+    r2_q.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
+    r2_q.add_argument("--max-frozen-share", type=float,
+                      help="maximum share of zero-trade minutes before a symbol is unusable")
+    r2_q.add_argument("--min-coverage", type=float,
+                      help="minimum present/expected calendar minutes before a symbol is unusable")
+    r2_q.add_argument("--max-staleness-days", type=float,
+                      help="maximum lag of a symbol's last bar behind the panel's last bar")
+    r2_q.set_defaults(fn=cmd_data_quality_r2)
+    r2_b = d.add_parser("bars-r2",
+                        help="build temporal and information bars from pre-cutoff R2 minutes")
+    r2_b.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
+    r2_b.add_argument("--timeframes", default="1h", help="comma-separated timeframes; default 1h")
+    r2_b.add_argument("--drop-frozen", action="store_true",
+                      help="drop zero-trade minutes (off by default: it hides illiquidity)")
+    r2_b.set_defaults(fn=cmd_data_bars_r2)
 
     lg = sub.add_parser("ledger").add_subparsers(dest="action", required=True)
     n = lg.add_parser("new")

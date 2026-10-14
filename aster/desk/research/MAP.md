@@ -1,0 +1,34 @@
+# Research matrix
+
+Global exploration cutoff: `2024-07-01T00:00:00Z`. Outside a one-shot holdout run, no post-cutoff market data may be inspected. The public 2026 order-book snapshot in `research/atlas/current-orderbook-snapshot.csv` is an authorised operational cost check, explicitly not research or holdout data.
+
+| Asset | N0 | N1 | N2 | N3 | N4 | N5 | N6 | N7 | Next gated action |
+|---|---|---|---|---|---|---|---|---|---|
+| BTC | **complete** — `assets/2026-10-13-btc-n0.md` | **complete, no candidate** — `assets/2026-10-14-btc-n1-ta.md` | **complete, no candidate** — `assets/2026-10-14-btc-n2.md` | **complete, forecast only** — `assets/2026-10-14-btc-eth-n3-vol.md` | **complete, descriptive** — `assets/2026-10-14-btc-n4-regimes.md` | **complete, no candidate** — `assets/2026-10-14-btc-n5-flow.md` | gated — no primary feature | gated | N1 catalogue (8 families, 112 cells, 5 000 bootstraps) produced 0 retained cells on BTC. All `*_above` and breakout signals have nominally significant positive t-stats at 3/7/14d but fail the placebo because the placebo at the next horizon is itself significant — the apparent edge is structural uptrend, not a tradable signal. No ledger hypothesis registered. Next: panel N1 if a panel primary feature emerges, otherwise N7 synthesis. |
+| ETH | **complete** — `assets/2026-10-14-eth-n0.md` | **complete, no candidate** — `assets/2026-10-14-eth-n1-ta.md` | **complete, no candidate** — `assets/2026-10-14-eth-n2.md` | **complete, forecast only** — `assets/2026-10-14-btc-eth-n3-vol.md` | **complete, descriptive** — `assets/2026-10-14-eth-n4-regimes.md` | **complete, no candidate** — `assets/2026-10-14-eth-n5-flow.md` | gated — no primary feature | gated | Same as BTC: structural uptrend dominates every *_above signal; only `fvg_down_entry_h1` retains the joint filter (mean fwd_1d -1.05%, BH q=0.026), but mechanism is unclear (continuation vs exhaustion) and the cell is ETH-only, not BTC. The cell goes to the **backlog**, not the ledger. No ledger hypothesis registered. Next: panel N1. |
+| BNB | **complete** — `assets/2026-10-14-bnbusdt-n0.md` | queued | queued | queued | queued | queued | queued | queued | Panel N0 done; next: panel N1/N2 once a panel-level primary feature is identified. |
+| XRP | **complete** — `assets/2026-10-14-xrpusdt-n0.md` | queued | queued | queued | queued | queued | queued | queued | Panel N0 done. |
+| SOL | **complete** — `assets/2026-10-14-solusdt-n0.md` | queued | queued | queued | queued | queued | queued | queued | Panel N0 done. |
+| LINK | **complete** — `assets/2026-10-14-linkusdt-n0.md` | queued | queued | queued | queued | queued | queued | queued | Panel N0 done. |
+| DOGE | **complete** — `assets/2026-10-14-dogeusdt-n0.md` | queued | queued | queued | queued | queued | queued | queued | Panel N0 done. |
+| Panel incl. XMR | **complete** — `assets/2026-10-14-panel-n0.md` | queued | queued | queued | queued | queued | queued | queued | XMR delisted 2024-02-20 (preserved as survivorship-bias guardrail). Panel N1–N2 only after a primary feature is identified from inter-residual or intra-asset studies. |
+
+## Infrastructure status
+
+- [x] Pre-cutoff R2 spot 1m local reader/audit, fixed cutoff enforcement and provenance checks.
+- [x] Quality profile: gaps and `number_of_trades == 0` frozen minutes remain explicit, never forward-filled.
+- [x] Causal time bars and source-clock normalisation.
+- [x] Conservative taker cost reference: `max(aggTrades proxy, one tick) × 3`, square-root impact, 10 bps/side fees, sensitivities ×1/×3/×10. See `atlas/costs.md`.
+- [x] Current public order-book operational check, isolated from exploration data.
+- [x] BTC and ETH N2 fixed-horizon descriptive toolkit: block bootstrap, inverse/placebo, BH-FDR.
+- [x] Inter-asset lead-lag / residual-return / FDR toolkit.
+- [x] GARCH/HAR-RV and forecast-comparison toolkit.
+- [x] Panel N0 dossiers (BNB, XRP, SOL, LINK, DOGE, XMR).
+- [x] Inter-asset residual factor study (PCA + Marcenko-Pastur denoising + lead-lag residual + cross-sectional residual momentum) over 8 assets.
+- [x] Multi-factor extension K=2, K=3 with per-eigenvalue MP denoising and reference-asset sign alignment.
+
+## Evidence discipline
+
+One hypothesis and one dev trial exist in the ledger: `H-20261013-001`, rejected after failing its preregistered drawdown gate; its holdout remains unread. BTC, ETH, BTC–ETH inter-asset, and the 8-asset inter-residual study (1-factor and K=2, K=3) are all descriptive artifacts only. N3 found forecast value in HAR-RV but no trading edge. Before any new `desk backtest`: ledger preregistration with mechanism, falsification and numerical prediction; then all trials through the pipeline, DSR using the true family trial count, and a single sealed holdout read.
+
+Next gated action: the klines-1m phase on the pre-cutoff 8-asset panel is **exhausted** (see BACKLOG item 12). The only credible next axis is tick microstructure data (BACKLOG item 15), which requires Samuel's budget OK and a new cutoff seal. N6/N7 cannot run without a primary feature, and no primary feature has been found on the klines-1m panel.

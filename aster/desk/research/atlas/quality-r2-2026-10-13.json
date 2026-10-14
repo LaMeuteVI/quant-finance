@@ -1,0 +1,325 @@
+{
+  "ok": false,
+  "cutoff_exclusive": "2024-07-01T00:00:00+00:00",
+  "thresholds": {
+    "max_frozen_share": 0.05,
+    "min_coverage": 0.99,
+    "max_staleness_days": 7.0
+  },
+  "panel_last_bar": "2024-06-30T23:59:00+00:00",
+  "symbols_requested": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "AAVEUSDT",
+    "DOGEUSDT",
+    "SUIUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "LINKUSDT",
+    "NEARUSDT",
+    "XMRUSDT",
+    "FETUSDT"
+  ],
+  "symbols_usable": [
+    "SOLUSDT",
+    "AAVEUSDT",
+    "SUIUSDT",
+    "XRPUSDT",
+    "LINKUSDT",
+    "NEARUSDT"
+  ],
+  "symbols_unusable": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "DOGEUSDT",
+    "BNBUSDT",
+    "XMRUSDT",
+    "FETUSDT"
+  ],
+  "stale_symbols": [
+    {
+      "symbol": "XMRUSDT",
+      "last": "2024-02-20T02:59:00+00:00",
+      "lag_days": 131.875
+    }
+  ],
+  "totals": {
+    "symbols": 12,
+    "rows": 31371418,
+    "frozen_bars": 1361666,
+    "frozen_share": 0.04340466854255679
+  },
+  "per_symbol": [
+    {
+      "symbol": "BTCUSDT",
+      "usable": false,
+      "partitions": 83,
+      "rows": 3605599,
+      "first": "2017-08-17T04:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 3614160,
+      "present_minutes": 3605599,
+      "missing_minutes": 8561,
+      "coverage": 0.9976312614826128,
+      "frozen_bars": 24003,
+      "frozen_share": 0.006657146288314369,
+      "zero_volume_bars": 24003,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "BTCUSDT: 21602 timestamps off the minute grid"
+      ],
+      "warnings": [
+        "BTCUSDT: 34 minute gaps (largest 1 days 09:31:14.789000)"
+      ]
+    },
+    {
+      "symbol": "ETHUSDT",
+      "usable": false,
+      "partitions": 83,
+      "rows": 3605598,
+      "first": "2017-08-17T04:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 3614160,
+      "present_minutes": 3605598,
+      "missing_minutes": 8562,
+      "coverage": 0.9976309847931469,
+      "frozen_bars": 32237,
+      "frozen_share": 0.00894081924829113,
+      "zero_volume_bars": 32237,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "ETHUSDT: 21602 timestamps off the minute grid"
+      ],
+      "warnings": [
+        "ETHUSDT: 34 minute gaps (largest 1 days 09:31:14.800000)"
+      ]
+    },
+    {
+      "symbol": "SOLUSDT",
+      "usable": true,
+      "partitions": 47,
+      "rows": 2043015,
+      "first": "2020-08-11T06:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 2044440,
+      "present_minutes": 2043015,
+      "missing_minutes": 1425,
+      "coverage": 0.9993029876151904,
+      "frozen_bars": 22380,
+      "frozen_share": 0.010954398279014104,
+      "zero_volume_bars": 22380,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": [
+        "SOLUSDT: 11 minute gaps (largest 0 days 04:45:00)",
+        "SOLUSDT: 1.10% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "AAVEUSDT",
+      "usable": true,
+      "partitions": 45,
+      "rows": 1949596,
+      "first": "2020-10-15T03:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 1951020,
+      "present_minutes": 1949596,
+      "missing_minutes": 1424,
+      "coverage": 0.9992701253703191,
+      "frozen_bars": 77304,
+      "frozen_share": 0.03965129185738994,
+      "zero_volume_bars": 77304,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": [
+        "AAVEUSDT: 10 minute gaps (largest 0 days 04:45:00)",
+        "AAVEUSDT: 3.97% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "usable": false,
+      "partitions": 60,
+      "rows": 2621331,
+      "first": "2019-07-05T12:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 2624400,
+      "present_minutes": 2621331,
+      "missing_minutes": 3069,
+      "coverage": 0.9988305898491083,
+      "frozen_bars": 356525,
+      "frozen_share": 0.136009149550362,
+      "zero_volume_bars": 356525,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "DOGEUSDT: frozen share 13.60% exceeds the 5.00% usability limit"
+      ],
+      "warnings": [
+        "DOGEUSDT: 19 minute gaps (largest 0 days 08:01:00)",
+        "DOGEUSDT: 13.60% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "SUIUSDT",
+      "usable": true,
+      "partitions": 14,
+      "rows": 611280,
+      "first": "2023-05-03T12:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 611280,
+      "present_minutes": 611280,
+      "missing_minutes": 0,
+      "coverage": 1.0,
+      "frozen_bars": 2147,
+      "frozen_share": 0.0035123020547048814,
+      "zero_volume_bars": 2147,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "symbol": "XRPUSDT",
+      "usable": true,
+      "partitions": 74,
+      "rows": 3233628,
+      "first": "2018-05-04T08:11:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 3239509,
+      "present_minutes": 3233628,
+      "missing_minutes": 5881,
+      "coverage": 0.9981846014318837,
+      "frozen_bars": 5272,
+      "frozen_share": 0.001630366882028483,
+      "zero_volume_bars": 5272,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": [
+        "XRPUSDT: 27 minute gaps (largest 0 days 10:01:00)"
+      ]
+    },
+    {
+      "symbol": "BNBUSDT",
+      "usable": false,
+      "partitions": 80,
+      "rows": 3489384,
+      "first": "2017-11-06T03:54:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 3497526,
+      "present_minutes": 3489384,
+      "missing_minutes": 8142,
+      "coverage": 0.9976720687708969,
+      "frozen_bars": 39840,
+      "frozen_share": 0.011417488015076586,
+      "zero_volume_bars": 39840,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "BNBUSDT: 21602 timestamps off the minute grid"
+      ],
+      "warnings": [
+        "BNBUSDT: 33 minute gaps (largest 1 days 09:31:15.787000)",
+        "BNBUSDT: 1.14% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "LINKUSDT",
+      "usable": true,
+      "partitions": 66,
+      "rows": 2865230,
+      "first": "2019-01-16T10:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 2869320,
+      "present_minutes": 2865230,
+      "missing_minutes": 4090,
+      "coverage": 0.9985745751606653,
+      "frozen_bars": 126420,
+      "frozen_share": 0.04412211236096229,
+      "zero_volume_bars": 126420,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": [
+        "LINKUSDT: 22 minute gaps (largest 0 days 10:01:00)",
+        "LINKUSDT: 4.41% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "NEARUSDT",
+      "usable": true,
+      "partitions": 45,
+      "rows": 1950916,
+      "first": "2020-10-14T05:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 1952340,
+      "present_minutes": 1950916,
+      "missing_minutes": 1424,
+      "coverage": 0.9992706188471271,
+      "frozen_bars": 36959,
+      "frozen_share": 0.018944434306756415,
+      "zero_volume_bars": 36959,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [],
+      "warnings": [
+        "NEARUSDT: 10 minute gaps (largest 0 days 04:45:00)",
+        "NEARUSDT: 1.89% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "XMRUSDT",
+      "usable": false,
+      "partitions": 60,
+      "rows": 2592531,
+      "first": "2019-03-15T04:00:00+00:00",
+      "last": "2024-02-20T02:59:00+00:00",
+      "expected_minutes": 2596260,
+      "present_minutes": 2592531,
+      "missing_minutes": 3729,
+      "coverage": 0.9985637031730258,
+      "frozen_bars": 288837,
+      "frozen_share": 0.11141120395474538,
+      "zero_volume_bars": 288837,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "XMRUSDT: frozen share 11.14% exceeds the 5.00% usability limit"
+      ],
+      "warnings": [
+        "XMRUSDT: 21 minute gaps (largest 0 days 10:01:00)",
+        "XMRUSDT: 11.14% of minutes have zero trades"
+      ]
+    },
+    {
+      "symbol": "FETUSDT",
+      "usable": false,
+      "partitions": 65,
+      "rows": 2803310,
+      "first": "2019-02-28T10:00:00+00:00",
+      "last": "2024-06-30T23:59:00+00:00",
+      "expected_minutes": 2807400,
+      "present_minutes": 2803310,
+      "missing_minutes": 4090,
+      "coverage": 0.9985431359977203,
+      "frozen_bars": 349742,
+      "frozen_share": 0.12476037255958135,
+      "zero_volume_bars": 349742,
+      "zero_trade_volume_bars": 0,
+      "missing_months": [],
+      "errors": [
+        "FETUSDT: frozen share 12.48% exceeds the 5.00% usability limit"
+      ],
+      "warnings": [
+        "FETUSDT: 22 minute gaps (largest 0 days 10:01:00)",
+        "FETUSDT: 12.48% of minutes have zero trades"
+      ]
+    }
+  ]
+}
