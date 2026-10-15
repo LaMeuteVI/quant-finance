@@ -25,6 +25,24 @@ from aster import paths
 BUCKET = "cryptos"
 PREFIX = "market/spot/klines_1m"
 CUTOFF = pd.Timestamp("2024-07-01", tz="UTC")
+# Convention holdout. The brief requires a sealed out-of-sample window that a
+# preregistered hypothesis may read exactly once. The current local store
+# contains only data up to CUTOFF, and 7 closed axes + the N1-alt panel have
+# already read the whole 2017-08 -> 2024-06 window for descriptive statistics,
+# BH-FDR, placebos, lead-lag grids, regime labels and residual factor mining.
+# A *true* untouched holdout is not possible without acquiring post-cutoff data
+# (see BACKLOG item 15). The 2024-04-01 -> 2024-06-30 window is therefore
+# reserved as a *convention* holdout: any future exploration code must not read
+# it, and a preregistered hypothesis can read it once via read_holdout().
+# The contamination caveat is documented in research/notes/2026-10-15-holdout-audit.md
+# and reproduced in this module's docstrings. Replace with a true holdout when
+# post-cutoff data is acquired.
+HOLDOUT_START = pd.Timestamp("2024-04-01", tz="UTC")
+# Single-shot holdout consumption: a (hypothesis_id, symbol) pair is recorded
+# the first time read_holdout returns data. A second call for the same pair
+# raises. This is the in-process enforcement of "un holdout ne se consulte
+# qu'une fois". It is not a security boundary; it is a discipline check.
+_holdout_consumed: set[tuple[str, str]] = set()
 SYMBOLS = (
     "BTCUSDT", "ETHUSDT", "SOLUSDT", "AAVEUSDT", "DOGEUSDT", "SUIUSDT",
     "XRPUSDT", "BNBUSDT", "LINKUSDT", "NEARUSDT", "XMRUSDT", "FETUSDT",
@@ -257,6 +275,11 @@ def read_local(symbol: str) -> pd.DataFrame:
     The audit is intentionally performed first so a reader cannot consume an
     unproven partition.  The returned index is ``open_time_utc`` and all other
     source columns retain their original names and dtypes.
+
+    Exploration guard: the function refuses to return any row whose index is
+    >= ``HOLDOUT_START`` (the reserved convention holdout window).  Only
+    :func:`read_holdout` may return those rows, and only once per
+    (hypothesis_id, symbol) pair.
     """
     approved = _approved_symbols((symbol,))
     audit_local(approved)
@@ -269,7 +292,73 @@ def read_local(symbol: str) -> pd.DataFrame:
         raise ValueError(f"{symbol}: duplicate open_time_utc values across local partitions")
     if (frame.index >= CUTOFF).any():
         raise ValueError(f"{symbol}: canonical frame crosses the exploration cutoff")
+    if (frame.index >= HOLDOUT_START).any():
+        raise ValueError(
+            f"{symbol}: canonical frame crosses the convention holdout start "
+            f"({HOLDOUT_START.isoformat()}). Exploration code must not read the "
+            f"holdout window; use read_holdout() with a preregistered hypothesis_id."
+        )
     return frame
+
+
+def read_holdout(symbol: str, *, hypothesis_id: str) -> pd.DataFrame:
+    """Read the convention holdout window for one symbol, exactly once.
+
+    The convention holdout is the window ``[HOLDOUT_START, CUTOFF)``.  It is
+    reserved for a single confirmation read by one preregistered hypothesis.
+    This function enforces three rules:
+
+    1. ``hypothesis_id`` must be a non-empty string.  An empty or None value
+       is refused (no anonymous reads).
+    2. The (hypothesis_id, symbol) pair must not have been read before in this
+       process.  The second call raises.  This is the in-process
+       single-shot enforcement of "un holdout ne se consulte qu'une fois".
+    3. The returned frame contains only rows whose index is in
+       ``[HOLDOUT_START, CUTOFF)``.
+
+    Contamination caveat: see module docstring.  This is a *convention* holdout
+    on a window that earlier exploration studies have already used for
+    descriptive statistics.  Any conclusion from a hypothesis read on this
+    window must be reported with that caveat.
+    """
+    if not isinstance(hypothesis_id, str) or not hypothesis_id:
+        raise ValueError("hypothesis_id must be a non-empty string")
+    if not symbol or not isinstance(symbol, str):
+        raise ValueError("symbol must be a non-empty string")
+    key = (hypothesis_id, symbol)
+    if key in _holdout_consumed:
+        raise RuntimeError(
+            f"Holdout already consumed for ({hypothesis_id}, {symbol}). "
+            f"The brief is explicit: 'un holdout ne se consulte qu'une fois'."
+        )
+    approved = _approved_symbols((symbol,))
+    audit_local(approved)
+    frames = [pq.ParquetFile(path).read().to_pandas() for path, _ in _local_partitions(approved)]
+    frame = pd.concat(frames, ignore_index=True)
+    index = pd.to_datetime(frame.pop("open_time_utc"), utc=True)
+    frame.index = pd.DatetimeIndex(index, name="open_time_utc")
+    frame = frame.loc[:, CANONICAL_COLUMNS].sort_index()
+    if frame.index.has_duplicates:
+        raise ValueError(f"{symbol}: duplicate open_time_utc values across local partitions")
+    # Restrict to the holdout window.
+    mask = (frame.index >= HOLDOUT_START) & (frame.index < CUTOFF)
+    frame = frame.loc[mask]
+    if frame.empty:
+        raise FileNotFoundError(
+            f"{symbol}: no rows in the holdout window "
+            f"[{HOLDOUT_START.isoformat()}, {CUTOFF.isoformat()})"
+        )
+    _holdout_consumed.add(key)
+    return frame
+
+
+def reset_holdout_consumption() -> None:
+    """Test-only helper: clear the in-process single-shot holdout ledger.
+
+    NOT for production use.  The brief is explicit: the holdout is read once.
+    This function exists only so unit tests can reset state between cases.
+    """
+    _holdout_consumed.clear()
 
 
 def load_r2_closes(symbols: tuple[str, ...]) -> pd.DataFrame:

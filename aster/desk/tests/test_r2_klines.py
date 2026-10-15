@@ -11,6 +11,7 @@ import pytest
 from aster.data.r2_klines import (
     CANONICAL_COLUMNS,
     CUTOFF,
+    HOLDOUT_START,
     PREFIX,
     RAW_COLUMNS,
     RemoteObject,
@@ -18,7 +19,9 @@ from aster.data.r2_klines import (
     _validate_cutoff,
     audit_local,
     inventory,
+    read_holdout,
     read_local,
+    reset_holdout_consumption,
     transfer,
 )
 
@@ -101,8 +104,12 @@ def test_manifest_schema_is_json_serializable():
     assert json.loads(json.dumps(payload))["cutoff_exclusive"] == "2024-07-01T00:00:00+00:00"
 
 
-def _local_partition(root, *, symbol="BTCUSDT", month="06", timestamps=None):
-    timestamps = timestamps or [pd.Timestamp("2024-06-30 23:59:00", tz="UTC")]
+def _local_partition(root, *, symbol="BTCUSDT", month="03", timestamps=None):
+    # Default timestamp is 2024-03-31 23:59:00 UTC, before the convention
+    # holdout window (HOLDOUT_START=2024-04-01). Tests that want to exercise
+    # the holdout path must pass an explicit ``timestamps`` argument that
+    # overlaps with [HOLDOUT_START, CUTOFF).
+    timestamps = timestamps or [pd.Timestamp("2024-03-31 23:59:00", tz="UTC")]
     path = root / "data" / "r2" / PREFIX / f"symbol={symbol}" / "year=2024" / f"month={month}" / "part.parquet"
     path.parent.mkdir(parents=True)
     values = pd.DatetimeIndex(timestamps)
@@ -168,3 +175,113 @@ def test_audit_local_rejects_schema_divergence(isolated_desk):
 
     with pytest.raises(ValueError, match="unexpected schema"):
         audit_local(("BTCUSDT",))
+
+
+# ---------------------------------------------------------------------------
+# Convention holdout tests (cf. research/notes/2026-10-15-holdout-audit.md)
+# ---------------------------------------------------------------------------
+
+
+def test_holdout_constants_are_well_defined():
+    # The holdout is a strict prefix of the cutoff window.  Both are
+    # timezone-aware UTC.  The holdout is a 3-month convention window:
+    # 2024-04-01 -> 2024-06-30.
+    assert HOLDOUT_START.tz is not None
+    assert HOLDOUT_START < CUTOFF
+    assert (CUTOFF - HOLDOUT_START) == pd.Timedelta(days=91)
+    assert HOLDOUT_START == pd.Timestamp("2024-04-01", tz="UTC")
+    assert CUTOFF == pd.Timestamp("2024-07-01", tz="UTC")
+
+
+def test_read_local_rejects_holdout_window(isolated_desk):
+    # Exploration code that tries to read a row inside the convention
+    # holdout window must fail.  The new guard is independent of the
+    # post-cutoff guard and uses a different error message.
+    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+
+    with pytest.raises(ValueError, match="convention holdout start"):
+        read_local("BTCUSDT")
+
+
+def test_read_local_allows_pre_holdout_data(isolated_desk):
+    # The default helper timestamp is 2024-03-31, which is before HOLDOUT_START.
+    # Exploration reads must continue to work for any data that lies strictly
+    # before HOLDOUT_START.
+    _local_partition(isolated_desk)
+
+    frame = read_local("BTCUSDT")
+
+    assert frame.index.max() < HOLDOUT_START
+
+
+def test_read_holdout_returns_only_holdout_window(isolated_desk):
+    # The convention holdout is exactly [HOLDOUT_START, CUTOFF).
+    # We populate the partition with one row in the holdout window and
+    # one row outside, and assert that only the in-window row comes back.
+    reset_holdout_consumption()
+    _local_partition(
+        isolated_desk,
+        timestamps=[
+            pd.Timestamp("2024-03-31 23:59:00", tz="UTC"),
+            pd.Timestamp("2024-05-15 12:00:00", tz="UTC"),
+            pd.Timestamp("2024-06-30 23:59:00", tz="UTC"),
+        ],
+    )
+
+    frame = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-001")
+
+    assert frame.index.min() >= HOLDOUT_START
+    assert frame.index.max() < CUTOFF
+    assert len(frame) == 2  # 2024-05-15 and 2024-06-30 only
+
+
+def test_read_holdout_is_single_shot(isolated_desk):
+    # "Un holdout ne se consulte qu'une fois": a second read for the same
+    # (hypothesis_id, symbol) pair must raise.  This is the in-process
+    # enforcement.  A different hypothesis_id for the same symbol must work.
+    reset_holdout_consumption()
+    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+
+    first = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-002")
+    assert len(first) == 1
+
+    with pytest.raises(RuntimeError, match="Holdout already consumed"):
+        read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-002")
+
+    # A different hypothesis_id is allowed: the contamination is on the
+    # (hypothesis, symbol) pair, not on the symbol alone.
+    second = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-003")
+    assert len(second) == 1
+
+
+def test_read_holdout_requires_hypothesis_id(isolated_desk):
+    # No anonymous reads.  Empty or None hypothesis_id is refused.
+    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+
+    with pytest.raises(ValueError, match="hypothesis_id must be a non-empty string"):
+        read_holdout("BTCUSDT", hypothesis_id="")
+
+    with pytest.raises(ValueError, match="hypothesis_id must be a non-empty string"):
+        read_holdout("BTCUSDT", hypothesis_id=None)  # type: ignore[arg-type]
+
+
+def test_read_holdout_raises_when_window_empty(isolated_desk):
+    # If a partition exists but has no rows in [HOLDOUT_START, CUTOFF),
+    # read_holdout must raise.  This protects against silent empty
+    # confirmations that would let a hypothesis "pass" on zero trades.
+    reset_holdout_consumption()
+    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-03-31 23:59:00", tz="UTC")])
+
+    with pytest.raises(FileNotFoundError, match="no rows in the holdout window"):
+        read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-004")
+
+
+def test_read_holdout_rejects_unapproved_symbol(isolated_desk):
+    # Same approval gate as read_local: an unknown symbol cannot read the
+    # holdout either.  This prevents the holdout API from being a backdoor
+    # to bypass the symbol allowlist.
+    reset_holdout_consumption()
+    _local_partition(isolated_desk, symbol="BTCUSDT", timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+
+    with pytest.raises(ValueError, match="symbols outside the approved pre-cutoff inventory"):
+        read_holdout("FAKEUSDT", hypothesis_id="H-20261015-TEST-005")
