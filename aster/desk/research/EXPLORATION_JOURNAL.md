@@ -14,10 +14,10 @@
 | 2 | Ichimoku Kinko Hyo complet (10 chapitres Riguet) | **CLOS — 0 edge** | riguet-ichimoku, chan ch03 | `research/notes/2026-10-14-axe-2.md` |
 | 3 | Mean-reversion OU + half-life + pairs (6 paires testées) | **CLOS — 0 edge** | chan ch03, pairs-trading-partial-cointegration | `research/notes/2026-10-14-axe-3.md` |
 | 4 | Vol risk premium (HAR-RV, RV/BV/JV, VRP par décile) | **CLOS — 0 edge** | chan ch03, tsay ch03, diebold-mariano | `research/notes/2026-10-14-axe-4.md` |
-| 5 | CFA-style TA enrichi (Camarilla/Woodie + Elliott proxy + Fib avancé) | queued | cfa-pm, riguet, cfa-qm | — |
-| 6 | ML XGBoost sur features microstructure avec purged k-fold CV | queued | lopez-de-prado ch03/04/05/07/08/14 | — |
-| 7 | Markov-switching BTC/ETH → cross-sectional alts | queued | tsay ch04, cfa-pm | — |
-| 8 | Order book microstructure proxy depuis aggTrades | queued | chan ch06, lopez ch19 | — |
+| 5 | CFA-style TA enrichi (Camarilla/Woodie + Elliott proxy + Fib avancé) | **CLOS — 0 edge clair** | cfa-pm, riguet, cfa-qm | `research/notes/2026-10-14-axe-5.md` |
+| 6 | ML XGBoost sur features microstructure avec purged k-fold CV | **NON LANCÉ** — phase close | lopez-de-prado ch03/04/05/07/08/14 | — |
+| 7 | Markov-switching BTC/ETH → cross-sectional alts | **NON LANCÉ** — phase close | tsay ch04, cfa-pm | — |
+| 8 | Order book microstructure proxy depuis aggTrades | **NON LANCÉ** — phase close | chan ch06, lopez ch19 | — |
 
 **Total ledger vivantes** : 0. **Total ledger rejetées** : 1 (H-20261013-001, BTC daily TSMOM 60d).
 
