@@ -12,7 +12,7 @@ from aster.research.axe7_markov_switching import (
     _run_lengths,
     _block_bootstrap,
     _aic_bic,
-    _null_ms_ar,
+    _null_loglik_ratio,
     leadlag_by_regime,
     fit_ms,
 )
@@ -81,7 +81,7 @@ def test_null_loglik_pvalue_under_null():
     """If there is NO regime structure (iid), the actual loglik should NOT dominate the null."""
     rng = np.random.default_rng(123)
     iid = rng.normal(0, 0.01, 500)
-    _, p = _null_ms_ar(iid, block=5, n_boot=50)  # 50 bootstraps for speed
+    _, p = _null_loglik_ratio(iid, n_boot=10, block=5)  # 10 bootstraps for speed
     # p is the fraction of null logliks >= real; under H0, p should be near 0.5
     assert 0.05 < p < 0.95, f"p={p} should be in (0.05, 0.95) for an iid series"
 
