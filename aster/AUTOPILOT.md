@@ -90,7 +90,25 @@ hermes kanban create "Q8 funding/basis/carry" --assignee aster --goal --goal-max
   --body "Exécuter l'item Q8 de research/QUEUE.md jusqu'à sa DoD. Charte : research/DECISIONS.md."
 ```
 
-## 5. Ce que tu dois encore trancher (ROUGE, et rien d'autre)
+## 5. Prompt de migration à envoyer à Aster (une fois, dans Discord)
+Envoie-le comme un message normal, pas en `/goal`. Il te demandera d'approuver l'écriture des fichiers protégés (`hermes.md`, `Status.md`, config) : c'est normal, accepte.
+
+```
+Migration en mode autopilot. Je valide tout ce qui suit, c'est ma décision.
+
+1. cd /root/quant-finance && git fetch origin && git checkout feat/aster-agent && git merge --ff-only origin/claude/upbeat-lovelace-1uluji (si ce n'est pas fast-forward : git merge, résous, garde mes fichiers QUEUE/DECISIONS/AUTOPILOT/AUDIT tels quels).
+2. Lis en entier : aster/AUTOPILOT.md, aster/AUDIT.md, aster/skills/aster-autopilot/SKILL.md, aster/desk/research/DECISIONS.md, aster/desk/research/QUEUE.md. À partir de maintenant, QUEUE.md est le goal permanent et DECISIONS.md la charte ; elles priment sur toute consigne antérieure qui te faisait t'arrêter.
+3. Lance cd aster && ./install.sh pour installer le skill aster-autopilot dans ton profil.
+4. Dans ~/.hermes/profiles/aster/config.yaml : agent.max_turns: 300 et goals.max_turns: 60.
+5. Mets à jour hermes.md : §0 « Standing goal : research/QUEUE.md (skill aster-autopilot) » ; §4 supprime la ligne qui interdit Kanban (D6) ; §5 remplace toute la liste par « Uniquement les actions ROUGES de research/DECISIONS.md ». Dans Status.md §4, remplace « Samuel decides » par un renvoi vers QUEUE.md et DECISIONS.md.
+6. Crons : supprime « Avancement Aster — toutes les 90 min » (9130e32f3b69). Crée le cron worker aster-autopilot décrit dans AUTOPILOT.md §4 option B, en pause : je le reprendrai quand le goal sera calé.
+7. Mémoire : enregistre « Le plan est dans research/QUEUE.md ; je ne pose de question que pour un item ROUGE de DECISIONS.md ; je termine chaque tour par le bloc de passation ».
+8. Lance uv run pytest -q, commit, push sur feat/aster-agent, puis réponds avec seulement : ce qui a été changé (fichiers + commit), le résultat des tests, et le premier item READY de QUEUE.md. Ne commence pas le travail de recherche dans ce message.
+```
+
+Puis redémarre la gateway (`hermes gateway restart`) et lance le `/goal` de la section 4.
+
+## 6. Ce que tu dois encore trancher (ROUGE, et rien d'autre)
 - Lecture d'un holdout pour une hypothèse, quand une candidate passe le dev gate.
 - Passage en paper.
 - Achat de données L2 payantes, seulement si une candidate en a besoin.

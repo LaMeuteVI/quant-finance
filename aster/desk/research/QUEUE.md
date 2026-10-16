@@ -28,7 +28,31 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
 - **Q4 — Bars and aggTrades.** `READY`
   Finish the 5m/15m/1h/4h bars marked partial in `Status.md`. Import spot aggTrades for BTC and ETH for 2022-01 → 2024-06 (free, Binance Vision; size-check the disk first) and build volume, dollar and taker-imbalance bars from them (afml ch02). This replaces the "1 month only" limitation of the former axe 8.
 
-## Block 1: the unexplored intraday and perp space (highest priority)
+## Block P: make `desk backtest` able to test what the research finds (critical path)
+Audit 2026-10-16 (`aster/AUDIT.md`): the pipeline can only backtest daily, close-price-only strategies on a flat cost. None of the brief's flow, funding, basis or intraday ideas can be expressed. These items come before any new hypothesis.
+
+- **P1 — Multi-input strategy contract.** `READY` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–14
+  `Strategy.target_weights(data)` receives a `MarketData` object (close, open, high, low, volume, quote_volume, taker_buy, trades, funding, premium, open interest), each causal and aligned to bar close. Close-only strategies keep working through an adapter. The truncation look-ahead test runs on every field. Changing `src/aster/strategies/base.py` and `backtest/pipeline.py` is GREEN (not risk/ or execution/); keep every existing test green and add tests per field.
+- **P2 — Per-hypothesis timeframe and instrument.** `READY` · depends on P1
+  Timeframe and instruments (spot vs USDⓈ-M perp, per leg) come from the preregistration, not from `config/desk.yaml`. Bars 1h/4h/15m/5m built from the R2 minute store via `r2_backtest_store`. Funding is charged on perp legs only (today it is charged on every held weight). Delta-neutral pairs (spot long + perp short) must be expressible.
+- **P3 — True holdout in the pipeline.** `READY` · depends on Q1
+  Today `holdout_frac: 0.25` puts the holdout inside the pre-cutoff window, which exploration has already read. New rule: dev = data before 2024-07-01, holdout = sealed store from 2024-07-01, read through `consume_holdout`. Test that a dev run cannot load a single sealed row.
+- **P4 — Realistic costs and capacity (brief section 9).** `READY`
+  Replace the flat 10 + 5 bps with the per-asset, per-hour cost grid from `research/atlas/cost-grid.csv` plus square-root impact on ADV. Report net Sharpe at 100k / 1M / 10M / 50M USD and capacity (max AUM with net Sharpe ≥ 1) in every `report.json`. Keep the ×2 and ×3 stress tests.
+- **P5 — Walk-forward and PBO by default.** `READY`
+  Every dev run also reports a walk-forward (expanding, embargoed) and, when params are swept, a CSCV/PBO, using `validation/cv.py` and `validation/pbo.py`.
+
+## Fast track: three priors strong enough to preregister as soon as P1–P4 are done
+These come from the literature and the brief's mechanism list, not from our data. This makes them cheap in trial count and quick to bring to a dev verdict. Each one: memo → Skeptic → ledger preregistration (ORANGE) → at most 5 versions → verdict. Holdout and paper stay RED.
+
+- **F1 — Funding carry, delta-neutral.** `BLOCKED_ON P1–P4, Q3`
+  Long spot / short perp (and the reverse when funding is negative) on BTC, ETH and liquid alts, entered when expected funding net of fees and basis drift is above costs. Mechanism: leveraged longs pay for the hedge. Main risks: funding regime flips, basis blow-outs in crashes, venue risk. Capacity potentially large on BTC/ETH.
+- **F2 — Funding and premium as a crowding signal.** `BLOCKED_ON P1–P2, Q3, Q8 descriptive`
+  Directional perp position against extreme funding or premium z-scores, conditioned on open-interest change. Mechanism: crowded leveraged positioning is forced out (liquidations).
+- **F3 — Vol-targeted trend ensemble on the panel.** `BLOCKED_ON P1, P4`
+  Blend of 20–120 day trend signals, long/short perps, volatility targeting, 8–10 assets, XMR kept as a survivorship guard. Same idea as the rejected `H-20261013-001`, so the trials count **in the existing family `btc-daily-tsmom`**: no new family to reset the DSR. It differs in diversification, shorting and sizing, so the preregistration must say why it should pass where the BTC long/cash version failed its drawdown floor.
+
+## Block 1: the unexplored intraday and perp space (highest priority after Block P)
 Previous N1–N5 work was mostly at daily horizons. The brief's intraday cells are open.
 
 - **Q5 — BTC/ETH intraday N2.** `READY` · depends on Q4 · skills: `tsay-analysis-financial-time-series` ch02/ch05, `cfa-quantitative-methods` ch09, `lopez-de-prado-afml` ch17–18
