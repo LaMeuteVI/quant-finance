@@ -31,6 +31,7 @@ Global exploration cutoff: `2024-07-01T00:00:00Z`. Outside a one-shot holdout ru
 - [x] Multi-factor extension K=2, K=3 with per-eigenvalue MP denoising and reference-asset sign alignment.
 - [x] Per-asset dossiers `assets/<symbol>-dossier.md` for 10 symbols, regenerated from the on-disk atlas + N0..N5 artefacts (`uv run python -m aster.research.q17_atlas`).
 - [x] Q17 atlas index `research/atlas/q17_atlas.json` and tests `tests/test_q17_atlas.py` + `tests/test_q17_atlas_index.py`.
+- [x] Q20 weekly state-of-research memo + JSON artefact (`research/atlas/q20_state.json`, `research/memos/2026-10-16-Q20-N9.md`) and test `tests/test_q20_state.py`.
 
 ## Evidence discipline
 

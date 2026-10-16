@@ -1,0 +1,76 @@
+{
+  "protocol": {
+    "cutoff_exclusive": "2024-07-01T00:00:00Z",
+    "scope": "weekly state-of-research meta-memo (matrix, candidates, what died and why, effort reallocation)",
+    "status": "descriptive_only",
+    "no_holdout": true,
+    "no_live": true,
+    "no_paper": true,
+    "no_order": true,
+    "no_key": true,
+    "no_new_download": true
+  },
+  "as_of": "2026-10-16",
+  "branch": "feat/aster-agent",
+  "ledger": {
+    "open_hypotheses": 0,
+    "rejected": [
+      {"id": "H-20261013-001", "name": "BTC TSMOM 60d", "verdict": "rejected (drawdown gate)"},
+      {"id": "H-20261016-002", "name": "funding_carry_dn", "verdict": "rejected (pipeline does not inject funding panel; zero weights)"}
+    ]
+  },
+  "matrix": {
+    "BTC":  "N5 (full N0..N5 stack) — no candidate",
+    "ETH":  "N5 (full N0..N5 stack) — no candidate",
+    "BNB":  "N1 (TA panel) + panel Q9/Q11/Q12/Q13/Q14 — no candidate",
+    "XRP":  "N1 + panel — no candidate",
+    "SOL":  "N1 + panel — no candidate",
+    "LINK": "N1 + panel — no candidate",
+    "DOGE": "N1 + panel — no candidate",
+    "AAVE": "N0 (data hydrated, no per-asset N0 dossier) + panel — no candidate",
+    "SUI":  "N0 (data hydrated) + panel — no candidate",
+    "NEAR": "N0 (data hydrated) + panel — no candidate"
+  },
+  "candidates": {
+    "ledger_strategies": 0,
+    "descriptive_axes_with_value": ["Q10 (HAR-RV beats fixed-naive in 18/20 cells after BH-FDR) — forecast value, not alpha"],
+    "descriptive_axes_without_value": [
+      "Q5 (multi-TF clustering)",
+      "Q6 (BTC kline flow V1)",
+      "Q7 (BTC/ETH lead-lag V1)",
+      "Q8 (funding carry V1)",
+      "Q9 (alt N2 multi-TF)",
+      "Q11 (alt N4 regimes)",
+      "Q12 (alt N5 kline flow)",
+      "Q13 (alt MP dependence)",
+      "Q14 (alt FE + sector pairs)"
+    ]
+  },
+  "what_died_and_why": [
+    {"axis": "Q6 BTC kline flow", "result": "descriptive only", "reason": "symmetric extreme-flow returns ±0.014%, no asymmetry tradable after costs"},
+    {"axis": "Q7 BTC/ETH lead-lag", "result": "no candidate", "reason": "0/640 cells past 100k-USDT cost hurdle; 5/640 common sign at half-year"},
+    {"axis": "Q8 funding carry", "result": "descriptive only", "reason": "no premium/perp-price/OI/borrow panel; cannot annualise net"},
+    {"axis": "Q9 alt N2", "result": "descriptive only", "reason": "lag-1 mean-reversion real but no bps/mechanism/capacity"},
+    {"axis": "Q10 alt N3", "result": "forecast only", "reason": "HAR-RV beats naive in 18/20 cells but no alpha signal"},
+    {"axis": "Q11 alt N4", "result": "no candidate, run quarantined", "reason": "preregistration written after execution; Hamilton cross-check null p 0.30-0.65"},
+    {"axis": "Q12 alt N5", "result": "no candidate, run provisional", "reason": "0/128 cells past conservative cost hurdle; perimeter reduced post-prereg"},
+    {"axis": "Q13 alt MP dependence", "result": "no pairwise candidate", "reason": "denoising bound degenerate (q≈0.019); only common market mode remains"},
+    {"axis": "Q14 alt panel FE + pairs", "result": "no candidate", "reason": "all 5 sector pairs half-life 0.6-0.7 d, below 1-day prereg lower bound; FE proxies p>0.67"}
+  ],
+  "effort_reallocation": {
+    "stop_or_keep": [
+      "STOP: continue on the klines-1m primary feature hunt (Q5–Q14 closed) — no further preregistration expected on this axis without new data",
+      "KEEP: weekly state-of-research memo (Q20, this item)",
+      "KEEP: 10 per-asset dossiers (Q17) — regenerated view of the atlas",
+      "KEEP: per-asset N0 dossier for AAVE/SUI/NEAR — the data is hydrated, only the N0 hourly-summary csv is missing"
+    ],
+    "open_axes_for_next_session": [
+      "Tick microstructure data (Tardis/Kaiko/Databento) — RED, requires Samuel's budget OK and a new cutoff seal",
+      "Post-cutoff sealed import (Q1) — RED, requires a separate authorised import run",
+      "Per-asset N0 dossier for AAVE/SUI/NEAR (GREEN, no new data) — should be done before closing the alts axis",
+      "Q15 ETH fvg_down_entry_h1 panel re-test (IDEA → would need prereg before READY)",
+      "Q18/Q19 financial ML and synthesis — BLOCKED until a primary feature appears (none in Q5–Q14)"
+    ]
+  },
+  "verdict": "no ledger hypothesis, no candidate, no holdout, no live/paper/order/key, no new download. Klines-1m pre-cutoff panel exhausted of primary features. The only credible next axis is tick microstructure (RED)."
+}
