@@ -32,7 +32,7 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
 ## Block P: make `desk backtest` able to test what the research finds (critical path)
 Audit 2026-10-16 (`aster/AUDIT.md`): the pipeline can only backtest daily, close-price-only strategies on a flat cost. None of the brief's flow, funding, basis or intraday ideas can be expressed. These items come before any new hypothesis.
 
-- **P1 — Multi-input strategy contract.** `READY` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–14
+- **P1 — Multi-input strategy contract.** `IN_PROGRESS (2026-10-16)` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–14
   `Strategy.target_weights(data)` receives a `MarketData` object (close, open, high, low, volume, quote_volume, taker_buy, trades, funding, premium, open interest), each causal and aligned to bar close. Close-only strategies keep working through an adapter. The truncation look-ahead test runs on every field. Changing `src/aster/strategies/base.py` and `backtest/pipeline.py` is GREEN (not risk/ or execution/); keep every existing test green and add tests per field.
 - **P2 — Per-hypothesis timeframe and instrument.** `READY` · depends on P1
   Timeframe and instruments (spot vs USDⓈ-M perp, per leg) come from the preregistration, not from `config/desk.yaml`. Bars 1h/4h/15m/5m built from the R2 minute store via `r2_backtest_store`; `desk data check` extended to the R2 and sealed stores (today it only checks the absent legacy `data/ohlcv` daily store). Funding is charged on perp legs only (today it is charged on every held weight). Delta-neutral pairs (spot long + perp short) must be expressible.
