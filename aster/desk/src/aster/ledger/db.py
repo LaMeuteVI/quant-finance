@@ -86,6 +86,12 @@ CREATE TABLE IF NOT EXISTS events (
 );
 CREATE INDEX IF NOT EXISTS trials_family ON trials(family);
 CREATE INDEX IF NOT EXISTS hyp_status ON hypotheses(status);
+CREATE TABLE IF NOT EXISTS sealed_holdout_consumptions (
+    hypothesis_id TEXT NOT NULL REFERENCES hypotheses(id),
+    symbol TEXT NOT NULL,
+    consumed_at TEXT NOT NULL,
+    PRIMARY KEY (hypothesis_id, symbol)
+);
 """
 
 
@@ -222,6 +228,23 @@ class Ledger:
         with self._conn() as c:
             c.execute("UPDATE hypotheses SET holdout_read_at = ? WHERE id = ?", (_now(), hid))
             self._event(c, hid, "holdout_read", {})
+
+    def consume_sealed_holdout(self, hid: str, symbol: str) -> None:
+        """Persistently consume one sealed symbol after the dev gate passed."""
+        if not isinstance(symbol, str) or not symbol:
+            raise LedgerError("sealed holdout symbol must be a non-empty string")
+        h = self.get(hid)
+        if h["status"] != "backtest_passed":
+            raise LedgerError("sealed holdout can only be read after the dev backtest passed")
+        try:
+            with self._conn() as c:
+                c.execute(
+                    "INSERT INTO sealed_holdout_consumptions (hypothesis_id, symbol, consumed_at) VALUES (?,?,?)",
+                    (hid, symbol, _now()),
+                )
+                self._event(c, hid, "sealed_holdout_read", {"symbol": symbol})
+        except sqlite3.IntegrityError as exc:
+            raise LedgerError(f"sealed holdout already read for ({hid}, {symbol}): one shot per hypothesis and symbol") from exc
 
     # ---- trials -----------------------------------------------------------
     def n_trials(self, family: str, sample: str = "dev") -> int:

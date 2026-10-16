@@ -22,7 +22,12 @@ def _slug(symbol: str) -> str:
 
 
 def dataset_path(kind: str, exchange: str, symbol: str, timeframe: str) -> Path:
-    return paths.path("data", kind, exchange, _slug(symbol), f"{timeframe}.parquet")
+    path = paths.path("data", kind, exchange, _slug(symbol), f"{timeframe}.parquet")
+    sealed_root = paths.path("data", "sealed").resolve(strict=False)
+    resolved = path.resolve(strict=False)
+    if resolved == sealed_root or sealed_root in resolved.parents:
+        raise ValueError("sealed holdout paths are inaccessible to the generic data store")
+    return path
 
 
 def content_hash(df: pd.DataFrame) -> str:

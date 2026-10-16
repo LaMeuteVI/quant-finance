@@ -7,13 +7,24 @@
 
 ## 1. The brief
 
-> "Coupure stricte : aucune donnée postérieure au 2024-07-01 en exploration; seules les hypothèses autorisées peuvent utiliser ces données en holdout. Un holdout ne se consulte qu'une fois."
+The original convention window is contaminated: prior research had already used
+it. Q1 replaces it with a true sealed holdout whose strict boundary is
+`2024-07-01T00:00:00Z`.
 
-> "Demande mon accord avant holdout, paper trading, action irréversible, arbitrage de priorité ou chantier substantiel."
+- Exploration reads remain exclusively in `data/r2/` and reject any timestamp
+  at or after the boundary.
+- Post-cutoff imports live only in `data/sealed/market/spot/klines_1m/`.
+- Each sealed manifest records only `source`, `key`, SHA-256, byte size, row
+  count, first/last timestamp, and timestamp unit. It intentionally contains
+  no market record values, calculated returns, statistics, or import timestamp.
+- `read_holdout()` requires an explicit ledger and persists a one-shot
+  `(hypothesis_id, symbol)` consumption record atomically in SQLite. A fresh
+  process cannot consume the same pair again.
 
-A "holdout" here means: a contiguous, sealed, never-touched time window that a preregistered hypothesis may read **exactly once** to confirm or kill the dev result. It must be a true out-of-sample test, not a re-use of the exploration sample.
+No actual sealed data was opened, analysed, printed, or plotted while making
+this change; the tests create synthetic Parquet fixtures only.
 
-## 2. What we have on disk
+## 2. Prior audit and the retired convention
 
 Audit of `data/r2/market/spot/klines_1m/` (2026-10-15):
 
@@ -43,69 +54,41 @@ These 8 studies (axes 1-7 + N1-alt panel) have used the **entire 2017-08 → 202
 
 **There is no untouched window inside the local data store.**
 
-## 4. The options
+## 4. Resolution and implementation evidence
 
-### Option A — Convention holdout on the last 3 months of the in-store window
+The `2024-04-01 → 2024-06-30` convention is contaminated validation data, not a
+holdout. It remains pre-cutoff and may be read by exploration. Q1 adopts the
+post-cutoff boundary and isolation model without running an import.
 
-- **Window**: `2024-04-01 → 2024-06-30` (3 months, 12 symbols).
-- **Status**: read by 8 studies already; we declare it "holdout" by convention and **forbid any future exploratory code from reading it** until a hypothesis is registered.
-- **Pros**: zero cost, immediate. We can register this convention in code (`HOLDOUT_START = pd.Timestamp("2024-04-01", tz="UTC")`) and have a guard that raises if exploration code touches it.
-- **Cons**: **the dev sample is contaminated**. The dev hypotheses that would read this holdout have been informed by descriptive statistics on the same dates (vol regimes, mean returns, correlation structure). The contamination is **statistical**, not just procedural: a 0.65 Sharpe at dev that survives on 0.62 at holdout may be the same number within noise, or it may be a leak. We would need to be very explicit about this in any report that uses the result.
-- **Risk for live**: a contaminated holdout under-prices live decay. We would still need a fresh 28-day paper before any live decision.
+Focused tests use synthetic Parquet only and verify:
 
-### Option B — Acquire post-2024-07-01 data and seal a true holdout
+1. an exploration-oriented path guard rejects `data/sealed/`;
+2. a pre-cutoff partition is refused by the sealed importer before remote I/O;
+3. a sealed import writes only the approved metadata manifest schema and the
+   metadata validates against the synthetic Parquet file;
+4. `read_holdout()` requires the ledger gate and returns post-cutoff data only;
+5. after a first sealed read, a separate Python process is refused for the same
+   `(hypothesis_id, symbol)` pair.
 
-- **Window**: any contiguous range, e.g. 2024-07-01 → 2024-12-31 (6 months) or 2025-01-01 → 2025-06-30 (6 months).
-- **Status**: truly untouched in our local store.
-- **Pros**: a real holdout. The whole point of the brief.
-- **Cons**:
-  - **Cost**: Tardis / Kaiko / Databento / CoinAPI monthly subscription. Budget decision for Samuel.
-  - **New cutoff seal**: we would re-define `EXPLORATION_CUTOFF` and `HOLDOUT_START` to a new value. This is a config change with risk if any other code still depends on the old 2024-07-01 cutoff (it does — the `read_local` raises on `>= 2024-07-01`).
-  - **Latency**: download, manifest re-build, audit re-run, tests re-run. Days to weeks.
-  - **Re-calibration**: any prior family trial count for the Deflated Sharpe Ratio may need a re-think (the dev/holdout boundary is part of the family definition).
-- This is **item 15 of the existing BACKLOG**. It has been waiting for a budget OK.
+The importer was not invoked against R2, Binance Vision, credentials, or any
+market-data file by Q1. Population of the sealed store requires a later,
+separately authorised import run.
 
-### Option C — No holdout; only walk-forward + purged k-fold + DSR
+## 5. Historical record (superseded)
 
-- **What it means**: rely on time-series CV and DSR/PBO without a sealed holdout.
-- **Cons**: explicitly violates the brief ("Un holdout ne se consulte qu'une fois" implies one exists).
+The following decision language is retained solely as an audit record of the
+superseded convention design.
 
-### Option D — Hybrid: keep Option A as a *convention* until Option B lands
+### Former option A
 
-- We ship Option A today (convention holdout, contamination noted), in parallel we plan Option B (data acquisition).
-- The convention holdout can be **replaced** by the real one when the data arrives. Any hypothesis read on the convention holdout must be re-read on the real one. That re-read is **not** an additional holdout read — it is a correction of the original.
+`2024-04-01 → 2024-06-30` was a three-month convention window, but it had
+already been used by prior research and therefore could not provide independent
+evidence.
 
-## 5. Recommendation
+### Former option B
 
-**Option D**, with a clear-eyed note that Option A is a *convention*, not a *true* holdout. This is the only way to make forward progress without waiting for a budget decision, and it preserves the option of a real holdout later.
-
-**But** — per the brief — Samuel's explicit agreement is required before this is written into the code. This is exactly the "holdout / irreversible / substantial change" gate.
-
-## 6. What I would do if Samuel approves Option D
-
-- Add `HOLDOUT_START = pd.Timestamp("2024-04-01", tz="UTC")` in `r2_klines.py` next to `CUTOFF`.
-- Add a `read_holdout(symbol)` API that returns only `index >= HOLDOUT_START` and `index < CUTOFF`, with a global "holdout has been read" flag (single-shot).
-- Add a `holdout_consumed` check in `read_local` so exploration code raises if it accidentally reads into the holdout window.
-- Add tests:
-  - `read_local` raises on `index >= HOLDOUT_START` for any non-holdout caller.
-  - `read_holdout` succeeds once, raises on second call.
-  - The holdout window is exactly `2024-04-01 → 2024-06-30` for all 12 spot symbols.
-- Add `research/notes/2026-10-15-holdout-seal.md` documenting the contamination caveat.
-- Update `BACKLOG.md` to mark item A done (with the caveat).
-- Update `Status.md` § 3 "where we are by goal".
-
-Nothing in `risk/`, `execution/`, `config/risk_limits.yaml`, or `policies/` would be touched.
-
-## 7. What I will NOT do without explicit OK
-
-- Define a `HOLDOUT_START` value in code.
-- Touch the `CUTOFF = 2024-07-01` value.
-- Add a `read_holdout` API.
-- Add the contamination-warning note as if it were the final word.
-
-## 8. What I need from Samuel
-
-A short message: **A, B, C, or D** (A, B, C = the option as described; D = the hybrid with explicit contamination acknowledgement). If D, I proceed with the § 6 plan. If anything else, I want to know before writing code.
+Acquire post-2024-07-01 data and seal it as the true holdout. Q1 implements the
+storage and access controls for this option; it does not acquire or inspect data.
 
 ---
 

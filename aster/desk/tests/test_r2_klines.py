@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 
 import pandas as pd
 import pyarrow as pa
+import aster.data.r2_klines as r2_klines
 import pyarrow.fs as pafs
 import pyarrow.parquet as pq
 import pytest
@@ -11,7 +15,6 @@ import pytest
 from aster.data.r2_klines import (
     CANONICAL_COLUMNS,
     CUTOFF,
-    HOLDOUT_START,
     PREFIX,
     RAW_COLUMNS,
     RemoteObject,
@@ -24,6 +27,9 @@ from aster.data.r2_klines import (
     reset_holdout_consumption,
     transfer,
 )
+
+
+SEALED_PREFIX = "market/spot/klines_1m"
 
 
 class FakeFileSystem:
@@ -178,110 +184,150 @@ def test_audit_local_rejects_schema_divergence(isolated_desk):
 
 
 # ---------------------------------------------------------------------------
-# Convention holdout tests (cf. research/notes/2026-10-15-holdout-audit.md)
+# Convention window: no longer a holdout. True holdout data is post-cutoff.
 # ---------------------------------------------------------------------------
 
 
-def test_holdout_constants_are_well_defined():
-    # The holdout is a strict prefix of the cutoff window.  Both are
-    # timezone-aware UTC.  The holdout is a 3-month convention window:
-    # 2024-04-01 -> 2024-06-30.
-    assert HOLDOUT_START.tz is not None
-    assert HOLDOUT_START < CUTOFF
-    assert (CUTOFF - HOLDOUT_START) == pd.Timedelta(days=91)
-    assert HOLDOUT_START == pd.Timestamp("2024-04-01", tz="UTC")
+def test_cutoff_is_timezone_aware_and_fixed():
+    assert CUTOFF.tz is not None
     assert CUTOFF == pd.Timestamp("2024-07-01", tz="UTC")
 
 
-def test_read_local_rejects_holdout_window(isolated_desk):
-    # Exploration code that tries to read a row inside the convention
-    # holdout window must fail.  The new guard is independent of the
-    # post-cutoff guard and uses a different error message.
+def test_read_local_allows_contaminated_pre_cutoff_validation_window(isolated_desk):
     _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
-
-    with pytest.raises(ValueError, match="convention holdout start"):
-        read_local("BTCUSDT")
-
-
-def test_read_local_allows_pre_holdout_data(isolated_desk):
-    # The default helper timestamp is 2024-03-31, which is before HOLDOUT_START.
-    # Exploration reads must continue to work for any data that lies strictly
-    # before HOLDOUT_START.
-    _local_partition(isolated_desk)
 
     frame = read_local("BTCUSDT")
 
-    assert frame.index.max() < HOLDOUT_START
-
-
-def test_read_holdout_returns_only_holdout_window(isolated_desk):
-    # The convention holdout is exactly [HOLDOUT_START, CUTOFF).
-    # We populate the partition with one row in the holdout window and
-    # one row outside, and assert that only the in-window row comes back.
-    reset_holdout_consumption()
-    _local_partition(
-        isolated_desk,
-        timestamps=[
-            pd.Timestamp("2024-03-31 23:59:00", tz="UTC"),
-            pd.Timestamp("2024-05-15 12:00:00", tz="UTC"),
-            pd.Timestamp("2024-06-30 23:59:00", tz="UTC"),
-        ],
-    )
-
-    frame = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-001")
-
-    assert frame.index.min() >= HOLDOUT_START
     assert frame.index.max() < CUTOFF
-    assert len(frame) == 2  # 2024-05-15 and 2024-06-30 only
 
 
-def test_read_holdout_is_single_shot(isolated_desk):
-    # "Un holdout ne se consulte qu'une fois": a second read for the same
-    # (hypothesis_id, symbol) pair must raise.  This is the in-process
-    # enforcement.  A different hypothesis_id for the same symbol must work.
-    reset_holdout_consumption()
-    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
-
-    first = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-002")
-    assert len(first) == 1
-
-    with pytest.raises(RuntimeError, match="Holdout already consumed"):
-        read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-002")
-
-    # A different hypothesis_id is allowed: the contamination is on the
-    # (hypothesis, symbol) pair, not on the symbol alone.
-    second = read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-003")
-    assert len(second) == 1
+# ---------------------------------------------------------------------------
+# True sealed post-cutoff holdout tests.  These use only synthetic Parquet.
+# ---------------------------------------------------------------------------
 
 
-def test_read_holdout_requires_hypothesis_id(isolated_desk):
-    # No anonymous reads.  Empty or None hypothesis_id is refused.
-    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+def test_exploration_readers_reject_paths_under_the_sealed_store(isolated_desk):
+    sealed_path = isolated_desk / "data" / "sealed" / SEALED_PREFIX / "symbol=BTCUSDT" / "year=2024" / "month=07" / "part.parquet"
 
-    with pytest.raises(ValueError, match="hypothesis_id must be a non-empty string"):
-        read_holdout("BTCUSDT", hypothesis_id="")
-
-    with pytest.raises(ValueError, match="hypothesis_id must be a non-empty string"):
-        read_holdout("BTCUSDT", hypothesis_id=None)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="sealed"):
+        r2_klines.reject_sealed_path(sealed_path)
 
 
-def test_read_holdout_raises_when_window_empty(isolated_desk):
-    # If a partition exists but has no rows in [HOLDOUT_START, CUTOFF),
-    # read_holdout must raise.  This protects against silent empty
-    # confirmations that would let a hypothesis "pass" on zero trades.
-    reset_holdout_consumption()
-    _local_partition(isolated_desk, timestamps=[pd.Timestamp("2024-03-31 23:59:00", tz="UTC")])
+def test_local_partition_discovery_rejects_r2_symlink_into_sealed_store(isolated_desk):
+    data_root = isolated_desk / "data"
+    sealed_root = data_root / "sealed"
+    (sealed_root / SEALED_PREFIX).mkdir(parents=True)
+    (data_root / "r2").symlink_to(sealed_root, target_is_directory=True)
 
-    with pytest.raises(FileNotFoundError, match="no rows in the holdout window"):
-        read_holdout("BTCUSDT", hypothesis_id="H-20261015-TEST-004")
+    with pytest.raises(ValueError, match="sealed"):
+        r2_klines._local_partitions(("BTCUSDT",))
 
 
-def test_read_holdout_rejects_unapproved_symbol(isolated_desk):
-    # Same approval gate as read_local: an unknown symbol cannot read the
-    # holdout either.  This prevents the holdout API from being a backdoor
-    # to bypass the symbol allowlist.
-    reset_holdout_consumption()
-    _local_partition(isolated_desk, symbol="BTCUSDT", timestamps=[pd.Timestamp("2024-05-15 12:00:00", tz="UTC")])
+def test_sealed_transfer_rejects_a_pre_cutoff_partition_without_remote_read(isolated_desk):
+    key = "market/spot/klines_1m/symbol=BTCUSDT/year=2024/month=06/part-0.parquet"
 
-    with pytest.raises(ValueError, match="symbols outside the approved pre-cutoff inventory"):
-        read_holdout("FAKEUSDT", hypothesis_id="H-20261015-TEST-005")
+    with pytest.raises(ValueError, match="sealed holdout"):
+        r2_klines.transfer_sealed(object(), [RemoteObject(key, 0)])
+
+
+def test_sealed_transfer_preserves_partial_market_data_when_validation_fails(isolated_desk):
+    source_bytes = b"synthetic-invalid-parquet-fixture"
+    key = "market/spot/klines_1m/symbol=BTCUSDT/year=2024/month=07/part-0.parquet"
+
+    class SourceFileSystem:
+        def open_input_file(self, remote_path):
+            assert remote_path == f"cryptos/{key}"
+            import io
+            return io.BytesIO(source_bytes)
+
+    with pytest.raises(Exception):
+        r2_klines.transfer_sealed(SourceFileSystem(), [RemoteObject(key, len(source_bytes))])
+
+    destination = isolated_desk / "data" / "sealed" / key
+    partial = destination.with_suffix(destination.suffix + ".partial")
+    assert partial.read_bytes() == source_bytes
+
+
+def test_sealed_manifest_contains_only_metadata_and_validates_synthetic_partition(isolated_desk):
+    source = isolated_desk / "source.parquet"
+    timestamp = pd.Timestamp("2024-07-01", tz="UTC")
+    table = pa.table({
+        "open_time_ms": pa.array([timestamp.value // 1_000_000]),
+        "open_time_utc": pa.array([timestamp]),
+        "close_time_ms": pa.array([timestamp.value // 1_000_000 + 59_999]),
+        "open": pa.array([1.0]), "high": pa.array([1.0]), "low": pa.array([1.0]),
+        "close": pa.array([1.0]), "volume": pa.array([1.0]), "quote_volume": pa.array([1.0]),
+        "trades": pa.array([1]), "taker_buy_base": pa.array([1.0]), "taker_buy_quote": pa.array([1.0]),
+    })
+    pq.write_table(table, source)
+    key = "market/spot/klines_1m/symbol=BTCUSDT/year=2024/month=07/part-0.parquet"
+
+    class SourceFileSystem:
+        def open_input_file(self, remote_path):
+            assert remote_path == f"cryptos/{key}"
+            return source.open("rb")
+
+    results = r2_klines.transfer_sealed(SourceFileSystem(), [RemoteObject(key, source.stat().st_size)])
+    destination = isolated_desk / "data" / "sealed" / key
+    manifest = json.loads(destination.with_suffix(".parquet.manifest.json").read_text())
+
+    assert results == [{"key": key, "destination": str(destination.relative_to(isolated_desk))}]
+    assert set(manifest) == {"source", "key", "size_bytes", "sha256", "rows", "start", "end", "timestamp_unit"}
+    assert manifest["key"] == key
+    assert all("open" not in field and "close" not in field for field in manifest)
+    r2_klines.audit_sealed(("BTCUSDT",))
+
+
+def test_read_holdout_requires_a_ledger_gate(isolated_desk):
+    with pytest.raises(TypeError, match="ledger"):
+        read_holdout("BTCUSDT", hypothesis_id="H-20261016-TEST-001")  # type: ignore[call-arg]
+
+
+def test_read_holdout_reads_only_sealed_data_once_across_processes(isolated_desk):
+    from aster.ledger.db import Ledger
+
+    source = isolated_desk / "source.parquet"
+    timestamp = pd.Timestamp("2024-07-01", tz="UTC")
+    table = pa.table({
+        "open_time_ms": pa.array([timestamp.value // 1_000_000]),
+        "open_time_utc": pa.array([timestamp]),
+        "close_time_ms": pa.array([timestamp.value // 1_000_000 + 59_999]),
+        "open": pa.array([1.0]), "high": pa.array([1.0]), "low": pa.array([1.0]),
+        "close": pa.array([1.0]), "volume": pa.array([1.0]), "quote_volume": pa.array([1.0]),
+        "trades": pa.array([1]), "taker_buy_base": pa.array([1.0]), "taker_buy_quote": pa.array([1.0]),
+    })
+    pq.write_table(table, source)
+    key = "market/spot/klines_1m/symbol=BTCUSDT/year=2024/month=07/part-0.parquet"
+
+    class SourceFileSystem:
+        def open_input_file(self, remote_path):
+            assert remote_path == f"cryptos/{key}"
+            return source.open("rb")
+
+    r2_klines.transfer_sealed(SourceFileSystem(), [RemoteObject(key, source.stat().st_size)])
+    ledger = Ledger()
+    hypothesis_id = ledger.register(
+        "Synthetic sealed test", "A synthetic test verifies durable single-shot gating.",
+        "A test-only fixture verifies ledger persistence.",
+        "Rejected if the persisted gate permits a second read.",
+        {"sharpe_ann_min": 0.8}, "test", "crypto-spot", "test",
+    )
+    with ledger._conn() as conn:
+        conn.execute("UPDATE hypotheses SET status = 'backtest_passed' WHERE id = ?", (hypothesis_id,))
+
+    frame = read_holdout("BTCUSDT", hypothesis_id=hypothesis_id, ledger=ledger)
+    assert (frame.index >= CUTOFF).all()
+    code = (
+        "from aster.data.r2_klines import read_holdout; "
+        "from aster.ledger.db import Ledger, LedgerError; "
+        "import sys; "
+        f"\ntry:\n read_holdout('BTCUSDT', hypothesis_id={hypothesis_id!r}, ledger=Ledger())\n"
+        "except LedgerError:\n sys.exit(0)\n"
+        "sys.exit(1)"
+    )
+    env = {**os.environ, "ASTER_DESK": str(isolated_desk)}
+    completed = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
+
+    assert completed.returncode == 0
+    assert completed.stdout == ""
+    assert completed.stderr == ""
