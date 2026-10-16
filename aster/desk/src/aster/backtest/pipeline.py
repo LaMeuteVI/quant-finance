@@ -36,19 +36,26 @@ def _gates(cfg: dict, prediction: dict) -> dict:
 
 
 def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
-             funding: pd.DataFrame | None, start: pd.Timestamp | None = None) -> dict:
-    """Base + stress backtests, restricted to bars >= start (holdout) when given."""
+             funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None) -> dict:
+    """Base + stress backtests, restricted to bars >= start (holdout) when given.
+
+    ``perp_legs`` follows the engine contract (None, ``"all"`` or iterable).
+    P2 wires it from the preregistration so that funding only hits the perp
+    columns of a delta-neutral book; the legacy default ``None`` is the safe
+    one for spot-only strategies that previously charged funding on every
+    weight by accident.
+    """
     def cut(s):
         return s if start is None else s[s.index >= start]
 
-    base = run_backtest(prices, weights, costs, lag=1, funding=funding)
+    base = run_backtest(prices, weights, costs, lag=1, funding=funding, perp_legs=perp_legs)
     stress = {
-        "costs_x2": run_backtest(prices, weights, costs.scaled(2), lag=1, funding=funding),
-        "costs_x3": run_backtest(prices, weights, costs.scaled(3), lag=1, funding=funding),
-        "lag_2": run_backtest(prices, weights, costs, lag=2, funding=funding),
+        "costs_x2": run_backtest(prices, weights, costs.scaled(2), lag=1, funding=funding, perp_legs=perp_legs),
+        "costs_x3": run_backtest(prices, weights, costs.scaled(3), lag=1, funding=funding, perp_legs=perp_legs),
+        "lag_2": run_backtest(prices, weights, costs, lag=2, funding=funding, perp_legs=perp_legs),
     }
     r = cut(base.returns)
-    window = {"1d": 30, "4h": 180, "1h": 720}.get(timeframe, 30)
+    window = {"1d": 30, "4h": 180, "1h": 720, "15m": 720, "5m": 720}.get(timeframe, 30)
     return {
         "base": summary(r, timeframe, cut(base.turnover)),
         "stress": {k: summary(cut(v.returns), timeframe) for k, v in stress.items()},
@@ -69,7 +76,19 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     if not ledger.verify_prereg(hypothesis_id):
         raise LedgerError("pre-registration hash mismatch: the hypothesis was tampered with")
 
-    timeframe = cfg["timeframe"]
+    # ---- P2: timeframe + universe + perp_legs come from the prereg first ----
+    # The legacy config-level timeframe and universe stay as the fallback so
+    # the original daily strategies keep working. A prereg may TIGHTEN the
+    # universe (or move to a different horizon) but never silently widen.
+    pred = hyp.get("prediction", {}) or {}
+    timeframe = pred.get("timeframe") or cfg["timeframe"]
+    if timeframe not in {"1d", "4h", "1h", "15m", "5m"}:
+        raise ValueError(
+            f"pre-registered timeframe {timeframe!r} is not supported by the bar bridge"
+        )
+    perp_legs = pred.get("perp_legs", None)  # None, "all" or iterable of symbols
+    universe = pred.get("universe") or cfg["universe"]
+
     strat = get_strategy(strategy)(timeframe=timeframe, **params)
     ledger.check_revision_budget(hypothesis_id, strat.version)
 
@@ -79,14 +98,17 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     # ---- data ---------------------------------------------------------------
     quality = {}
     if prices is None:
-        symbols = cfg["universe"]
+        symbols = list(universe)
         for s in symbols:
             rep = check_ohlcv(store.read("ohlcv", cfg["exchange"], s, timeframe), timeframe)
             quality[s] = {"errors": rep.errors, "warnings": rep.warnings}
             if not rep.ok:
                 raise ValueError(f"data quality errors for {s}: {rep.errors}")
         prices = store.load_closes(cfg["exchange"], symbols, timeframe)
-        funding = store.load_funding(cfg["exchange"], symbols, timeframe)
+        if perp_legs:
+            # Funding panel for perp symbols. Reindexed to the weight frame
+            # columns by the engine; the store loader keeps the union.
+            funding = store.load_funding(cfg["exchange"], symbols, timeframe)
 
     holdout_start = sealed_split(prices.index, cfg.get("holdout_frac", 0.25))
     if hyp["holdout_start"]:
@@ -108,7 +130,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     weights = strat.target_weights(px)
 
     costs = CostModel(**cfg.get("costs", {}))
-    ev = evaluate(px, weights, costs, timeframe, funding, start)
+    ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start)
     base = ev["base"]
     returns = ev.pop("_returns")
 

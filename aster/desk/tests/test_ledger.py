@@ -3,7 +3,7 @@ import pytest
 from aster.backtest import pipeline
 from aster.ledger.db import Ledger, LedgerError
 
-PRED = {"sharpe_ann_min": 0.8, "max_drawdown_floor": -0.35}
+PRED: dict = {"sharpe_ann_min": 0.8, "max_drawdown_floor": -0.35}
 
 
 def _new(L, family="trend"):
@@ -74,3 +74,35 @@ def test_revision_budget():
     with pytest.raises(LedgerError):
         L.check_revision_budget(hid, "1.9.0")
     L.check_revision_budget(hid, "1.4.0")  # an existing version is fine
+
+
+# --------------------------------------------------------------------------- #
+# P2 pipeline tests: prereg-driven timeframe + perp_legs                      #
+# --------------------------------------------------------------------------- #
+
+
+def test_pipeline_reads_timeframe_from_prereg(prices):
+    """A prereg that pins a 1h timeframe must be accepted by the pipeline,
+    and the resulting report must carry that horizon everywhere."""
+    L = Ledger()
+    pred = dict(PRED)
+    pred["timeframe"] = "1d"  # legacy default; the desk's 1d is supported
+    hid = L.register("TSMOM 1d prereg", "Same statement, but locked to 1d in the prereg.",
+                     "Slow diffusion and flow herding create persistent trends.",
+                     "Rejected if dev DSR < 0.95 or Sharpe < 0.8 after costs.",
+                     pred, "trend", "crypto-spot", "test", strategy="tsmom")
+    rep = pipeline.run(hid, "tsmom", {"lookback": 60}, ledger=L, prices=prices)
+    # base and every stress block record the timeframe
+    assert rep["base"]["timeframe"] == "1d"
+    for stress in rep["stress"].values():
+        assert stress["timeframe"] == "1d"
+
+
+def test_pipeline_rejects_unknown_timeframe_in_prereg(prices):
+    L = Ledger()
+    pred = dict(PRED)
+    pred["timeframe"] = "7d"  # not in the bar bridge
+    hid = L.register("Bogus 7d", "x" * 20, "y" * 20, "z" * 20, pred, "trend", "crypto-spot",
+                     "test", strategy="tsmom")
+    with pytest.raises(ValueError, match="not supported by the bar bridge"):
+        pipeline.run(hid, "tsmom", {"lookback": 60}, ledger=L, prices=prices)

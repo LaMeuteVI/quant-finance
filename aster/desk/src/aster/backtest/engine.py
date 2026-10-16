@@ -7,15 +7,45 @@ Timing convention (the only one the desk uses):
 
 Costs are charged on drift-aware turnover: before rebalancing, yesterday's
 weights have drifted with prices, and only the gap to the new target trades.
-Funding (perps): a positive rate means longs pay shorts, per bar held.
-"""
 
+Funding (perps only): a positive rate means longs pay shorts, per bar held.
+P2 added the ``perp_legs`` discriminator: funding is now applied only to
+columns marked as perp, never to spot columns. A delta-neutral pair
+(spot long + perp short on the same underlying) therefore charges funding
+on the perp leg only, which is the economic reality.
+"""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+
+
+def _normalise_perp_legs(perp_legs, columns: pd.Index) -> tuple[str, ...]:
+    """Validate and freeze the perp-leg set against the weight frame columns.
+
+    ``perp_legs`` may be ``None`` (no perp leg at all, every column treated as
+    spot), an explicit iterable of symbols, or the sentinel ``"all"`` (every
+    column treated as a perp; legacy behaviour for tests that don't care).
+    Spot symbols are never in the funding column sum.
+    """
+    if perp_legs is None:
+        return ()
+    if perp_legs == "all":
+        return tuple(columns)
+    if isinstance(perp_legs, str):
+        raise ValueError(
+            f"perp_legs must be None, 'all', or an iterable of symbols; got {perp_legs!r}"
+        )
+    perp_set: tuple[str, ...] = tuple(perp_legs)
+    unknown = [s for s in perp_set if s not in columns]
+    if unknown:
+        raise ValueError(
+            f"perp_legs contains symbols not in the weight frame: {sorted(unknown)}"
+        )
+    return perp_set
 
 
 @dataclass
@@ -47,12 +77,43 @@ class BacktestResult:
 
 
 def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel | None = None,
-                 lag: int = 1, funding: pd.DataFrame | None = None) -> BacktestResult:
+                 lag: int = 1, funding: pd.DataFrame | None = None,
+                 perp_legs: str | Iterable[str] | None = None) -> BacktestResult:
+    """Run a target-weight backtest with explicit lag, costs and (perp-only) funding.
+
+    Parameters
+    ----------
+    prices : DataFrame
+        Wide price panel (UTC index x symbols). Symbols missing from
+        ``weights`` are ignored; symbols missing from ``prices`` cannot
+        earn any return, only funding.
+    weights : DataFrame
+        Target weights. A positive value is a long, a negative value is
+        a short, columns are per-leg (spot leg and perp leg carry
+        distinct symbols).
+    costs : CostModel, optional
+        Costs per side. Default is 10 + 5 bps.
+    lag : int, default 1
+        Number of bars between signal and execution. Must be >= 1.
+    funding : DataFrame, optional
+        Funding-rate panel. The per-bar dollar charge on a column ``c`` is
+        ``held[c] * funding[c]`` **only if** ``c`` is in ``perp_legs``;
+        spot columns never pay funding.
+    perp_legs : None, ``"all"`` or iterable of symbols
+        Which columns of ``weights`` are perp legs and therefore pay
+        funding. ``None`` (default) means no perp leg at all — the
+        delta-neutral contract of P2. ``"all"`` is the legacy behaviour,
+        kept for back-compat in tests. The intersection of ``perp_legs``
+        with ``weights.columns`` is used; symbols listed in
+        ``perp_legs`` but missing from ``weights`` raise ``ValueError``.
+    """
     if lag < 1:
         raise ValueError("lag must be >= 1: a signal cannot trade on the bar that produced it")
     costs = costs or CostModel()
     prices = prices.sort_index()
     weights = weights.reindex(index=prices.index, columns=prices.columns).fillna(0.0)
+
+    perp_set = set(_normalise_perp_legs(perp_legs, weights.columns))
 
     rets = prices.pct_change(fill_method=None)
     tradable = prices.notna() & prices.shift(1).notna()
@@ -68,12 +129,23 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel |
     cost = turnover * costs.total_bps / 1e4
 
     fund = pd.Series(0.0, index=prices.index)
-    if funding is not None:
-        f = funding.reindex(index=prices.index, columns=prices.columns).fillna(0.0)
-        fund = (held * f).sum(axis=1)
+    if funding is not None and perp_set:
+        f = funding.reindex(index=prices.index, columns=weights.columns).fillna(0.0)
+        # Only perp legs pay funding. Spot columns are zeroed out so the
+        # held*funding sum cannot be polluted by a spot leg with a
+        # forward-filled funding cell.
+        perp_panel = f.copy()
+        for col in f.columns:
+            if col not in perp_set:
+                perp_panel[col] = 0.0
+        fund = (held * perp_panel).sum(axis=1)
+    # else: no perp leg in this book, funding is informational only and
+    # is NOT subtracted from gross. (Legacy tests with perp_legs='all'
+    # still apply funding to every column.)
 
     net = gross - cost - fund
     return BacktestResult(
         returns=net, gross_returns=gross, costs=cost, funding=fund, held=held, turnover=turnover,
-        meta={"lag": lag, "fee_bps": costs.fee_bps, "slippage_bps": costs.slippage_bps},
+        meta={"lag": lag, "fee_bps": costs.fee_bps, "slippage_bps": costs.slippage_bps,
+              "perp_legs": sorted(perp_set)},
     )

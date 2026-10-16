@@ -21,7 +21,8 @@ def summary(returns: pd.Series, timeframe: str = "1d", turnover: pd.Series | Non
     ppy = PERIODS_PER_YEAR[timeframe]
     n = len(r)
     if n < 2 or r.std(ddof=1) == 0:
-        return {"n_obs": n, "error": "not enough variation to compute statistics"}
+        return {"n_obs": n, "timeframe": timeframe,
+                "error": "not enough variation to compute statistics"}
     mu, sd = r.mean(), r.std(ddof=1)
     sr_pp = mu / sd
     downside = r[r < 0].std(ddof=1)
@@ -31,6 +32,7 @@ def summary(returns: pd.Series, timeframe: str = "1d", turnover: pd.Series | Non
     mdd = max_drawdown(r)
     out = {
         "n_obs": n,
+        "timeframe": timeframe,
         "years": round(years, 3),
         "total_return": total,
         "cagr": cagr,

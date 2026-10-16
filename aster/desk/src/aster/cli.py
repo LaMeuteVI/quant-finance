@@ -111,6 +111,119 @@ def cmd_data_check_r2(a) -> None:
     _print(audit_local(symbols, verify_sha256=a.sha256))
 
 
+def cmd_data_check_stores(a) -> None:
+    """Audit every store the desk reads from: R2 spot 1m, sealed holdout, funding, aggTrades.
+
+    P2 added this command because the legacy `cmd_data_check` only looked at
+    the absent ``data/ohlcv`` daily store. A hypothesis preregistration may
+    ask for any timeframe (5m/15m/1h/4h/1d) and any perp leg; the check
+    must report which (symbol, timeframe) pairs the bar bridge has built,
+    which R2 spot 1m partitions exist, which funding rates are imported
+    and which sealed holdout partitions are present, so the prereg can be
+    declared ready without re-touching the data layer.
+    """
+    from aster.data import r2_klines, funding_rate, aggtrades
+
+    r2_symbols = tuple(a.symbols.split(",")) if a.symbols else r2_klines.SYMBOLS
+    perp_symbols = ("BTCUSDT", "ETHUSDT", "SOLUSDT", "AAVEUSDT", "DOGEUSDT",
+                    "SUIUSDT", "XRPUSDT", "BNBUSDT", "LINKUSDT", "NEARUSDT",
+                    "XMRUSDT", "FETUSDT")
+    agg_symbols = ("BTCUSDT", "ETHUSDT")
+
+    r2_summary: dict = {"requested": list(r2_symbols)}
+    try:
+        r2_audit = r2_klines.audit_local(r2_symbols, verify_sha256=False)
+        r2_summary.update({
+            "ok": r2_audit.get("ok"),
+            "partitions": r2_audit.get("partitions"),
+            "rows": r2_audit.get("rows"),
+            "bytes": r2_audit.get("bytes"),
+            "symbols_found": r2_audit.get("symbols"),
+            "missing": sorted(set(r2_symbols) - set(r2_audit.get("symbols", []))),
+        })
+    except FileNotFoundError as e:
+        r2_summary["ok"] = False
+        r2_summary["error"] = str(e)
+
+    try:
+        funding_audit = funding_rate.audit_local(perp_symbols, verify_sha256=False)
+        funding_summary = {
+            "ok": funding_audit.get("ok"),
+            "partitions": funding_audit.get("partitions"),
+            "rows": funding_audit.get("rows"),
+            "symbols_found": funding_audit.get("symbols"),
+            "missing": sorted(set(perp_symbols) - set(funding_audit.get("symbols", []))),
+        }
+    except FileNotFoundError as e:
+        funding_summary = {"ok": False, "error": str(e)}
+
+    try:
+        agg_audit = aggtrades.audit_local(agg_symbols, verify_sha256=False)
+        agg_summary = {
+            "ok": agg_audit.get("ok"),
+            "partitions": agg_audit.get("partitions"),
+            "rows": agg_audit.get("rows"),
+            "symbols_found": agg_audit.get("symbols"),
+            "missing": sorted(set(agg_symbols) - set(agg_audit.get("symbols", []))),
+        }
+    except FileNotFoundError as e:
+        agg_summary = {"ok": False, "error": str(e)}
+
+    # Sealed holdout is checked separately; reading its content crosses the
+    # holdout boundary, so we only report its presence here.
+    from aster import paths
+    sealed_root = paths.path("data", "sealed")
+    sealed_summary = {
+        "path": str(sealed_root),
+        "exists": sealed_root.is_dir(),
+    }
+    if sealed_summary["exists"]:
+        sealed_files = list(sealed_root.rglob("*.parquet"))
+        sealed_summary["partitions"] = len(sealed_files)
+        sealed_summary["bytes"] = sum(p.stat().st_size for p in sealed_files)
+
+    # Bar bridge state: which (symbol, timeframe) parquets the bridge wrote.
+    from aster.data import store
+    cfg = paths.load_config("desk")
+    bar_bridge: dict = {}
+    ohlcv_root = paths.path("data", "ohlcv", cfg["exchange"])
+    if ohlcv_root.is_dir():
+        for sym_dir in sorted(ohlcv_root.iterdir()):
+            if not sym_dir.is_dir():
+                continue
+            symbol = sym_dir.name.replace("-", "/")
+            for tf_path in sorted(sym_dir.glob("*.parquet")):
+                tf = tf_path.stem
+                bar_bridge.setdefault(symbol, {})[tf] = {
+                    "rows": int(pd.read_parquet(tf_path).shape[0]),
+                    "manifest": str(tf_path.with_suffix(".manifest.json")),
+                }
+
+    _print({
+        "r2_spot_1m": r2_summary,
+        "funding_rate": funding_summary,
+        "aggtrades": agg_summary,
+        "sealed_holdout": sealed_summary,
+        "bar_bridge": bar_bridge,
+    })
+
+
+def cmd_data_materialise_bars(a) -> None:
+    """Materialise multi-TF spot bars from the sealed pre-cutoff R2 minute store.
+
+    P2 made the bar bridge prereg-driven: the timeframe is no longer read
+    from ``config/desk.yaml`` alone.  This CLI command materialises one or
+    more timeframes for an explicit symbol list and writes a Parquet +
+    manifest pair under ``data/ohlcv/<exchange>/<symbol>/<tf>.parquet``.
+    """
+    from aster.data import r2_backtest_store
+    cfg = paths.load_config("desk")
+    r2_symbols = [s.strip() for s in a.symbols.split(",") if s.strip()]
+    tfs = [t.strip() for t in a.timeframes.split(",") if t.strip()]
+    result = r2_backtest_store.materialise_bars(r2_symbols, tfs, exchange=cfg["exchange"])
+    _print(r2_backtest_store.summarise(result))
+
+
 def cmd_data_import_funding(a) -> None:
     """Import monthly funding rate ZIPs from a local folder.
 
@@ -497,6 +610,16 @@ def build_parser() -> argparse.ArgumentParser:
     r2_audit.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
     r2_audit.add_argument("--sha256", action="store_true", help="recompute every local Parquet SHA-256")
     r2_audit.set_defaults(fn=cmd_data_check_r2)
+    r2_stores = d.add_parser("check-stores",
+                             help="audit every store the desk reads from (R2 1m, sealed, funding, aggTrades, bar bridge)")
+    r2_stores.add_argument("--symbols", help="comma-separated R2 spot symbols; defaults to the full inventory")
+    r2_stores.set_defaults(fn=cmd_data_check_stores)
+    mat_b = d.add_parser("materialise-bars",
+                         help="materialise multi-TF spot bars from the sealed pre-cutoff R2 minute store")
+    mat_b.add_argument("--symbols", required=True, help="comma-separated R2 spot symbols (e.g. BTCUSDT,ETHUSDT)")
+    mat_b.add_argument("--timeframes", required=True,
+                       help="comma-separated timeframes (one or more of 5m,15m,1h,4h,1d)")
+    mat_b.set_defaults(fn=cmd_data_materialise_bars)
     r2_q = d.add_parser("quality-r2",
                         help="profile pre-cutoff R2 minute bars: coverage, frozen minutes, price integrity")
     r2_q.add_argument("--symbols", help="comma-separated approved symbols; defaults to the fixed R2 inventory universe")
