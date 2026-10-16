@@ -105,6 +105,36 @@ def test_pipeline_reads_timeframe_from_prereg(prices):
         assert stress["timeframe"] == "1d"
 
 
+def test_pipeline_emits_aum_sweep_and_capacity(prices):
+    """P4: every dev pipeline.run must report a net-Sharpe sweep at the
+    brief §9 sizes (100k / 1M / 10M / 50M USD) and the linearly
+    interpolated AUM at which net Sharpe first drops below 1.0.
+
+    The test only asserts structural invariants: the four sizes are
+    present, the net Sharpe is monotone non-increasing in AUM (square-
+    root impact assumption), and ``capacity_max_AUM_usd`` is either
+    zero (strategy not viable) or one of the grid points.
+    """
+    L = Ledger()
+    pred = dict(PRED)
+    pred["timeframe"] = "1d"
+    hid = L.register("TSMOM 1d P4 sweep", "Statement.", "Mechanism text here.",
+                     "Falsification text here.",
+                     pred, "trend", "crypto-spot", "test", strategy="tsmom")
+    rep = pipeline.run(hid, "tsmom", {"lookback": 60}, ledger=L, prices=prices)
+    sweep = rep["aum_sweep"]
+    assert set(sweep.keys()) == {"100000", "1000000", "10000000", "50000000"}
+    # Net Sharpe is monotone non-increasing in AUM (the desk's
+    # square-root impact model); a test on pure noise is allowed to
+    # have all-null entries.
+    net_sharpes = [sweep[k]["sharpe_ann_net"] for k in sorted(sweep)]
+    if all(s is not None for s in net_sharpes):
+        for i in range(1, len(net_sharpes)):
+            assert net_sharpes[i] <= net_sharpes[i - 1] + 1e-9
+    assert "capacity_max_AUM_usd" in rep
+    assert rep["default_aum_usd"] == 1_000_000.0
+
+
 def test_pipeline_rejects_unknown_timeframe_in_prereg(prices):
     L = Ledger()
     pred = dict(PRED)

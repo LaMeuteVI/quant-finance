@@ -86,7 +86,8 @@ def _build_holdout_prices(ledger: Ledger, hypothesis_id: str, symbols: list[str]
 
 
 def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
-             funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None) -> dict:
+             funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None,
+             AUM: float | None = None) -> dict:
     """Base + stress backtests, restricted to bars >= start (holdout) when given.
 
     ``perp_legs`` follows the engine contract (None, ``"all"`` or iterable).
@@ -94,15 +95,25 @@ def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, time
     columns of a delta-neutral book; the legacy default ``None`` is the safe
     one for spot-only strategies that previously charged funding on every
     weight by accident.
+
+    P4 adds the ``AUM`` argument: when provided, the engine looks up the
+    per-asset, per-UTC-hour round-trip cost in the grid panel; when
+    ``None``, the legacy scalar path is used (every existing test in the
+    suite that calls ``evaluate`` without ``AUM`` continues to charge
+    the same 10+5 bps as before).
     """
     def cut(s):
         return s if start is None else s[s.index >= start]
 
-    base = run_backtest(prices, weights, costs, lag=1, funding=funding, perp_legs=perp_legs)
+    base = run_backtest(prices, weights, costs, lag=1, funding=funding,
+                        perp_legs=perp_legs, AUM=AUM)
     stress = {
-        "costs_x2": run_backtest(prices, weights, costs.scaled(2), lag=1, funding=funding, perp_legs=perp_legs),
-        "costs_x3": run_backtest(prices, weights, costs.scaled(3), lag=1, funding=funding, perp_legs=perp_legs),
-        "lag_2": run_backtest(prices, weights, costs, lag=2, funding=funding, perp_legs=perp_legs),
+        "costs_x2": run_backtest(prices, weights, costs.scaled(2), lag=1, funding=funding,
+                                 perp_legs=perp_legs, AUM=AUM),
+        "costs_x3": run_backtest(prices, weights, costs.scaled(3), lag=1, funding=funding,
+                                 perp_legs=perp_legs, AUM=AUM),
+        "lag_2": run_backtest(prices, weights, costs, lag=2, funding=funding,
+                              perp_legs=perp_legs, AUM=AUM),
     }
     r = cut(base.returns)
     window = {"1d": 30, "4h": 180, "1h": 720, "15m": 720, "5m": 720}.get(timeframe, 30)
@@ -207,9 +218,37 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     weights = strat.target_weights(px)
 
     costs = CostModel(**cfg.get("costs", {}))
-    ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start)
+    # P4: every dev backtest now reports a net-Sharpe sweep at the four
+    # brief §9 sizes (100k / 1M / 10M / 50M USD) and the linearly
+    # interpolated AUM at which net Sharpe first crosses 1.0.
+    # The default-size evaluation (used for the gate) is run at 1M USD.
+    default_aum = float(cfg.get("default_aum_usd", 1_000_000.0))
+    aum_sweep = tuple(float(a) for a in cfg.get(
+        "aum_sweep_usd", (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)))
+    ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start, AUM=default_aum)
     base = ev["base"]
     returns = ev.pop("_returns")
+    sweep_results: dict = {}
+    if sample == "dev":
+        for aum in aum_sweep:
+            ev_s = evaluate(px, weights, costs, timeframe, funding, perp_legs,
+                            start, AUM=aum)
+            sweep_results[f"{aum:.0f}"] = {
+                "sharpe_ann_net": ev_s["base"].get("sharpe_ann"),
+                "sharpe_ann_gross": None,  # gross is reported on the default run below
+                "max_drawdown": ev_s["base"].get("max_drawdown"),
+            }
+        # Capacity = AUM at which net Sharpe first crosses 1.0, linearly
+        # interpolated between sweep points. If the curve is already
+        # below 1.0 at the smallest AUM the strategy is not viable.
+        net_sharpe_by_aum = {aum: sweep_results[f"{aum:.0f}"]["sharpe_ann_net"]
+                             for aum in aum_sweep
+                             if sweep_results[f"{aum:.0f}"]["sharpe_ann_net"] is not None}
+        # Lazy import to avoid a hard dependency on cost_model at module load
+        from aster.backtest.cost_model import capacity_max_AUM
+        capacity_usd = capacity_max_AUM(net_sharpe_by_aum, threshold=1.0)
+    else:
+        capacity_usd = None
 
     # ---- statistics ----------------------------------------------------------
     stats_out: dict = {"lookahead": la}
@@ -262,6 +301,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         "prediction": hyp["prediction"], "gates": g, "checks": checks, "passed": passed,
         "holdout_start": holdout_start.isoformat(), "period": [str(returns.index[0]), str(returns.index[-1])]
         if len(returns) else None, "costs": costs.__dict__, "data_quality": quality, **ev, "statistics": stats_out,
+        "aum_sweep": sweep_results, "capacity_max_AUM_usd": capacity_usd, "default_aum_usd": default_aum,
         "notes": notes,
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str))

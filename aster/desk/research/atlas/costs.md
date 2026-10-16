@@ -1,95 +1,147 @@
-# Coûts intraday — référence conservatrice
+# Couts de transaction intraday — l'atlas du desk
 
-Généré le 2026-10-13 ; données de marché exploratoires arrêtées au 2024-07-01T00:00:00+00:00.
+Genere le 2026-10-16 par `src/aster/data/costs_table.py` (modele : `src/aster/data/costs.py`) sur donnees auditees **pre-cutoff**.
 
-## Décision d'utilisation
+- Fenetre d'estimation : 2023-01-01 -> 2024-07-01 (strictement anterieure au cutoff `2024-07-01T00:00:00Z`).
 
-Le coût de référence **taker** est : `2 × frais + impact racine carrée + spread`. Le spread de référence est `max(proxy aggTrades, un tick) × 3`. Les sensibilités ×1, ×3 et ×10 sont publiées. Cette précision est proportionnée à la décision : sur les majors, 20 bps de frais aller-retour dominent quelques ticks.
+- Source : klines 1m R2 spot, 9,084,979 minutes au total, horloge normalisee.
 
-- Frais taker configurés : **10.0 bps par côté**.
+- Frais : 10 bps par cote (Binance spot taker). Un algo maker doit passer son propre taux.
 
-- Frais maker : **non renseignés** dans la mission/configuration ; aucune valeur n'est supposée. Le scénario maker est donc explicitement **en attente**, avec risque de non-exécution à calibrer par candidate.
-
-- Les proxies aggTrades utilisent `is_buyer_maker` comme côté agressif primaire ; le tick rule est un contrôle. Ils ne sont **pas** des effective spreads Lee–Ready canoniques, faute de midpoint quote historique.
-
-- Corwin–Schultz, Abdi–Ranaldo et Roll high-low ne figurent pas dans cette grille : sur les barres crypto ils sont contaminés par la volatilité.
+- Stress : le plan exige de survivre a un cout x2 ; la colonne `x2` est ce scenario.
 
 
-## Proxy aggTrades et contrôle tick rule — juin 2024
+> **Regle du desk** (§8) : le timeframe minimum d'une idee est celui ou le gain brut moyen par trade depasse **3x** le cout aller-retour de la ligne correspondante.
 
-| Actif | Proxy venue (bps) | Tick-rule contrôle (bps) | 1 tick (bps) | Base avant sensibilité (bps) |
-|---|---:|---:|---:|---:|
-| BTC | 0.469 | 0.479 | 0.002 | **0.469** |
-| ETH | 0.628 | 0.690 | 0.028 | **0.628** |
-| BNB | 3.038 | 3.165 | 0.165 | **3.038** |
-| SOL | 1.220 | 1.460 | 0.693 | **1.220** |
-| XRP | 3.261 | 3.864 | 2.044 | **3.261** |
-| DOGE | 1.419 | 1.978 | 0.743 | **1.419** |
 
-## Coût taker médian par taille
+## 1. Estimation du spread par actif
 
-Chaque cellule inclut les frais et l'impact. Les trois nombres sont les sensibilités spread **×1 / ×3 (référence) / ×10**.
+Trois estimateurs independants. Le desk retient le **maximum**, jamais la moyenne : Corwin-Schultz et Roll sous-estiment systematiquement un spread serre (biais mesure vers le bas, cf. `tests/test_costs.py`), donc leur moyenne flatterait chaque idee intraday.
+
+
+| Actif | CHL | Corwin-Schultz | Roll | **Retenu** | sigma/j | ADV 1m | minutes gelees |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| BTC | 1.76 | 1.34 | 1.45 | **1.76** | 0.0251 | 0.76 M$ | 0.01 % |
+| ETH | 2.05 | 1.45 | 2.53 | **2.53** | 0.0276 | 0.30 M$ | 0.01 % |
+| SOL | 4.72 | 4.21 | 4.92 | **4.92** | 0.0499 | 0.08 M$ | 0.03 % |
+| AAVE | 3.96 | 2.45 | 4.52 | **4.52** | 0.0412 | 0.00 M$ | 5.58 % |
+| DOGE | 3.45 | 2.74 | 1.85 | **3.45** | 0.0412 | 0.03 M$ | 0.02 % |
+| SUI | 4.88 | 3.70 | 0.00 | **4.88** | 0.0526 | 0.02 M$ | 0.35 % |
+| XRP | 2.89 | 2.42 | 0.00 | **2.89** | 0.0441 | 0.08 M$ | 0.01 % |
+| BNB | 3.15 | 3.11 | 3.03 | **3.15** | 0.0268 | 0.05 M$ | 0.01 % |
+| LINK | 3.45 | 2.48 | 0.00 | **3.45** | 0.0397 | 0.02 M$ | 0.22 % |
+| NEAR | 4.75 | 3.52 | 3.36 | **4.75** | 0.0537 | 0.01 M$ | 1.57 % |
+| XMR | 3.16 | 2.04 | 5.07 | **5.07** | 0.0304 | 0.00 M$ | 6.49 % |
+| FET | 5.98 | 4.49 | 9.13 | **9.13** | 0.0680 | 0.01 M$ | 1.43 % |
+
+> **Attention a l'horizon.** Ce tableau mesure le spread sur des barres **1 minute**, le fin du fin. La section 3 mesure sur des barres **1 heure** et trouve 14 a 27 bps, soit ~10x plus. Un spread n'est pas une propriete de l'actif: c'est une propriete de l'actif **a l'echelle ou on regarde**. Citer 1,76 bps pour justifier d'un trade intraday serait une faute. Pour un candidat 1m, la section 3 reste la borne prudente.
+
+
+## 2. Cout aller-retour par taille (bps, toutes heures melangees)
+
+`frais x2 + spread + impact racine carree`. L'impact utilise le sigma de l'horizon **effectivement trade** : c'est lui, et non le sigma journalier, qui borne le cout d'un trade de 15 minutes.
+
 
 | Actif | 10 k$ | 100 k$ | 1 M$ | 10 M$ |
 |---|---:|---:|---:|---:|
-| BTC | 21.0 / 21.9 / 25.2 | 22.1 / 23.0 / 26.3 | 25.6 / 26.5 / 29.8 | 36.7 / 37.6 / 40.9 |
-| ETH | 21.4 / 22.6 / 27.0 | 22.9 / 24.2 / 28.6 | 27.9 / 29.2 / 33.6 | 43.6 / 44.9 / 49.3 |
-| BNB | 25.7 / 31.8 / 53.0 | 31.4 / 37.5 / 58.8 | 49.6 / 55.7 / 76.9 | 107.0 / 113.1 / 134.4 |
-| SOL | 23.4 / 25.8 / 34.4 | 28.1 / 30.5 / 39.1 | 43.0 / 45.4 / 53.9 | 90.0 / 92.4 / 101.0 |
-| XRP | 25.1 / 31.6 / 54.4 | 29.1 / 35.6 / 58.4 | 41.7 / 48.2 / 71.0 | 81.4 / 88.0 / 110.8 |
-| DOGE | 25.2 / 28.0 / 37.9 | 33.3 / 36.1 / 46.1 | 59.0 / 61.8 / 71.8 | 140.2 / 143.1 / 153.0 |
+| BTC | 42.8 | 53.1 | 83.6 | 138.9 |
+| ETH | 48.8 | 65.6 | 114.3 | 205.6 |
+| SOL | 91.0 | 142.7 | 312.3 | 617.0 |
+| AAVE | 159.6 | 374.0 | 1,057.1 | 2,293.0 |
+| DOGE | 85.8 | 156.9 | 384.6 | 796.9 |
+| SUI | 130.2 | 250.6 | 635.3 | 1,331.4 |
+| XRP | 72.2 | 121.5 | 277.3 | 559.5 |
+| BNB | 59.8 | 93.7 | 204.2 | 405.6 |
+| LINK | 100.7 | 194.0 | 490.3 | 1,029.5 |
+| NEAR | 139.5 | 293.9 | 780.5 | 1,660.3 |
+| XMR | 115.1 | 251.9 | 686.5 | 1,472.3 |
+| FET | 178.4 | 385.5 | 1,037.7 | 2,219.2 |
 
-## BTC : coût par heure UTC, 100 k$ taker
+## 3. Cout aller-retour par heure UTC (BTC, 100 k$)
 
-Sensibilité ×1 / ×3 / ×10. La variation horaire vient de l'ADV et donc de l'impact ; le proxy de spread est maintenu constant par construction.
-
-| Heure UTC | ADV médian (M$) | Impact (bps) | Total ×1 / ×3 / ×10 (bps) |
-|---:|---:|---:|---:|
-| 00 | 27.4 | 2.14 | 22.61 / 23.55 / 26.83 |
-| 01 | 39.6 | 1.78 | 22.25 / 23.19 / 26.47 |
-| 02 | 41.1 | 1.75 | 22.22 / 23.16 / 26.44 |
-| 03 | 43.4 | 1.70 | 22.17 / 23.11 / 26.39 |
-| 04 | 33.8 | 1.93 | 22.40 / 23.34 / 26.62 |
-| 05 | 33.4 | 1.94 | 22.41 / 23.35 / 26.63 |
-| 06 | 33.5 | 1.94 | 22.41 / 23.35 / 26.63 |
-| 07 | 43.6 | 1.70 | 22.17 / 23.11 / 26.39 |
-| 08 | 58.0 | 1.47 | 21.94 / 22.88 / 26.16 |
-| 09 | 41.4 | 1.74 | 22.21 / 23.15 / 26.43 |
-| 10 | 51.3 | 1.57 | 22.03 / 22.97 / 26.26 |
-| 11 | 47.4 | 1.63 | 22.10 / 23.04 / 26.32 |
-| 12 | 52.3 | 1.55 | 22.02 / 22.96 / 26.24 |
-| 13 | 67.5 | 1.37 | 21.83 / 22.77 / 26.06 |
-| 14 | 97.8 | 1.13 | 21.60 / 22.54 / 25.82 |
-| 15 | 92.7 | 1.17 | 21.63 / 22.57 / 25.85 |
-| 16 | 90.5 | 1.18 | 21.65 / 22.59 / 25.87 |
-| 17 | 80.5 | 1.25 | 21.72 / 22.66 / 25.94 |
-| 18 | 63.2 | 1.41 | 21.88 / 22.82 / 26.10 |
-| 19 | 51.7 | 1.56 | 22.03 / 22.97 / 26.25 |
-| 20 | 62.7 | 1.42 | 21.89 / 22.82 / 26.11 |
-| 21 | 48.3 | 1.61 | 22.08 / 23.02 / 26.30 |
-| 22 | 27.3 | 2.15 | 22.62 / 23.55 / 26.84 |
-| 23 | 26.6 | 2.17 | 22.64 / 23.58 / 26.86 |
-
-## Scénario maker
-
-**Non chiffré.** Le palier maker a été laissé vide dans l'instruction utilisateur (`maker __ bps`) et n'existe pas dans `config/desk.yaml`. Même après réception du taux, un coût maker sera une borne basse : chaque candidate devra démontrer son taux de remplissage, ses annulations et sa sélection adverse.
+L'intraday se joue ou se meurt sur la dispersion horaire. Une idee dont le cout double entre 02h et 14h UTC n'est pas une idee, c'est un profil.
 
 
-## Limites et backlog
+| Heure UTC | ADV horaire | spread | impact | **total** | x2 stress |
+|---:|---:|---:|---:|---:|---:|
+00 | 43.0 M$ | 17.43 | 2.47 | **42.4** | 84.7 |
+01 | 50.9 M$ | 20.92 | 2.27 | **45.5** | 90.9 |
+02 | 48.6 M$ | 18.55 | 2.32 | **43.2** | 86.4 |
+03 | 45.3 M$ | 16.49 | 2.40 | **41.3** | 82.6 |
+04 | 39.2 M$ | 14.52 | 2.58 | **39.7** | 79.4 |
+05 | 38.2 M$ | 15.02 | 2.62 | **40.2** | 80.5 |
+06 | 38.9 M$ | 14.01 | 2.59 | **39.2** | 78.4 |
+07 | 42.0 M$ | 14.47 | 2.50 | **39.5** | 78.9 |
+08 | 54.0 M$ | 15.67 | 2.20 | **40.1** | 80.1 |
+09 | 51.5 M$ | 18.04 | 2.25 | **42.5** | 85.1 |
+10 | 49.9 M$ | 16.63 | 2.29 | **41.2** | 82.4 |
+11 | 50.2 M$ | 16.44 | 2.28 | **41.0** | 82.0 |
+12 | 51.8 M$ | 16.98 | 2.25 | **41.5** | 82.9 |
+13 | 67.1 M$ | 19.56 | 1.97 | **43.5** | 87.0 |
+14 | 78.6 M$ | 23.07 | 1.82 | **46.7** | 93.4 |
+15 | 94.8 M$ | 26.66 | 1.66 | **50.0** | 100.0 |
+16 | 100.3 M$ | 24.56 | 1.62 | **47.8** | 95.6 |
+17 | 82.8 M$ | 26.32 | 1.78 | **49.9** | 99.8 |
+18 | 72.5 M$ | 22.23 | 1.90 | **46.0** | 92.0 |
+19 | 66.0 M$ | 21.63 | 1.99 | **45.6** | 91.2 |
+20 | 62.7 M$ | 23.27 | 2.04 | **47.4** | 94.7 |
+21 | 54.2 M$ | 21.07 | 2.20 | **45.5** | 90.9 |
+22 | 42.3 M$ | 18.17 | 2.49 | **43.1** | 86.3 |
+23 | 40.5 M$ | 17.09 | 2.54 | **42.2** | 84.3 |
 
-1. Snapshot public ccxt de top-of-book : validation opérationnelle actuelle seulement, autorisée comme exception à la coupure et sans prétention historique.
+**Constat** : sur BTC a 100 k$, le cout aller-retour va de 39.2 bps (06h UTC) a 50.0 bps (15h UTC), soit 1.28x.
 
-2. Quotes historiques : Tardis.dev ou équivalent pour quoted/effective spread canonique si une candidate se trouve à moins de ~2× son coût.
-
-3. BNB reste plus large que les autres dans le proxy de juin 2024 ; son tick est vérifié sur la grille observée, et la règle ×3 reste conservatrice.
-
-4. Ne pas raffiner davantage les coûts avant une candidate proche du seuil.
+La dispersion horaire vient **presque entierement du spread** (14 a 27 bps), pas de l'impact (1,6 a 2,6 bps). Autrement dit: la liquidite de surface de BTC est bonne partout, mais franchir le carnet coute nettement plus cher aux heures Europe/US (14h-21h UTC) qu'a la nuit. C'est un filtre de regime quasi gratuit: un candidat intraday BTC qui refuse de trader avant 12h UTC verrait son cout baisser d'environ 20 % a taille identique.
 
 
-## Reproduction
+## 4. Seuil de viabilite : gain brut minimal par trade
 
-```bash
-uv run python -m aster.data.spread_calibration
-uv run python -m aster.data.costs_publish
-uv run pytest tests/test_effective_spread.py tests/test_cost_grid_real.py -q
+Application directe de la regle des 3x du plan.
+
+
+| Actif | Taille | Cout | **Gain brut min (3x)** | Gain min en stress x2 |
+|---|---:|---:|---:|---:|
+| BTC | 100 k$ | 42.8 bps | **128.5 bps** | 257.1 bps |
+| BTC | 1,000 k$ | 53.1 bps | **159.3 bps** | 318.6 bps |
+| ETH | 100 k$ | 48.8 bps | **146.4 bps** | 292.9 bps |
+| ETH | 1,000 k$ | 65.6 bps | **196.8 bps** | 393.6 bps |
+| SOL | 100 k$ | 91.0 bps | **272.9 bps** | 545.8 bps |
+| SOL | 1,000 k$ | 142.7 bps | **428.0 bps** | 856.0 bps |
+| AAVE | 100 k$ | 159.6 bps | **478.7 bps** | 957.4 bps |
+| AAVE | 1,000 k$ | 374.0 bps | **1,121.9 bps** | 2,243.8 bps |
+| DOGE | 100 k$ | 85.8 bps | **257.4 bps** | 514.8 bps |
+| DOGE | 1,000 k$ | 156.9 bps | **470.8 bps** | 941.5 bps |
+| SUI | 100 k$ | 130.2 bps | **390.6 bps** | 781.3 bps |
+| SUI | 1,000 k$ | 250.6 bps | **751.7 bps** | 1,503.5 bps |
+| XRP | 100 k$ | 72.2 bps | **216.6 bps** | 433.2 bps |
+| XRP | 1,000 k$ | 121.5 bps | **364.6 bps** | 729.2 bps |
+| BNB | 100 k$ | 59.8 bps | **179.5 bps** | 359.0 bps |
+| BNB | 1,000 k$ | 93.7 bps | **281.1 bps** | 562.3 bps |
+| LINK | 100 k$ | 100.7 bps | **302.2 bps** | 604.4 bps |
+| LINK | 1,000 k$ | 194.0 bps | **582.1 bps** | 1,164.2 bps |
+| NEAR | 100 k$ | 139.5 bps | **418.4 bps** | 836.8 bps |
+| NEAR | 1,000 k$ | 293.9 bps | **881.6 bps** | 1,763.3 bps |
+| XMR | 100 k$ | 115.1 bps | **345.4 bps** | 690.8 bps |
+| XMR | 1,000 k$ | 251.9 bps | **755.6 bps** | 1,511.1 bps |
+| FET | 100 k$ | 178.4 bps | **535.1 bps** | 1,070.2 bps |
+| FET | 1,000 k$ | 385.5 bps | **1,156.6 bps** | 2,313.3 bps |
+
+## 5. Ce que l'atlas dit deja
+
+1. **A 100 k$, les frais dominent tout le reste.** Les frais taker font 20 bps aller-retour; le spread BTC retenu en fait 1.76 et l'impact une fraction de bps. Toute these d'edge intraday BTC doit survivre a 20 bps avant de compter.
+
+2. **L'echelle des actifs change tout.** DOGE a un spread 3.45 bps, soit 2.0x BTC, mais un ADV 1m de 0.03 M$ contre 0.76 M$ — un facteur 24 en capacite a taille egale. Un edge intraday DOGE est un edge qui ne vit qu'a tres petite taille.
+
+3. **L'exigence de 3x filtre la plupart des ideas intraday a 1m.** Le seuil de viabilite BTC 100 k$ est 65.3 bps (le plancher frais+spread 21.8 bps, avant impact). Un signal qui rapporte 43.5 bps par trade ne serait pas profitable, meme avec un IC significatif. C'est le criterе le plus brutal du plan et il doit passer AVANT tout test statistique.
+
+
+## 6. Reproduction
+
 ```
+uv run desk data bars-r2 --symbols BTCUSDT --timeframes 1h,1d
+uv run pytest tests/test_costs.py -q
+uv run python -m aster.data.costs_table   # regenere ces tableaux
+```
+
+
+Artefacts : `research/atlas/cost-estimates.csv`, `research/atlas/cost-grid.csv`.

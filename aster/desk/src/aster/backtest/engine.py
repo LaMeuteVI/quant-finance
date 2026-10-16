@@ -18,9 +18,33 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from typing import Protocol
 
 import numpy as np
 import pandas as pd
+
+from aster.backtest.cost_model import ConstantCostModel
+
+
+class _CostLike(Protocol):
+    """Anything the engine can ask for a per-bar, per-symbol cost panel."""
+
+    def per_trade_cost_bps(self, weights: pd.DataFrame, prices: pd.DataFrame,
+                           AUM: float) -> pd.DataFrame: ...
+
+
+def _to_cost_model(costs: "_CostLike | CostModel | None") -> _CostLike:
+    """Adapt the legacy ``CostModel`` to the new panel interface.
+
+    A scalar ``CostModel`` becomes a :class:`ConstantCostModel`; an
+    already-panel model is returned as-is. ``None`` is the desk default
+    (10 + 5 bps flat, see :class:`ConstantCostModel` defaults).
+    """
+    if costs is None:
+        return ConstantCostModel()
+    if isinstance(costs, CostModel):
+        return ConstantCostModel(costs.fee_bps, costs.slippage_bps)
+    return costs
 
 
 def _normalise_perp_legs(perp_legs, columns: pd.Index) -> tuple[str, ...]:
@@ -76,9 +100,11 @@ class BacktestResult:
         return (1 + self.returns).cumprod()
 
 
-def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel | None = None,
+def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame,
+                 costs: "CostModel | _CostLike | None" = None,
                  lag: int = 1, funding: pd.DataFrame | None = None,
-                 perp_legs: str | Iterable[str] | None = None) -> BacktestResult:
+                 perp_legs: str | Iterable[str] | None = None,
+                 AUM: float | None = None) -> BacktestResult:
     """Run a target-weight backtest with explicit lag, costs and (perp-only) funding.
 
     Parameters
@@ -109,7 +135,7 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel |
     """
     if lag < 1:
         raise ValueError("lag must be >= 1: a signal cannot trade on the bar that produced it")
-    costs = costs or CostModel()
+    cost_model = _to_cost_model(costs)
     prices = prices.sort_index()
     weights = weights.reindex(index=prices.index, columns=prices.columns).fillna(0.0)
 
@@ -126,7 +152,18 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel |
     denom = (1 + gross).replace(0, np.nan)
     drifted = drifted.div(denom, axis=0).fillna(0.0)
     turnover = (held - drifted.shift(1).fillna(0.0)).abs().sum(axis=1)
-    cost = turnover * costs.total_bps / 1e4
+    # Per-bar, per-symbol cost in bps. The panel model needs an AUM to
+    # know the order notional per turnover unit. Without AUM the desk
+    # falls back to the scalar ``total_bps`` for back-compat with the
+    # existing ledger tests; the new ``pipeline.run`` always passes AUM.
+    if AUM is None or AUM <= 0:
+        cost = turnover * cost_model.per_trade_cost_bps(
+            weights, prices, 1.0).mean().mean() / 1e4
+    else:
+        cost_panel = cost_model.per_trade_cost_bps(weights, prices, AUM)
+        per_leg_turnover = (held - drifted.shift(1).fillna(0.0)).abs()
+        per_leg_cost = per_leg_turnover * cost_panel / 1e4
+        cost = per_leg_cost.sum(axis=1)
 
     fund = pd.Series(0.0, index=prices.index)
     if funding is not None and perp_set:
@@ -146,6 +183,9 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel |
     net = gross - cost - fund
     return BacktestResult(
         returns=net, gross_returns=gross, costs=cost, funding=fund, held=held, turnover=turnover,
-        meta={"lag": lag, "fee_bps": costs.fee_bps, "slippage_bps": costs.slippage_bps,
+        meta={"lag": lag, "AUM": AUM,
+              "fee_bps": getattr(cost_model, "fee_bps", None),
+              "slippage_bps": getattr(cost_model, "slippage_bps", None),
+              "cost_model": type(cost_model).__name__,
               "perp_legs": sorted(perp_set)},
     )

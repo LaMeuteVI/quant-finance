@@ -18,8 +18,11 @@ from aster.data.r2_klines import read_local
 
 CUTOFF = pd.Timestamp("2024-07-01", tz="UTC")
 WINDOW_START = pd.Timestamp("2023-01-01", tz="UTC")
-SYMBOLS = ("BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT")
-SIZES = (10_000.0, 100_000.0, 1_000_000.0, 10_000_000.0)
+SYMBOLS = (
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "AAVEUSDT", "DOGEUSDT", "SUIUSDT",
+    "XRPUSDT", "BNBUSDT", "LINKUSDT", "NEARUSDT", "XMRUSDT", "FETUSDT",
+)
+SIZES = (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)  # brief §9: 100k/1M/10M/50M
 # Desk fee tier: Binance spot taker, 10 bps per side.  A maker strategy passes
 # its own number in; the round trip below is charged 2 x fee + spread + impact.
 FEE_BPS_PER_SIDE = 10.0
