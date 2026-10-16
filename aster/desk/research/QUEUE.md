@@ -93,7 +93,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 - **Q15 — ETH `fvg_down_entry_h1` follow-up.** `IDEA` · from BACKLOG item 8; re-test on the panel before anything else.
 - **Q16 — Veille (former G, section 7).** `DONE (2026-10-16, 8c197c0)` · former E
   SSRN, arXiv q-fin, AQR/Man/Robeco/Two Sigma, Kaiko/Coin Metrics/Glassnode on crypto return predictability, funding, microstructure, intraday seasonality. Per source: reference, claim, period, assumed costs, ladder level. Top 3 claims become replication sub-items in this queue.
-- **Q17 — Atlas and asset dossiers (former F).** `READY` after each block
+- **Q17 — Atlas and asset dossiers (former F).** `DONE (2026-10-16, 1c571a2)` · former F after each block
   One `research/assets/<SYMBOL>.md` per asset with the level reached (N0 → N7) at the top, linking the dated artefacts; `research/atlas/` lead-lag, regimes, costs, data-sources. MAP updated.
 - **Q18 — N6 financial ML.** `BLOCKED_ON a primary feature from Q5–Q14`
   Meta-labeling on primary signals, triple barrier, purged CV with embargo, MDA/SFI by feature clusters, trial count reported.
