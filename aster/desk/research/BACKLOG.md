@@ -28,6 +28,10 @@ On 10 alt symbols, 5,129 pseudo-OOS forecasts and 60 fixed HAR/GARCH/naive compa
 
 Ten approved assets, three causal regimes and three horizons produced 870 cells; 77 were nominal at p<0.01 before correction. The fixed Hamilton cross-check remains non-significant (null p 0.30–0.65). No corrected, costed or capacity-tested feature survived as a strategy. Artefact: `research/atlas/q11_regimes.json`; memo: `research/memos/2026-10-16-Q11-N4.md`.
 
+25. **Q12 — Alt-panel N5 flow — descriptive closure, no candidate (2026-10-16).**
+
+Eight approved alt assets, four flow features and four horizons produced 128 capped descriptive cells; 5 were nominal before correction and 0 survived the cost hurdle. Artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`.
+
 
 16. **Continuous web scout.** Papers/SSRN/arXiv/hedge-fund claims are untrusted leads only. Each lead needs mechanism, data availability, cost/capacity check, prior-ledger check and independent replication.
 17. **Tick microstructure data acquisition (Tardis / Kaiko / Databento).** Only axis that may surface an un-arbitraged edge on the residual timescale. Requires Samuel’s budget OK and a fresh cutoff seal post-acquisition. Pre-acquisition research must remain on the existing pre-2024-07-01 klines panel.
