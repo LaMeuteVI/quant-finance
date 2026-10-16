@@ -40,11 +40,11 @@ ASSET_DIR = Path("research/assets")
 # --------------------------------------------------------------------------- #
 
 SIGNAL_LABELS: dict[str, str] = {
-    # --- moving-average crossovers (4 primary) -------------------------------
-    "ma_20_100_above": "close > SMA(20)",
-    "ma_50_200_above": "close > SMA(50) and close > SMA(200)",
-    "ma_10_30_above": "close > SMA(10) and close > SMA(30)",
-    "ma_5_20_above": "close > SMA(5) and close > SMA(20)",
+    # --- moving-average relative states (4 primary) --------------------------
+    "ma_20_100_fast_above_slow": "SMA(20) > SMA(100)",
+    "ma_20_100_fast_below_slow": "SMA(20) < SMA(100)",
+    "ma_5_20_fast_above_slow": "SMA(5) > SMA(20)",
+    "ma_5_20_fast_below_slow": "SMA(5) < SMA(20)",
     # --- RSI(14) (2 primary) -------------------------------------------------
     "rsi14_oversold": "RSI(14) < 30",
     "rsi14_overbought": "RSI(14) > 70",
@@ -362,8 +362,6 @@ def build_features(daily: pd.DataFrame) -> pd.DataFrame:
     for key, ratio in FIB_RATIOS.items():
         feats[f"fib_{key:03d}"] = _fib(close, ratio)
 
-    high = daily["high"].astype(float)
-    low = daily["low"].astype(float)
     up_fill, down_fill = _fvg3_masks(daily)
     feats["fvg3_up"] = up_fill
     feats["fvg3_down"] = down_fill
@@ -395,10 +393,18 @@ def signal_masks(feats: pd.DataFrame) -> list[tuple[str, pd.Series, pd.Series]]:
     if close is None:
         raise ValueError("features must carry a 'close' column")
     masks: dict[str, pd.Series] = {
-        "ma_20_100_above": close > feats["sma_20"],
-        "ma_50_200_above": (close > feats["sma_50"]) & (close > feats["sma_200"]),
-        "ma_10_30_above": (close > feats["sma_10"]) & (close > feats["sma_30"]),
-        "ma_5_20_above": (close > feats["sma_5"]) & (close > feats["sma_20"]),
+        "ma_20_100_fast_above_slow": (feats["sma_20"] > feats["sma_100"]).where(
+            feats["sma_20"].notna() & feats["sma_100"].notna()
+        ),
+        "ma_20_100_fast_below_slow": (feats["sma_20"] < feats["sma_100"]).where(
+            feats["sma_20"].notna() & feats["sma_100"].notna()
+        ),
+        "ma_5_20_fast_above_slow": (feats["sma_5"] > feats["sma_20"]).where(
+            feats["sma_5"].notna() & feats["sma_20"].notna()
+        ),
+        "ma_5_20_fast_below_slow": (feats["sma_5"] < feats["sma_20"]).where(
+            feats["sma_5"].notna() & feats["sma_20"].notna()
+        ),
         "rsi14_oversold": feats["rsi14"] < 30.0,
         "rsi14_overbought": feats["rsi14"] > 70.0,
         "bb20_lower_break": close < feats["bb20_lower"],
@@ -563,19 +569,26 @@ def bootstrap_mean(values: np.ndarray, block: int, seed: int, draws: int = BOOTS
     return float(np.quantile(means, 0.025)), float(np.quantile(means, 0.975))
 
 
-def bh_adjust(p_values: np.ndarray) -> np.ndarray:
-    """Benjamini-Hochberg step-up adjusted p-values, NaN-safe."""
+def bh_adjust(p_values: np.ndarray, *, family_size: int | None = None) -> np.ndarray:
+    """Benjamini-Hochberg adjusted p-values with an explicit fixed denominator.
+
+    Missing p-values remain missing in the output, but a declared family can
+    still supply its full denominator.  This preserves preregistered
+    multiplicity when a cell has fewer than :data:`MIN_EVENTS`.
+    """
     p = np.asarray(p_values, dtype=float)
     q = np.full(p.shape, np.nan)
     valid = np.isfinite(p)
     if not valid.any():
         return q
     sub = p[valid]
-    m = sub.size
+    m = int(family_size) if family_size is not None else sub.size
+    if m < sub.size:
+        raise ValueError("family_size cannot be smaller than the finite p-values")
     order = np.argsort(sub)
-    ranked = sub[order] * m / np.arange(1, m + 1)
+    ranked = sub[order] * m / np.arange(1, sub.size + 1)
     ranked = np.minimum.accumulate(ranked[::-1])[::-1]
-    adjusted = np.empty(m)
+    adjusted = np.empty(sub.size)
     adjusted[order] = np.clip(ranked, 0.0, 1.0)
     q[valid] = adjusted
     return q
@@ -623,9 +636,9 @@ def timing_placebo_return(log_close: pd.Series, horizon: int) -> pd.Series:
 # --------------------------------------------------------------------------- #
 
 def _placebo_horizon(horizon: int) -> int:
-    """Next longer horizon; the longest horizon falls back to the shortest."""
+    """Next strictly longer horizon; 14d falls back to the declared 7d control."""
     longer = [h for h in HORIZONS if h > horizon]
-    return longer[0] if longer else HORIZONS[0]
+    return longer[0] if longer else 7
 
 
 @dataclass(frozen=True)
@@ -653,6 +666,10 @@ def _score_stats(
 ) -> tuple[float, float, float, float, float]:
     """``(mean, t, p, ci_lo, ci_hi)`` of the event mean, HAC-inferred.
 
+    The fixed grid keeps cells with fewer than :data:`MIN_EVENTS`, but all five
+    inferential/reporting values are ``NaN`` for those cells.  They therefore
+    remain in the declared BH family without being mistaken for evidence.
+
     ``mean`` is the plain event mean (for reporting), while ``t``/``p`` come from
     the Newey-West test of the grid score and the interval from the moving-block
     bootstrap that resamples ``(mask, returns)`` jointly.
@@ -661,7 +678,7 @@ def _score_stats(
     returns = np.asarray(returns, dtype=float)
     usable = mask & np.isfinite(returns)
     n_events = int(usable.sum())
-    if n_events == 0:
+    if n_events < MIN_EVENTS:
         nan = float("nan")
         return nan, nan, nan, nan, nan
 
@@ -769,7 +786,9 @@ def event_grid(feats: pd.DataFrame, bootstraps: int = BOOTSTRAPS) -> pd.DataFram
         & (grid["placebo_timing_p_value"] >= 0.05)
         & (grid["placebo_horizon_p_value"] >= 0.05)
     )
-    grid["bh_q_asset"] = bh_adjust(grid["p_value"].to_numpy())
+    grid["bh_q_asset"] = bh_adjust(
+        grid["p_value"].to_numpy(), family_size=len(grid),
+    )
     grid["retention"] = (
         (grid["bh_q_asset"] < 0.05)
         & grid["bootstrap_excludes_zero"]
@@ -793,8 +812,13 @@ def apply_panel_fdr(grid: pd.DataFrame) -> pd.DataFrame:
     out = grid.copy()
     q = np.full(len(out), np.nan)
     primary = (out["kind"] == "primary").to_numpy()
-    if primary.any():
-        q[primary] = bh_adjust(out.loc[primary, "p_value"].to_numpy())
+    p_values = out.loc[primary, "p_value"].to_numpy(dtype=float)
+    eligible = primary.copy()
+    eligible[primary] = np.isfinite(p_values)
+    if eligible.any():
+        q[eligible] = bh_adjust(
+            out.loc[eligible, "p_value"].to_numpy(), family_size=int(primary.sum()),
+        )
     out["bh_q_panel"] = q
     out["retention_final"] = out["retention"] & (out["bh_q_panel"] < 0.05)
     return out
@@ -811,13 +835,13 @@ def regime_breakdown(feats: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
         events = feats.index[mask & feats[f"fwd_{horizon}d"].notna()]
         for trend in (0.0, 1.0):
             for vol in (0.0, 1.0):
-                subset = feats[f"fwd_%dd" % horizon][
+                subset = feats["fwd_%dd" % horizon][
                     mask & (feats["trend_regime"] == trend) & (feats["vol_regime"] == vol)
                 ].to_numpy()
                 bucket = (mask & (feats["trend_regime"] == trend)
                           & (feats["vol_regime"] == vol))
                 mean, t_stat, p_value, _, _ = _score_stats(
-                    bucket.to_numpy(), feats[f"fwd_%dd" % horizon].to_numpy(),
+                    bucket.to_numpy(), feats["fwd_%dd" % horizon].to_numpy(),
                     horizon, SEED + horizon, BOOTSTRAPS,
                 )
                 if len(subset) < MIN_EVENTS:
@@ -846,7 +870,8 @@ def _markdown(symbol: str, features: pd.DataFrame, grid: pd.DataFrame, regime: p
         f"`{summary['last']}` — no bar at or after the cutoff is used.",
         f"* Cells evaluated: **{summary['cells']}** = {len(SIGNAL_LABELS)} signals x {len(HORIZONS)} horizons",
         f"  ({summary['primary_cells']} primary, {summary['cells'] - summary['primary_cells']} placebo-level).",
-        f"* Tested cells with n >= {MIN_EVENTS}: {summary['tested_cells']}.",
+        f"* Tested cells with n >= {MIN_EVENTS}: {summary['tested_cells']} "
+        f"(the fixed 128-cell family is retained; below-floor cells are reported as NaN).",
         f"* Retained after BH-FDR (asset and panel) + bootstrap + inverse + 3 placebos: "
         f"**{summary['retained']}**.",
         "",
@@ -927,12 +952,38 @@ def write_reports(symbol: str, features: pd.DataFrame, grid: pd.DataFrame,
     return summary
 
 
+def run_panel(bootstraps: int = BOOTSTRAPS) -> dict[str, dict]:
+    """Evaluate all preregistered assets and apply one fixed 480-cell panel BH.
+
+    Per-asset grids are built first so their 128-cell BH correction remains
+    independent.  The 96 primary cells of every declared asset are then
+    concatenated solely for the panel BH adjustment; no outcome-dependent
+    filtering occurs before that correction.
+    """
+    runs: dict[str, dict] = {}
+    for symbol in SYMBOLS:
+        daily = build_daily(symbol)
+        features = build_features(daily)
+        grid = event_grid(features, bootstraps=bootstraps).assign(symbol=symbol)
+        runs[symbol] = {"features": features, "grid": grid}
+
+    panel = pd.concat([runs[symbol]["grid"] for symbol in SYMBOLS], ignore_index=True)
+    panel = apply_panel_fdr(panel)
+    for symbol in SYMBOLS:
+        grid = panel.loc[panel["symbol"] == symbol].copy()
+        features = runs[symbol]["features"]
+        regime = regime_breakdown(features, grid)
+        summary = write_reports(symbol, features, grid, regime)
+        runs[symbol] = {**summary, "grid": grid, "features": features, "regime": regime}
+    return runs
+
+
 def run_symbol(symbol: str, bootstraps: int = BOOTSTRAPS) -> dict:
     """Full N1 pipeline for one symbol: daily bars -> features -> fixed grid -> artifacts.
 
-    The **whole** preregistered grid of 128 cells is evaluated and written; the
-    panel FDR is computed over its 96 primary cells, exactly as declared.  The
-    placebo-level cells are reported for calibration and can never be retained.
+    This single-symbol helper applies the declared 96-primary-cell panel
+    correction only to that supplied grid.  Use :func:`run_panel` for the
+    preregistered five-asset analysis, whose panel family is 480 cells.
     """
     daily = build_daily(symbol)
     features = build_features(daily)

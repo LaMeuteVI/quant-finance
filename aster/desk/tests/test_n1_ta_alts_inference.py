@@ -26,6 +26,57 @@ from aster.research import n1_ta_alts as n1
 # --------------------------------------------------------------------------- #
 
 
+def test_placebo_horizon_uses_next_longer_horizon_with_14d_fallback_to_7d():
+    """The horizon placebo mapping is fixed and must not wrap to 1 day."""
+    assert {h: n1._placebo_horizon(h) for h in n1.HORIZONS} == {
+        1: 3, 3: 7, 7: 14, 14: 7,
+    }
+
+
+def _ma_fixture() -> pd.DataFrame:
+    """Constant closes with independent, signed SMA spreads for both pairs."""
+    idx = pd.date_range("2024-01-01", periods=6, freq="D", tz="UTC")
+    frame = pd.DataFrame(index=idx)
+    frame["close"] = 100.0
+    for column in (
+        "sma_5", "sma_10", "sma_20", "sma_30", "sma_50", "sma_100", "sma_200",
+        "rsi14", "bb20_lower", "bb20_upper", "donchian_high",
+        "donchian_low", "stoch_k", "stoch_d", "pivot_r1", "pivot_s1",
+        "fvg3_up", "fvg3_down",
+        *(f"fib_{ratio:03d}" for ratio in (382, 500, 618, 550, 600, 650, 700)),
+    ):
+        frame[column] = 0.0
+    # The close is deliberately constant.  A and B are independent state inputs:
+    # SMA20-SMA100 = [+1, 0, -1, NaN, +1, -1]
+    # SMA5-SMA20   = [-1, +1, 0, +1, NaN, -1]
+    frame["sma_20"] = 100.0
+    frame["sma_100"] = 100.0 - np.array([1, 0, -1, np.nan, 1, -1], dtype=float)
+    frame["sma_5"] = 100.0 + np.array([-1, 1, 0, 1, np.nan, -1], dtype=float)
+    frame["sma_10"] = frame["sma_30"] = frame["sma_50"] = frame["sma_200"] = 100.0
+    return frame
+
+
+def test_ma_signals_are_preregistered_daily_sma_states_not_close_or_crossovers():
+    """All defined SMA rows are states; equality is neutral and NaNs stay undefined."""
+    features = _ma_fixture()
+    pairs = {label: mask for label, mask, _ in n1.signal_masks(features)}
+    expected = {
+        "ma_20_100_fast_above_slow": pd.Series([True, False, False, pd.NA, True, False], index=features.index, dtype="boolean"),
+        "ma_20_100_fast_below_slow": pd.Series([False, False, True, pd.NA, False, True], index=features.index, dtype="boolean"),
+        "ma_5_20_fast_above_slow": pd.Series([False, True, False, True, pd.NA, False], index=features.index, dtype="boolean"),
+        "ma_5_20_fast_below_slow": pd.Series([True, False, False, False, pd.NA, True], index=features.index, dtype="boolean"),
+    }
+    for label, state in expected.items():
+        pd.testing.assert_series_equal(pairs[label], state, check_names=False)
+
+
+def test_ma_signal_registry_has_only_the_four_preregistered_fast_slow_states():
+    assert tuple(label for label in n1.SIGNAL_LABELS if label.startswith("ma_")) == (
+        "ma_20_100_fast_above_slow", "ma_20_100_fast_below_slow",
+        "ma_5_20_fast_above_slow", "ma_5_20_fast_below_slow",
+    )
+
+
 def test_hac_t_test_is_at_least_as_conservative_as_the_iid_t_test():
     """Overlapping/positively autocorrelated scores: HAC must widen the error.
 
@@ -116,6 +167,17 @@ def test_hac_t_test_uses_bartlett_weights_on_a_fixed_vector():
 def test_hac_t_test_returns_nan_when_there_are_too_few_events():
     score = np.array([0.1, 0.2, -0.05, 0.3])
     assert all(np.isnan(v) for v in n1.hac_mean_test(score, bandwidth=3))
+
+
+def test_cell_statistics_are_undefined_below_the_preregistered_event_floor():
+    """A 29-event cell stays in the fixed family but receives no inference."""
+    mask = np.zeros(60, dtype=bool)
+    mask[: n1.MIN_EVENTS - 1] = True
+    returns = np.linspace(-0.03, 0.03, len(mask))
+
+    stats = n1._score_stats(mask, returns, horizon=1, seed=n1.SEED, draws=50)
+
+    assert all(np.isnan(value) for value in stats)
 
 
 def test_hac_bandwidth_is_at_least_the_overlap_length():
@@ -443,9 +505,10 @@ def test_event_grid_uses_hac_and_calendar_bootstrap_not_the_iid_path(monkeypatch
 
     assert len(grid) == 128
     assert calls["iid"] == 0 and calls["filtered_bootstrap"] == 0
-    # 128 cells x (cell + inverse + 3 placebos) scored with HAC.
-    assert calls["hac"] >= 128 * 5
-    # The bootstrap interval is a property of the cell under test only: the
-    # inverse and the three placebos report means and p-values, never a CI, so
-    # exactly one interval per cell is computed.
-    assert calls["calendar"] == 128
+    # Each eligible cell and eligible control uses HAC; below-floor cells are
+    # retained in the declared family but deliberately have no inference.
+    eligible = grid["n_events"] >= n1.MIN_EVENTS
+    assert calls["hac"] >= int(eligible.sum()) * 5
+    # The bootstrap interval is a property of an eligible cell under test only:
+    # the inverse and the three placebos report means and p-values, never a CI.
+    assert calls["calendar"] == int(eligible.sum())

@@ -233,7 +233,7 @@ def test_timeline_placebo_rolls_the_mask_by_one_seeded_offset(features):
         mask = pairs[row["signal"]]
         rolled = n1.roll_mask(mask, offset=n1.shift_offset(len(mask), n1.SEED + horizon))
         expected = float(features[f"fwd_{horizon}d"][rolled].mean())
-        if not np.isfinite(expected):
+        if not np.isfinite(expected) or int(rolled.sum()) < n1.MIN_EVENTS:
             continue
         assert row["placebo_shift_mean"] == pytest.approx(expected, rel=1e-9, abs=1e-12), row["signal"]
         checked += 1
@@ -314,8 +314,29 @@ def test_timeline_placebo_keeps_the_signal_but_changes_its_alignment(features):
     assert subset["placebo_timing_mean"].std() > 0
 
 
+def test_panel_fdr_keeps_low_count_primary_cells_in_the_bh_denominator(features):
+    panels = {
+        symbol: n1.event_grid(features.assign(), bootstraps=50).assign(symbol=symbol)
+        for symbol in ("BNBUSDT", "XRPUSDT")
+    }
+    combined = pd.concat([panels[s] for s in panels], ignore_index=True)
+    combined = combined[combined["kind"] == "primary"]
+    assert len(combined) == 192
+    baseline = n1.apply_panel_fdr(combined)
+    low_count = baseline["p_value"].isna()
+    assert low_count.any()
+
+    injected = combined.copy()
+    injected.loc[low_count, "p_value"] = 1.0
+    with_low_count_controls = n1.apply_panel_fdr(injected)
+    eligible = ~low_count
+    np.testing.assert_allclose(
+        baseline.loc[eligible, "bh_q_panel"],
+        with_low_count_controls.loc[eligible, "bh_q_panel"],
+    )
+
+
 def test_panel_fdr_runs_on_the_union_of_primary_cells_of_every_asset(features):
-    grid = n1.event_grid(features, bootstraps=50)
     panels = {
         symbol: n1.event_grid(features.assign(), bootstraps=50).assign(symbol=symbol)
         for symbol in ("BNBUSDT", "XRPUSDT")
@@ -325,8 +346,10 @@ def test_panel_fdr_runs_on_the_union_of_primary_cells_of_every_asset(features):
     assert len(combined) == 192
     out = n1.apply_panel_fdr(combined)
     assert len(out) == len(combined)
-    assert out["bh_q_panel"].notna().all()
-    assert (out["bh_q_panel"] >= out["p_value"] - 1e-12).all()
+    tested = out["p_value"].notna()
+    assert out.loc[tested, "bh_q_panel"].notna().all()
+    assert out.loc[~tested, "bh_q_panel"].isna().all()
+    assert (out.loc[tested, "bh_q_panel"] >= out.loc[tested, "p_value"] - 1e-12).all()
     assert out["retention_final"].equals(out["retention"] & (out["bh_q_panel"] < 0.05))
 
 
@@ -364,3 +387,16 @@ def test_run_symbol_counts_cells_programmatically(monkeypatch, daily, tmp_path):
     assert result["primary_cells"] >= 80
     assert result["retained"] == int(result["grid"]["retention_final"].sum())
     assert result["cutoff_exclusive"] == "2024-07-01T00:00:00+00:00"
+
+
+def test_run_panel_applies_bh_to_the_fixed_five_asset_primary_family(monkeypatch, daily, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(n1, "build_daily", lambda symbol: daily)
+    result = n1.run_panel(bootstraps=50)
+
+    assert set(result) == set(n1.SYMBOLS)
+    combined = pd.concat([result[symbol]["grid"] for symbol in n1.SYMBOLS], ignore_index=True)
+    primary = combined["kind"] == "primary"
+    assert int(primary.sum()) == len(n1.SYMBOLS) * len(n1.PRIMARY_SIGNALS) * len(HORIZONS) == 480
+    assert combined.loc[primary & combined["p_value"].notna(), "bh_q_panel"].notna().all()
+    assert combined.loc[primary & combined["p_value"].isna(), "bh_q_panel"].isna().all()
