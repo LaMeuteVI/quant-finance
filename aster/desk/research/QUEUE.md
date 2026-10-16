@@ -10,9 +10,12 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
 
 ## Block 0: hygiene and infrastructure
 
-- **Q0 — Integrate the N1 correction worktree.** `READY`
+- **Q0 — Integrate the N1 correction worktree.** `DONE (2026-10-16, 9e40c01; follow-up: the commit also tracked a self-referential `aster/desk/data` symlink, untracked again in the next commit, see Q0b)`
   The Kanban card `t_5b11e143` (prereg-conformant SMA states, placebo 14d→7d, panel BH) left uncommitted changes in `.worktrees/`. Review the diff, run the targeted tests and the full suite, commit on `wt/aster-n1-alts`, merge into `feat/aster-agent`, push. Make sure `data/` inside the worktree is a symlink or gitignored, never committed. Remove the stale `.worktrees/t_1a257193` entry if it is empty.
   DoD: `git status` clean in the main tree and the worktree; merged commit hash in the N1-alts note; 0/640 result re-stated from the corrected artefacts.
+
+- **Q0b — Restore the local data store.** `READY` (GREEN)
+  After `git pull`, `aster/desk/data` must be a real directory or a symlink to the real store, never a link to itself. `ls -la aster/desk/data`; if it is still a link to itself, `rm aster/desk/data` (removes only the link). Find the store: `find / -xdev -name '*.manifest.json' -path '*r2*' 2>/dev/null | head` and `ls /root/marketdata-binance-phase1`. Then link it (`ln -s <store root> aster/desk/data`) or re-run `uv run desk data import` (GREEN). DoD: `uv run desk data check` green on the 12 symbols, `uv run pytest -q` green, a one-line note in `research/atlas/data-sources.md` saying where the store lives.
 
 - **Q1 — True sealed holdout (D2).** `READY` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–12
   Import post-cutoff months (2024-07 → latest available) for every symbol into `data/sealed/`, from the existing R2 bucket if it holds them, else from `data.binance.vision`. The import computes only sha256, row count, first/last timestamp and timestamp unit; no returns, no statistics, no plots. `read_local()` and every research module must be unable to read `data/sealed/` (test it). `read_holdout()` reads the sealed store, single-shot per (hypothesis, symbol), persisted in the ledger rather than in memory. Update `research/notes/2026-10-15-holdout-audit.md` and the `r2_klines.py` docstring: option A becomes the contaminated dev-validation window.

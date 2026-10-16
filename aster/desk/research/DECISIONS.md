@@ -11,6 +11,8 @@
 | **ORANGE** | Do it, log one line below, keep going. | Registering a ledger hypothesis that follows `policies/research_protocol.md`; dev backtests through `desk backtest`; rejecting a hypothesis with its lesson; closing one signal class as null after the coverage check (section 3); choosing between two valid methods; adding a new QUEUE item above the current top. |
 | **RED** | Stop and ask Samuel, with options and a recommendation. | Any spending (paid data, paid APIs, compute); live trading, keys, secrets, withdrawals; `desk promote`, `desk kill off`; editing `risk/`, `execution/`, `policies/`, `config/risk_limits.yaml`; **reading a holdout** (`--sample holdout`, `read_holdout`); starting paper trading for a hypothesis; deleting data or rewriting git history; changing the brief's success criteria; closing the whole research programme. |
 
+Clarification on git and files: "rewriting git history" means `rebase`, `reset --hard` on pushed commits, `push --force`, or amending pushed commits. A normal commit that removes, renames or fixes a tracked file or symlink (for example a wrongly committed `data` symlink) is **GREEN**. So is repairing local links and paths inside the desk. Only deleting actual market data files is RED; when data is missing, re-import it (GREEN).
+
 Rule of thumb: if it is not RED, it is not a question. Pick what you would recommend, log it if ORANGE, and continue.
 
 ## 2. Decisions already taken (2026-10-16, Samuel)

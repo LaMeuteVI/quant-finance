@@ -38,6 +38,12 @@ If a question is not RED, it is not a question: pick the option you would recomm
 5. Mark it `DONE` with commit hash + artifact paths + a one-line finding. If the work produced new questions, append them as new items (`READY` or `IDEA`) at the right priority; do not ask Samuel about them.
 6. End the turn with the handoff block below, then go straight to the next item if budget remains.
 
+Truthfulness rules for the protocol:
+- Describe a QUEUE item only by quoting its title from the file (`grep -n '^- \*\*' research/QUEUE.md`), never from memory.
+- A commit hash appears in a report only if `git log origin/feat/aster-agent --oneline` shows it. Push first, then report.
+- An item is `DONE` only once its QUEUE.md line has been edited and pushed. Saying "terminé" in chat does not count.
+- Before calling something RED, quote the RED line of DECISIONS.md it matches. If no line matches, it is GREEN or ORANGE: do it.
+
 An item too large for one turn is split into sub-items in QUEUE.md (`Q12a`, `Q12b`, …) so that each turn closes something.
 
 ## Handoff block (last lines of every turn's answer)
