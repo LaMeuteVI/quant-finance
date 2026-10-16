@@ -74,7 +74,9 @@ Previous N1–N5 work was mostly at daily horizons. The brief's intraday cells a
 ## Block 2: alt depth and inter-asset (former C, D, E)
 One `delegate_task` sub-agent per asset, in parallel, never reading each other; Skeptic after.
 
-- **Q9 — N2 per alt (BNB, XRP, SOL, LINK, DOGE, XMR; then AAVE, FET, NEAR, SUI in panel).** `READY` · former C · reuse the Q5 code
+- **Q9 — N2 per alt (BNB, XRP, SOL, LINK, DOGE, XMR; then AAVE, FET, NEAR, SUI in panel).** `DONE (2026-10-16, q9-commit)` · former C · reuse the Q5 code
+  Preregistration: `research/notes/2026-10-16-Q9-prereg.md`. Assets × timeframes grid, descriptive only; no ledger hypothesis.
+  Artefact: `research/atlas/q9_intraday_n2.json` (50 cells); memo: `research/memos/2026-10-16-Q9-N5.md`; tests: `tests/test_q9_intraday_n2.py` (4). Findings: lag-1 return autocorrelation negative in 43/50 cells (mean −0.0302); absolute-return autocorrelation positive in 50/50 (mean +0.3116); Hurst 0.5780–0.6527 in 49/50 finite cells. The generalisation is descriptive only; no cost/capacity evidence and no candidate.
 - **Q10 — N3 per alt** (GARCH/EGARCH/GJR, inverse leverage effect, HAR-RV, Diebold–Mariano vs naïve, compression → expansion). `READY` · former D
 - **Q11 — N4 per alt** (threshold/Markov/HMM, BTC-correlation regimes, re-read of N1–N3 by regime). `READY` · former D
 - **Q12 — N5 per alt** (flow on klines, then on aggTrades where Q4 is extended). `READY` · former D
