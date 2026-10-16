@@ -19,6 +19,7 @@ import pandas as pd
 from aster import paths
 from aster.backtest.engine import CostModel, run_backtest
 from aster.backtest.metrics import PERIODS_PER_YEAR, summary, worst_windows
+from aster.data.r2_klines import CUTOFF, read_holdout as _read_holdout
 from aster.data import store
 from aster.data.quality import check_ohlcv
 from aster.ledger.db import Ledger, LedgerError
@@ -33,6 +34,55 @@ def _gates(cfg: dict, prediction: dict) -> dict:
     g = dict(cfg.get("gates", {}))
     g.update({k: v for k, v in prediction.items() if k in g})
     return g
+
+
+def _build_holdout_prices(ledger: Ledger, hypothesis_id: str, symbols: list[str],
+                          *, exchange: str, timeframe: str) -> pd.DataFrame:
+    """Assemble the post-cutoff close panel for a holdout backtest.
+
+    The sealed store only carries 1-minute klines, so the function reads
+    each symbol's sealed Parquet through :func:`read_holdout` (which
+    atomically consumes the ledger gate) and resamples to ``timeframe``
+    with the same :func:`build_bars` contract the dev path uses. The
+    result is a wide close panel (UTC index x symbols), every row
+    strictly at or after the exploration cutoff.
+
+    Raises whatever :func:`read_holdout` raises: missing partitions,
+    already-consumed gates, schema drift, or a sealed frame that crosses
+    the cutoff. The caller is expected to have checked the dev gate.
+    """
+    if timeframe not in {"1d", "4h", "1h", "15m", "5m"}:
+        raise ValueError(f"unsupported holdout timeframe {timeframe!r}")
+    from aster.data.bars import build_bars, normalise_clock
+    from aster.data.r2_backtest_store import R2_TO_PIPELINE_SYMBOL
+
+    panels: dict[str, pd.Series] = {}
+    for r2_symbol in R2_TO_PIPELINE_SYMBOL:
+        pipeline_symbol = R2_TO_PIPELINE_SYMBOL[r2_symbol]
+        if pipeline_symbol not in symbols:
+            continue
+        sealed = _read_holdout(r2_symbol, hypothesis_id=hypothesis_id, ledger=ledger)
+        if sealed.empty:
+            continue
+        # The sealed store is 1-minute; the bar bridge resamples with the
+        # same rules as the pre-cutoff side. ``label='close'`` is the only
+        # research-grade label: a bar at t contains information up to t
+        # and is not usable at t.
+        repaired, _ = normalise_clock(sealed)
+        bars = build_bars(repaired, timeframe, label="close", drop_frozen=False)
+        if bars.empty:
+            continue
+        panels[pipeline_symbol] = bars["close"]
+    if not panels:
+        raise ValueError(
+            f"holdout assembled no symbols: requested {symbols}, sealed store empty"
+        )
+    wide = pd.DataFrame(panels).sort_index()
+    if wide.index.empty or wide.index.min() < CUTOFF:
+        raise ValueError(
+            f"holdout frame contains a pre-cutoff row ({wide.index.min() if len(wide.index) else 'n/a'})"
+        )
+    return wide
 
 
 def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
@@ -97,8 +147,8 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
 
     # ---- data ---------------------------------------------------------------
     quality = {}
+    symbols = list(universe)  # used by both the loader and the holdout reader
     if prices is None:
-        symbols = list(universe)
         for s in symbols:
             rep = check_ohlcv(store.read("ohlcv", cfg["exchange"], s, timeframe), timeframe)
             quality[s] = {"errors": rep.errors, "warnings": rep.warnings}
@@ -110,18 +160,45 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             # columns by the engine; the store loader keeps the union.
             funding = store.load_funding(cfg["exchange"], symbols, timeframe)
 
-    holdout_start = sealed_split(prices.index, cfg.get("holdout_frac", 0.25))
+    holdout_start = CUTOFF  # P3: sealed cutoff, NOT holdout_frac on the pre-cutoff index
     if hyp["holdout_start"]:
-        holdout_start = pd.Timestamp(hyp["holdout_start"])
+        # Backwards-compatible override: an old ledger row may carry a
+        # pre-P3 quantile-based holdout_start. Refuse to honour it: a
+        # quantile that lies inside the pre-cutoff window is exactly the
+        # leak P3 was written to close.
+        configured = pd.Timestamp(hyp["holdout_start"])
+        if configured < CUTOFF:
+            raise LedgerError(
+                f"hypothesis {hypothesis_id} carries a pre-P3 holdout_start "
+                f"({configured.isoformat()}) inside the pre-cutoff window; "
+                "the holdout must be the sealed store from 2024-07-01"
+            )
+        holdout_start = configured
     else:
         ledger.seal_holdout(hypothesis_id, holdout_start.isoformat())
 
     if sample == "dev":
+        # The bar bridge already materialises pre-cutoff bars only. A
+        # dev run therefore cannot read a single sealed row by construction.
         px = prices[prices.index < holdout_start]
+        if not px.empty and px.index.max() >= holdout_start:
+            # Defence in depth: the bridge invariant must hold, but if a
+            # caller ever sneaks a non-pre-cutoff frame in, fail closed.
+            raise ValueError(
+                f"dev sample crosses the exploration cutoff "
+                f"({px.index.max().isoformat()} >= {holdout_start.isoformat()})"
+            )
         start = None
     elif sample == "holdout":
+        # The sealed store is read exactly once per (hypothesis, symbol)
+        # pair through ``consume_sealed_holdout``. The ledger gate raises
+        # if the dev backtest has not passed or the pair has already been
+        # consumed. This is the only way a post-cutoff row enters the
+        # backtest.
         ledger.consume_holdout(hypothesis_id)   # raises if not allowed or already read
-        px, start = prices, holdout_start
+        px = _build_holdout_prices(ledger, hypothesis_id, symbols, exchange=cfg["exchange"],
+                                    timeframe=timeframe)
+        start = holdout_start
     else:
         raise ValueError("sample must be dev or holdout")
 

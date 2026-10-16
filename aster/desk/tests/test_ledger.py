@@ -48,7 +48,7 @@ def test_live_needs_human():
     assert L.get(hid)["approved_by"] == "Samuel"
 
 
-def test_pipeline_counts_trials_and_holdout_is_single_use(prices):
+def test_pipeline_counts_trials_and_holdout_is_single_use(prices, monkeypatch):
     L = Ledger()
     hid = _new(L)
     r1 = pipeline.run(hid, "tsmom", {"lookback": 60}, ledger=L, prices=prices)
@@ -61,8 +61,15 @@ def test_pipeline_counts_trials_and_holdout_is_single_use(prices):
         pipeline.run(hid, "tsmom", {}, sample="holdout", ledger=L, prices=prices)
     with L._conn() as c:
         c.execute("UPDATE hypotheses SET status = 'backtest_passed' WHERE id = ?", (hid,))
-    pipeline.run(hid, "tsmom", {}, sample="holdout", ledger=L, prices=prices)
-    with pytest.raises(LedgerError):
+    # P3: the holdout is the sealed store, not the pre-cutoff index. The
+    # sealed store is empty in the test fixture, so the first call raises
+    # a ``FileNotFoundError`` from the sealed reader *after* the ledger
+    # gate has been consumed. The second call therefore raises
+    # ``LedgerError("holdout already read")`` — the single-use gate fires
+    # before the missing partition is even looked at.
+    with pytest.raises((FileNotFoundError, ValueError)):
+        pipeline.run(hid, "tsmom", {}, sample="holdout", ledger=L, prices=prices)
+    with pytest.raises(LedgerError, match="holdout already read"):
         pipeline.run(hid, "tsmom", {}, sample="holdout", ledger=L, prices=prices)
 
 
