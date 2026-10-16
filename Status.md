@@ -91,11 +91,11 @@ The full pre-registration / trial / verdict protocol is in `policies/research_pr
 |---|---|---|
 | Audit t_1a257193 worktree after the sub-agent's N1-alt run | ✅ done (2026-10-15) | — |
 | Audit data: provenance, ms/µs, gaps, frozen minutes, XMR, HYPE, aggTrades | ✅ done (2026-10-15) | — |
-| Compare desk to Phase 0 of the brief, propose a minimal plan | ✅ done (2026-10-15) | Samuel picks A–G |
+| Compare desk to Phase 0 of the brief, propose a minimal plan | ✅ done (2026-10-15) | superseded by `research/QUEUE.md` |
 | Fix BACKLOG.md and `.gitignore` | ✅ done (BACKLOG items 16-17 added; `.worktrees/` already ignored) | — |
 | Write `Status.md` and agent handoff files | ✅ done (this file) | — |
-| **H1**: Holdout split, sealed, written down | ⏳ **pending Samuel's OK** | ledger preregistration template needs to add `holdout_lock` |
-| **H2**: At least one crypto strategy with real, net, defensible, scalable edge | ⏳ blocked on (a) tick microstructure data or (b) extending the matrix on a different signal class | requires budget OK for Tardis/Kaiko OR an N2-N5 run per alt that surfaces a candidate |
+| **H1**: Holdout split, sealed, written down | ⏳ decided (DECISIONS D2): true holdout = sealed data from 2024-07-01 | QUEUE Q1 + P3 |
+| **H2**: At least one crypto strategy with real, net, defensible, scalable edge | ⏳ blocked on (a) tick microstructure data or (b) extending the matrix on a different signal class | QUEUE Block P, fast track F1–F3, Block 1 (free Binance Vision data, no budget needed: DECISIONS D3) |
 
 ## 4. Work remaining
 
@@ -112,7 +112,7 @@ The ordered standing plan and autonomy boundaries are maintained in `aster/desk/
 7. **Run every backtest through `desk backtest`.** Outside-the-pipeline runs inflate the DSR.
 8. **Datasets**: all data lives in `data/` (gitignored). R2 is the source of truth; never trust a derived parquet without its manifest SHA256.
 9. **Tests**: `uv run pytest` must stay green. Do not weaken a gate to make something pass.
-10. **Sub-agents**: spawn only Aster sub-agents (Scout, Researcher, Skeptic, Breaker, Critic) via `delegate_task`, never external agents (Forge, Kanban, etc.).
+10. **Sub-agents**: spawn only Aster sub-agents (Scout, Researcher, Skeptic, Breaker, Critic) via `delegate_task`, or Kanban goal-mode cards for QUEUE items (DECISIONS D6).
 11. **Live**: never. Samuel decides live promotion. `desk kill on` is human-only.
 
 ### 5.1 Common commands
@@ -152,9 +152,7 @@ There is **no live strategy** to copy-trade. The following were tested and rejec
 
 ## 7. Open questions for Samuel
 
-1. **Tick microstructure data acquisition** (Tardis / Kaiko / Databento). The 1m kline panel cannot expose residual idiosyncratic alpha; the next credible axis is tick data. This requires budget OK **and** a new cutoff seal post-acquisition. Do you want me to (a) draft a data-acquisition memo for one vendor, (b) close the klines research axis and stop until a decision, or (c) continue on a different signal class first?
-2. **Holdout seal**: which cutoff do you want locked in? The current cutoff is the exploration cutoff (`2024-07-01`); the dev/holdout split has not been written down yet.
-3. **Time horizon**: how many more days/weeks of the current rig do you want before deciding (1)?
+None. The former questions (tick data budget, holdout cutoff, time horizon) are answered in `aster/desk/research/DECISIONS.md` (D2, D3, D4). New questions are raised only for RED items.
 
 ## 8. Where things live (file index)
 
