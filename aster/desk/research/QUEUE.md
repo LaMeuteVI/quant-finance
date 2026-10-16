@@ -14,7 +14,7 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
   The Kanban card `t_5b11e143` (prereg-conformant SMA states, placebo 14d→7d, panel BH) left uncommitted changes in `.worktrees/`. Review the diff, run the targeted tests and the full suite, commit on `wt/aster-n1-alts`, merge into `feat/aster-agent`, push. Make sure `data/` inside the worktree is a symlink or gitignored, never committed. Remove the stale `.worktrees/t_1a257193` entry if it is empty.
   DoD: `git status` clean in the main tree and the worktree; merged commit hash in the N1-alts note; 0/640 result re-stated from the corrected artefacts.
 
-- **Q0b — Restore the local data store.** `READY` (GREEN)
+- **Q0b — Restore the local data store.** `BLOCKED_ON legacy data-check contract: only 5 daily symbols, while Q0b requires green on 12 R2 symbols`
   After `git pull`, `aster/desk/data` must be a real directory or a symlink to the real store, never a link to itself. `ls -la aster/desk/data`; if it is still a link to itself, `rm aster/desk/data` (removes only the link). Find the store: `find / -xdev -name '*.manifest.json' -path '*r2*' 2>/dev/null | head` and `ls /root/marketdata-binance-phase1`. Then link it (`ln -s <store root> aster/desk/data`) or re-run `uv run desk data import` (GREEN). DoD: `uv run desk data check` green on the 12 symbols, `uv run pytest -q` green, a one-line note in `research/atlas/data-sources.md` saying where the store lives.
 
 - **Q1 — True sealed holdout (D2).** `READY` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–12
