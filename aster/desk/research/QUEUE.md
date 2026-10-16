@@ -99,4 +99,4 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
   Meta-labeling on primary signals, triple barrier, purged CV with embargo, MDA/SFI by feature clusters, trial count reported.
 - **Q19 — N7 synthesis and preregistration.** `BLOCKED_ON Q5–Q14`
   Per asset: signal map (horizon, IC with CI, corrected t, IC decay, bps vs cost, regime dependence, capacity, correlation to other signals). Register the 1–3 most mature hypotheses (ORANGE), dev backtests (ORANGE), Skeptic and Breaker, capacity at 100k/1M/10M/50M. **Holdout read and paper are RED.**
-- **Q20 — Weekly "État de la recherche".** `READY`, every Sunday: matrix, candidates, what died and why, effort reallocation.
+- **Q20 — Weekly "État de la recherche".** `DONE (2026-10-16, c056f3c)`, every Sunday: matrix, candidates, what died and why, effort reallocation.
