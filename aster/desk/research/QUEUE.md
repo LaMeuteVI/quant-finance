@@ -77,7 +77,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 - **Q9 — N2 per alt (BNB, XRP, SOL, LINK, DOGE, XMR; then AAVE, FET, NEAR, SUI in panel).** `DONE (2026-10-16, 38423dc)` · former C · reuse the Q5 code
   Preregistration: `research/notes/2026-10-16-Q9-prereg.md`. Assets × timeframes grid, descriptive only; no ledger hypothesis.
   Artefact: `research/atlas/q9_intraday_n2.json` (50 cells); memo: `research/memos/2026-10-16-Q9-N5.md`; tests: `tests/test_q9_intraday_n2.py` (4). Findings: lag-1 return autocorrelation negative in 43/50 cells (mean −0.0302); absolute-return autocorrelation positive in 50/50 (mean +0.3116); Hurst 0.5780–0.6527 in 49/50 finite cells. The generalisation is descriptive only; no cost/capacity evidence and no candidate.
-- **Q10 — N3 per alt** (GARCH/EGARCH/GJR, inverse leverage effect, HAR-RV, Diebold–Mariano vs naïve, compression → expansion). `DONE (2026-10-16, q10-commit)` · former D
+- **Q10 — N3 per alt** (GARCH/EGARCH/GJR, inverse leverage effect, HAR-RV, Diebold–Mariano vs naïve, compression → expansion). `DONE (2026-10-16, 6e1ce7d)` · former D
   Preregistration: `research/notes/2026-10-16-Q10-prereg.md`. Descriptive pseudo-OOS forecast grid; no strategy hypothesis.
   Artefact: `research/atlas/q10_volatility.json` (60 comparison cells, 5,129 forecasts); memo: `research/memos/2026-10-16-Q10-N5.md`; tests: `tests/test_q10_volatility.py` (3) plus `tests/test_n3_vol.py` (3). Findings: HAR beats the fixed naïve forecast in 18/20 BH-FDR cells and is sign-stable in 18/20; 52/60 cells pass BH q<0.05, 50/60 are sign-stable. Forecast value only, no alpha/candidate.
 - **Q11 — N4 per alt** (threshold/Markov/HMM, BTC-correlation regimes, re-read of N1–N3 by regime). `READY` · former D
