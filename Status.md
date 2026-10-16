@@ -97,17 +97,9 @@ The full pre-registration / trial / verdict protocol is in `policies/research_pr
 | **H1**: Holdout split, sealed, written down | ⏳ **pending Samuel's OK** | ledger preregistration template needs to add `holdout_lock` |
 | **H2**: At least one crypto strategy with real, net, defensible, scalable edge | ⏳ blocked on (a) tick microstructure data or (b) extending the matrix on a different signal class | requires budget OK for Tardis/Kaiko OR an N2-N5 run per alt that surfaces a candidate |
 
-## 4. Work remaining — Samuel decides
+## 4. Work remaining
 
-Each is **substantive** and needs explicit approval before code or data work. None has been started.
-
-- **A — Holdout seal.** Pick a cutoff, write the train/dev/holdout boundaries into a committed file, lock the holdout path in `r2_klines.py`. Required before any further backtest.
-- **B — Axe 8 microstructure proxy from aggTrades.** Build the aggTrades → trades/min → flow-imbalance pipeline on the 6 assets where 2024-06 data exists (BTC/ETH/BNB/SOL/XRP/DOGE). 1 month window only — useful for pipeline validation, not for a multi-year backtest.
-- **C — N2 per alt** (5 alts). Distribution, autocorr, Hurst, jumps.
-- **D — N3–N5 per alt.** Vol + regimes + microstructure proxies.
-- **E — Section 6 inter-asset.** Dependence structure, lead-lag grid, panel cointegration, canonical residual.
-- **F — Atlas.** Lead-lag, regimes, asset dossiers `research/assets/<SYMBOLE>.md` consolidated.
-- **G — Web scout** (SSRN/arXiv) and update of `research/veille/`.
+The ordered standing plan and autonomy boundaries are maintained in `aster/desk/research/QUEUE.md` and `aster/desk/research/DECISIONS.md`. The first READY item is executed automatically unless it is classified RED there.
 
 ## 5. How to pick up the work (any agent, any session)
 

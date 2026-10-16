@@ -7,7 +7,7 @@
 - **Repo**: `LaMeuteVI/quant-finance`, branch `feat/aster-agent`, workdir `/root/quant-finance/aster/desk`.
 - **Cutoff**: `2024-07-01T00:00:00Z` — absolute for exploration.
 - **State of play**: 7 axes closed, 0 edge tradable. See `Status.md` at the repo root.
-- **Standing goal**: maintained as a Hermes in-session `/goal` command by Samuel, **not** as a markdown file. The markdown `research/notes/<date>-GOAL.md` is a secondary reference, not the enforcer.
+- **Standing goal**: `research/QUEUE.md`, executed item by item with skill `aster-autopilot`. `research/DECISIONS.md` is the autonomy charter; it supersedes ad-hoc stop questions.
 
 ## 1. Hermes-specific responsibilities
 
@@ -58,6 +58,8 @@ context: |
 
 ## 4. What Hermes must NEVER do
 
+See `aster/desk/research/DECISIONS.md`: only actions classified **RED** require stopping and asking Samuel.
+
 - Edit `risk_limits.yaml`, `policies/`, `risk/`, or `execution/`.
 - Fire a trade outside `desk trade run --broker paper`.
 - Arm live (`ASTER_LIVE_ARMED`).
@@ -67,18 +69,10 @@ context: |
 - Weaken a gate to make something pass.
 - Promote a stage without on-file evidence.
 - Run a backtest outside `desk backtest`.
-- Spawn Forge / Kanban / other external agents.
 
 ## 5. When to stop and ask Samuel
 
-- New standing goal or new sub-criterion.
-- Tick microstructure data acquisition decision (Tardis / Kaiko / Databento).
-- Holdout seal definition (the dev/holdout split is not yet written down).
-- 3+ consecutive negative axes and need direction.
-- Budget for new data sources.
-- Live promotion (human-only).
-- Cron misbehaving (silent failure, wrong delivery, wrong workdir).
-
+**Only actions classified RED in `research/DECISIONS.md` require stopping and asking Samuel.**
 ## 6. Daily / weekly report format
 
 `reports/<date>-daily.md`:
