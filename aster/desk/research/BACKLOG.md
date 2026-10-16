@@ -30,6 +30,10 @@ Q6 uses the existing pre-cutoff BTCUSDT aggTrades store (4 partitions, 2022-01�
 
 The 640-cell raw/residual grid produced 104 raw and 59 residual BH + block-bootstrap survivors, but zero exceeded the optimistic 100k-USDT cost hurdle and only 5 residual cells had common half-year sign. The prereg residual-survivor prediction (<5%) was falsified (18.4%), so the null is not a statement that no statistical dependence exists; it is a statement that the dependence is not economically tradable in this sample. Artefact: `research/atlas/q7_intraday_leadlag.json`; memo: `research/memos/2026-10-16-Q7-N5.md`.
 
+22. **Q8 — Funding/carry V1 — descriptive, no strategy hypothesis (2026-10-16).**
+
+The 12-symbol Q3 funding store contains 4,929 aligned 8-hour fixing rows. Mean funding is +1.234 bps/fixing; median positive-fixing fraction is 84.1%; mean lag-1 persistence is 0.737. Extreme funding predicts future funding-rate persistence, but Q8 V1 has no premium, perp-price, open-interest, borrow or basis-risk panel, so the annualised carry quote is not a net strategy return. Artefact: `research/atlas/q8_funding_carry.json`; memo: `research/memos/2026-10-16-Q8-N5.md`.
+
 - Reference: `research/atlas/costs.md`; aggTrades primary `is_buyer_maker`, tick-rule control; sensitivities x1/x3/x10.
 - Current public snapshot: `research/atlas/current-orderbook-snapshot.csv`, authorised operational validation only.
 - High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs.
