@@ -26,6 +26,10 @@ Global exploration cutoff: `2024-07-01T00:00:00Z`. Priority means dependency ord
 
 Q6 uses the existing pre-cutoff BTCUSDT aggTrades store (4 partitions, 2022-01→2022-04) and 50-BTC volume bars on a deterministic 10% sample. It finds positive lag-1 signed-flow autocorrelation (+0.172) and symmetric extreme-flow next-bar returns (+0.014% / −0.014%). This is a microstructure observation, not a net-of-cost strategy; no ledger hypothesis is registered. Artifact: `research/atlas/q6_intraday_flow.json`; memo: `research/memos/2026-10-16-Q6-N5.md`. ETH, VPIN and kline-proxy comparison remain open variants, not silently inferred.
 
+21. **Q7 — Intraday lead-lag V1 — no candidate (2026-10-16).**
+
+The 640-cell raw/residual grid produced 104 raw and 59 residual BH + block-bootstrap survivors, but zero exceeded the optimistic 100k-USDT cost hurdle and only 5 residual cells had common half-year sign. The prereg residual-survivor prediction (<5%) was falsified (18.4%), so the null is not a statement that no statistical dependence exists; it is a statement that the dependence is not economically tradable in this sample. Artefact: `research/atlas/q7_intraday_leadlag.json`; memo: `research/memos/2026-10-16-Q7-N5.md`.
+
 - Reference: `research/atlas/costs.md`; aggTrades primary `is_buyer_maker`, tick-rule control; sensitivities x1/x3/x10.
 - Current public snapshot: `research/atlas/current-orderbook-snapshot.csv`, authorised operational validation only.
 - High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs.
