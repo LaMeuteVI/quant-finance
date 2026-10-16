@@ -1,0 +1,377 @@
+{
+  "protocol": {
+    "cutoff_exclusive": "2024-07-01 00:00:00+00:00",
+    "start": "2021-01-01 00:00:00+00:00",
+    "symbols": [
+      "BNBUSDT",
+      "XRPUSDT",
+      "SOLUSDT",
+      "LINKUSDT",
+      "DOGEUSDT",
+      "AAVEUSDT",
+      "SUIUSDT",
+      "NEARUSDT"
+    ],
+    "bootstrap_draws": 1000,
+    "seed": 3671724849,
+    "status": "descriptive_only"
+  },
+  "panel": {
+    "n_days": 423,
+    "n_symbols": 8,
+    "start": "2023-05-05 00:00:00+00:00",
+    "end": "2024-06-30 00:00:00+00:00"
+  },
+  "raw_corr_max_offdiag": 0.5955502442237047,
+  "denoising": {
+    "mp_upper": 68.41803957224899,
+    "eigenvalues": [
+      4.374525280316992,
+      0.7000309050509776,
+      0.6360415150441381,
+      0.5716663054634011,
+      0.4711528968793678,
+      0.4571105588221566,
+      0.41108126506501835,
+      0.3783912733579484
+    ],
+    "market_mode_norm": 2.0915365835473665,
+    "detoned_max_offdiag": 0.1200557878177172,
+    "max_offdiag": 0.0
+  },
+  "clustering": {
+    "best_k": 2,
+    "by_k": {
+      "2": {
+        "silhouette": 0.125,
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2
+        ]
+      },
+      "3": {
+        "silhouette": 0.125,
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2
+        ]
+      },
+      "4": {
+        "silhouette": 0.125,
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2
+        ]
+      }
+    },
+    "chosen_labels": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  "clustering_table": [
+    {
+      "k": 2,
+      "silhouette": 0.125,
+      "labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ]
+    },
+    {
+      "k": 3,
+      "silhouette": 0.125,
+      "labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ]
+    },
+    {
+      "k": 4,
+      "silhouette": 0.125,
+      "labels": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ]
+    }
+  ],
+  "stability": {
+    "bootstrap_draws": 50,
+    "block": 5,
+    "top_allocations": [
+      [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2
+        ],
+        50
+      ]
+    ]
+  },
+  "lower_tail_unconditional": {
+    "quantile": 0.1,
+    "pairs": [
+      {
+        "pair": "BNBUSDT/XRPUSDT",
+        "joint_lower": 0.054373522458628844,
+        "n_days": 423,
+        "n_crashes": 23
+      },
+      {
+        "pair": "BNBUSDT/SOLUSDT",
+        "joint_lower": 0.04491725768321513,
+        "n_days": 423,
+        "n_crashes": 19
+      },
+      {
+        "pair": "BNBUSDT/LINKUSDT",
+        "joint_lower": 0.05200945626477541,
+        "n_days": 423,
+        "n_crashes": 22
+      },
+      {
+        "pair": "BNBUSDT/DOGEUSDT",
+        "joint_lower": 0.04728132387706856,
+        "n_days": 423,
+        "n_crashes": 20
+      },
+      {
+        "pair": "BNBUSDT/AAVEUSDT",
+        "joint_lower": 0.04491725768321513,
+        "n_days": 423,
+        "n_crashes": 19
+      },
+      {
+        "pair": "BNBUSDT/SUIUSDT",
+        "joint_lower": 0.037825059101654845,
+        "n_days": 423,
+        "n_crashes": 16
+      },
+      {
+        "pair": "BNBUSDT/NEARUSDT",
+        "joint_lower": 0.04728132387706856,
+        "n_days": 423,
+        "n_crashes": 20
+      },
+      {
+        "pair": "XRPUSDT/SOLUSDT",
+        "joint_lower": 0.04964539007092199,
+        "n_days": 423,
+        "n_crashes": 21
+      },
+      {
+        "pair": "XRPUSDT/LINKUSDT",
+        "joint_lower": 0.054373522458628844,
+        "n_days": 423,
+        "n_crashes": 23
+      },
+      {
+        "pair": "XRPUSDT/DOGEUSDT",
+        "joint_lower": 0.0591016548463357,
+        "n_days": 423,
+        "n_crashes": 25
+      },
+      {
+        "pair": "XRPUSDT/AAVEUSDT",
+        "joint_lower": 0.0591016548463357,
+        "n_days": 423,
+        "n_crashes": 25
+      },
+      {
+        "pair": "XRPUSDT/SUIUSDT",
+        "joint_lower": 0.04491725768321513,
+        "n_days": 423,
+        "n_crashes": 19
+      },
+      {
+        "pair": "XRPUSDT/NEARUSDT",
+        "joint_lower": 0.04964539007092199,
+        "n_days": 423,
+        "n_crashes": 21
+      },
+      {
+        "pair": "SOLUSDT/LINKUSDT",
+        "joint_lower": 0.06382978723404255,
+        "n_days": 423,
+        "n_crashes": 27
+      },
+      {
+        "pair": "SOLUSDT/DOGEUSDT",
+        "joint_lower": 0.04728132387706856,
+        "n_days": 423,
+        "n_crashes": 20
+      },
+      {
+        "pair": "SOLUSDT/AAVEUSDT",
+        "joint_lower": 0.04728132387706856,
+        "n_days": 423,
+        "n_crashes": 20
+      },
+      {
+        "pair": "SOLUSDT/SUIUSDT",
+        "joint_lower": 0.04491725768321513,
+        "n_days": 423,
+        "n_crashes": 19
+      },
+      {
+        "pair": "SOLUSDT/NEARUSDT",
+        "joint_lower": 0.0591016548463357,
+        "n_days": 423,
+        "n_crashes": 25
+      },
+      {
+        "pair": "LINKUSDT/DOGEUSDT",
+        "joint_lower": 0.061465721040189124,
+        "n_days": 423,
+        "n_crashes": 26
+      },
+      {
+        "pair": "LINKUSDT/AAVEUSDT",
+        "joint_lower": 0.05673758865248227,
+        "n_days": 423,
+        "n_crashes": 24
+      },
+      {
+        "pair": "LINKUSDT/SUIUSDT",
+        "joint_lower": 0.0425531914893617,
+        "n_days": 423,
+        "n_crashes": 18
+      },
+      {
+        "pair": "LINKUSDT/NEARUSDT",
+        "joint_lower": 0.0591016548463357,
+        "n_days": 423,
+        "n_crashes": 25
+      },
+      {
+        "pair": "DOGEUSDT/AAVEUSDT",
+        "joint_lower": 0.054373522458628844,
+        "n_days": 423,
+        "n_crashes": 23
+      },
+      {
+        "pair": "DOGEUSDT/SUIUSDT",
+        "joint_lower": 0.04491725768321513,
+        "n_days": 423,
+        "n_crashes": 19
+      },
+      {
+        "pair": "DOGEUSDT/NEARUSDT",
+        "joint_lower": 0.06382978723404255,
+        "n_days": 423,
+        "n_crashes": 27
+      },
+      {
+        "pair": "AAVEUSDT/SUIUSDT",
+        "joint_lower": 0.037825059101654845,
+        "n_days": 423,
+        "n_crashes": 16
+      },
+      {
+        "pair": "AAVEUSDT/NEARUSDT",
+        "joint_lower": 0.0591016548463357,
+        "n_days": 423,
+        "n_crashes": 25
+      },
+      {
+        "pair": "SUIUSDT/NEARUSDT",
+        "joint_lower": 0.0425531914893617,
+        "n_days": 423,
+        "n_crashes": 18
+      }
+    ]
+  },
+  "lower_tail_by_vol": {
+    "high_vol_n": 213,
+    "low_vol_n": 210,
+    "high_vol_top3": [
+      {
+        "pair": "BNBUSDT/XRPUSDT",
+        "joint_lower": 0.051643192488262914,
+        "n_days": 213,
+        "n_crashes": 11
+      },
+      {
+        "pair": "BNBUSDT/SOLUSDT",
+        "joint_lower": 0.046948356807511735,
+        "n_days": 213,
+        "n_crashes": 10
+      },
+      {
+        "pair": "BNBUSDT/LINKUSDT",
+        "joint_lower": 0.06103286384976526,
+        "n_days": 213,
+        "n_crashes": 13
+      }
+    ],
+    "low_vol_top3": [
+      {
+        "pair": "BNBUSDT/XRPUSDT",
+        "joint_lower": 0.06666666666666667,
+        "n_days": 210,
+        "n_crashes": 14
+      },
+      {
+        "pair": "BNBUSDT/SOLUSDT",
+        "joint_lower": 0.05238095238095238,
+        "n_days": 210,
+        "n_crashes": 11
+      },
+      {
+        "pair": "BNBUSDT/LINKUSDT",
+        "joint_lower": 0.05238095238095238,
+        "n_days": 210,
+        "n_crashes": 11
+      }
+    ]
+  },
+  "candidate": false
+}

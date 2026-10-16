@@ -32,6 +32,10 @@ Ten approved assets, three causal regimes and three horizons produced 870 cells;
 
 Eight approved alt assets, four flow features and four horizons produced 128 capped descriptive cells; 5 were nominal before correction and 0 survived the cost hurdle. Artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`.
 
+26. **Q13 — Dependence structure on the alt panel — no pairwise candidate (2026-10-16).**
+
+The approved 8-asset alt panel (no BTC/ETH) over 423 days, MP denoising, detoning, angular clustering, and lower-quadrant tail dependence. Largest denoised eigenvalue 4.37 vs MP upper bound 68 (N/T≈0.019 ⇒ bound is degenerate; denoising uninformative). After detoning the largest off-diagonal residual ρ≈0.00. Best cluster k=2 with one outlier; allocation stable 50/50. Lower-quadrant co-crash top pairs 4.4%–5.4% vs 1% under independence. Conclusion: no denoised/detoned |ρ|>0.50 candidate; the only structure is the common market mode. Artefact: `research/atlas/q13_dependence.json`; memo: `research/memos/2026-10-16-Q13-N6.md`; preregistration: `research/notes/2026-10-16-Q13-prereg.md`.
+
 
 16. **Continuous web scout.** Papers/SSRN/arXiv/hedge-fund claims are untrusted leads only. Each lead needs mechanism, data availability, cost/capacity check, prior-ledger check and independent replication.
 17. **Tick microstructure data acquisition (Tardis / Kaiko / Databento).** Only axis that may surface an un-arbitraged edge on the residual timescale. Requires Samuel’s budget OK and a fresh cutoff seal post-acquisition. Pre-acquisition research must remain on the existing pre-2024-07-01 klines panel.
