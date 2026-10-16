@@ -10,6 +10,7 @@ dependencies = [
     "pyarrow>=15",
     "pyyaml>=6",
     "ccxt>=4.3",
+    "statsmodels>=0.15.0",
 ]
 
 [project.optional-dependencies]
