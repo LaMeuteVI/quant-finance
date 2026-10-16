@@ -86,7 +86,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
   Preregistration: `research/notes/2026-10-16-Q12-prereg.md`; artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`. 128 capped descriptive cells, 5 nominal before correction, 0 cost survivors; no candidate.
 - **Q13 — Dependence structure (6.1).** `DONE (2026-10-16, b742e01)` · former E · skills: `lopez-de-prado-ml-asset-managers` ch02–04, `tsay` ch08–09, `hull-risk-management` ch11
   Denoised/detoned correlation by horizon and regime, clustering, DCC, tail dependence in crashes.
-- **Q14 — Panel and relative value (6.3).** `READY` · former E · skills: `pairs-trading-partial-cointegration`
+- **Q14 — Panel and relative value (6.3).** `DONE (2026-10-16, 3f82f97)` · former E · skills: `lopez-de-prado-ml-asset-managers` ch07, `tsay` ch07
   Fixed-effects panel tests of every surviving signal; sector pairs (L1 SOL/NEAR/SUI, AI FET/RENDER, payments XRP/DOGE, DeFi AAVE/LINK); intraday residual mean reversion; cross-sectional momentum/reversal on residuals at 1h–1w. State the narrow cross-section and survivorship bound in the report.
 
 ## Block 3: literature, atlas, synthesis
