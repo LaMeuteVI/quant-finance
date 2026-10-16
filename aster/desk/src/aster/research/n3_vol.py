@@ -104,11 +104,8 @@ def _garch_variance(params: np.ndarray, returns: np.ndarray) -> tuple[float, np.
     return variances[-1], variances
 
 
-def fit_garch_predict(returns: pd.Series, origin: int) -> float:
-    sample = returns.iloc[:origin].dropna().to_numpy(float)
-    if len(sample) < MIN_TRAIN:
-        return float("nan")
-    sample = sample[-min(len(sample), 1260):]
+def _garch_params(sample: np.ndarray) -> np.ndarray:
+    """Estimate GARCH parameters once for a fixed expanding-window sample."""
     variance = max(float(np.var(sample)), 1e-12)
     initial = np.array([variance * 0.05, 0.05, 0.90])
 
@@ -124,9 +121,18 @@ def fit_garch_predict(returns: pd.Series, origin: int) -> float:
         initial,
         method="L-BFGS-B",
         bounds=[(1e-12, variance * 10.0), (1e-8, 0.999), (1e-8, 0.999)],
-        options={"maxiter": 250, "ftol": 1e-10},
+        options={"maxiter": 50, "ftol": 1e-8},
     )
-    params = result.x if result.success and np.isfinite(result.fun) else initial
+    return result.x if result.success and np.isfinite(result.fun) else initial
+
+
+def fit_garch_predict(returns: pd.Series, origin: int) -> float:
+    """Fit one GARCH forecast at an origin (legacy reference path)."""
+    sample = returns.iloc[:origin].dropna().to_numpy(float)
+    if len(sample) < MIN_TRAIN:
+        return float("nan")
+    sample = sample[-min(len(sample), 1260):]
+    params = _garch_params(sample)
     omega, alpha, beta = params
     last_var, _ = _garch_variance(params, sample)
     forecast = omega + alpha * sample[-1] ** 2 + beta * last_var
