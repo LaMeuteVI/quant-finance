@@ -3,3 +3,6 @@ aster/desk/data/
 
 # Worktrees
 .worktrees/
+
+# Autopilot run lock (skill aster-autopilot)
+aster/desk/research/.autopilot.lock
