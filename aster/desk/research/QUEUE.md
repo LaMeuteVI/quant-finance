@@ -17,9 +17,8 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
 - **Q0b — Restore the local data store.** `DONE (2026-10-16, 2925bf1, research/notes/2026-10-16-Q0b-data-store.md)`
   722 pre-cutoff partitions, 12 symbols, `desk data audit-r2 --sha256` green. The original DoD wrongly named `desk data check`, which only checks the legacy 5-symbol daily ccxt store (`data/ohlcv`), absent by design. Feeding `desk backtest` from R2 (`r2_backtest_store`) and making `desk data check` cover the R2 store are part of P2.
 
-- **Q1 — True sealed holdout (D2).** `READY` · skills: `quant-backtest-hygiene`, `lopez-de-prado-afml` ch11–12
-  Import post-cutoff months (2024-07 → latest available) for every symbol into `data/sealed/`, from the existing R2 bucket if it holds them, else from `data.binance.vision`. The import computes only sha256, row count, first/last timestamp and timestamp unit; no returns, no statistics, no plots. `read_local()` and every research module must be unable to read `data/sealed/` (test it). `read_holdout()` reads the sealed store, single-shot per (hypothesis, symbol), persisted in the ledger rather than in memory. Update `research/notes/2026-10-15-holdout-audit.md` and the `r2_klines.py` docstring: option A becomes the contaminated dev-validation window.
-  DoD: tests proving (a) exploration paths raise on sealed data, (b) single-shot is persisted across processes; manifest committed; no data value printed in logs.
+- **Q1 — True sealed holdout (D2).** `DONE (2026-10-16, dd056b6, research/notes/2026-10-15-holdout-audit.md, aster/desk/tests/test_r2_klines.py + test_store.py)`
+  Code: `reject_sealed_path()` blocks every exploration reader including `data.store.read()`; `read_holdout(symbol, *, hypothesis_id, ledger)` requires a ledger and atomically persists a `(hypothesis_id, symbol)` consumption record via `Ledger.consume_sealed_holdout()`; `transfer_sealed()` writes only metadata manifests (no record values) and refuses pre-cutoff partitions before any remote I/O. Tests: exploration paths raise on sealed data, `read_holdout` raises across a fresh process for a previously consumed pair, transfer rejects pre-cutoff objects without remote I/O. 349 pytest green; warnings unchanged. Convention `[2024-04-01, 2024-07-01)` retired and demoted to contaminated pre-cutoff dev-validation window. **Sealed store is intentionally empty** — population requires a separately authorised import run before any hypothesis can pass its dev gate into holdout.
 
 - **Q2 — Missing universe members.** `READY` · depends on Q1
   The brief lists RENDER, ONDO, PUMP and HYPE (perp) besides the 12 imported symbols. Import whatever exists pre-cutoff into the research store and the rest into the sealed store. Assets with no pre-cutoff history are holdout-only panel members: record this in `research/atlas/data-sources.md`.
@@ -93,6 +92,3 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 - **Q19 — N7 synthesis and preregistration.** `BLOCKED_ON Q5–Q14`
   Per asset: signal map (horizon, IC with CI, corrected t, IC decay, bps vs cost, regime dependence, capacity, correlation to other signals). Register the 1–3 most mature hypotheses (ORANGE), dev backtests (ORANGE), Skeptic and Breaker, capacity at 100k/1M/10M/50M. **Holdout read and paper are RED.**
 - **Q20 — Weekly "État de la recherche".** `READY`, every Sunday: matrix, candidates, what died and why, effort reallocation.
-
-## Done
-(move items here with date, commit and artefact)
