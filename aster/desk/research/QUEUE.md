@@ -23,9 +23,11 @@ A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D =
 - **Q2 — Missing universe members.** `DONE (2026-10-16, 72eb80a, research/notes/2026-10-16-Q2-prereg.md, research/atlas/data-sources.md, aster/desk/src/aster/scripts/probe_universe.py)`
   Probe of RENDER, ONDO, PUMP, HYPE across `local-r2-spot`, `data.binance.vision-spot`, `data.binance.vision-um` returns `exists=no` for all 12 cells (4 symbols × 3 channels). None of the four brief members has pre-cutoff data on any free public channel we currently rely on. Decision: route RENDER/ONDO/PUMP to the post-cutoff sealed store when Q1's import is run; otherwise treat them as holdout-only panel members. HYPE perp channel stays under Q3. 353 pytest green (4 new probe tests).
 
-- **Q3 — Perpetual futures data, pre-cutoff (D5).** `READY`
+- **Q3 — Perpetual futures data, pre-cutoff (D5).** `IN_PROGRESS (2026-10-16)` · skills: `chan-machine-trading`, `hull-derivatives`, `grinold-kahn-apm`
   From `data.binance.vision` USDⓈ-M: `fundingRate`, 1m klines, `premiumIndexKlines`, `markPriceKlines`, `metrics` (open interest, long/short ratios, available from about 2020–2021) for BTC, ETH and every alt with a perp. Same provenance and cutoff discipline as spot. Extend `desk data check`.
   DoD: `research/atlas/data-sources.md` (source, coverage, known gaps); data check green; tests on the parser.
+
+  *(updated 2026-10-16: only `fundingRate` monthly ZIPs and `klines UM` monthly ZIPs are reliably available on the public archive. `premiumIndexKlines`, `markPriceKlines`, and `metrics` ZIPs return 404 across paths tried. Funding is enough for F1 and F2. Carry-only scope for this iteration; historical OI stays BLOCKED on a paid source if later needed.)*
 
 - **Q4 — Bars and aggTrades.** `READY`
   Finish the 5m/15m/1h/4h bars marked partial in `Status.md`. Import spot aggTrades for BTC and ETH for 2022-01 → 2024-06 (free, Binance Vision; size-check the disk first) and build volume, dollar and taker-imbalance bars from them (afml ch02). This replaces the "1 month only" limitation of the former axe 8.

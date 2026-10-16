@@ -111,6 +111,35 @@ def cmd_data_check_r2(a) -> None:
     _print(audit_local(symbols, verify_sha256=a.sha256))
 
 
+def cmd_data_import_funding(a) -> None:
+    """Import monthly funding rate ZIPs from a local folder.
+
+    Each ZIP is parsed, validated against the strict cutoff, and stored under
+    `data/r2/market/futures/um/funding_rate/`. A metadata-only manifest is
+    written next to each Parquet. The explorer never reads the post-cutoff store.
+    """
+    from aster.data.funding_rate import import_archive
+
+    root = Path(a.root)
+    files = sorted(root.rglob("*.zip"))
+    if not files:
+        raise SystemExit(f"no funding ZIPs found under {root}")
+    results = [import_archive(p) for p in files]
+    _print({"imported": len(results), "files": [str(Path(r["source"])) for r in results]})
+
+
+def cmd_data_audit_funding(a) -> None:
+    """Audit the local funding rate store: manifest, cutoff and (optional) SHA-256."""
+    from aster.data.funding_rate import audit_local
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else (
+        "BTCUSDT", "ETHUSDT", "SOLUSDT", "AAVEUSDT", "DOGEUSDT",
+        "SUIUSDT", "XRPUSDT", "BNBUSDT", "LINKUSDT", "NEARUSDT",
+        "XMRUSDT", "FETUSDT",
+    )
+    _print(audit_local(symbols, verify_sha256=a.sha256))
+
+
 def cmd_data_quality_r2(a) -> None:
     """Profile pre-cutoff minute quality. Never reads post-cutoff values."""
     from aster.data.minute_quality import profile_symbols
@@ -401,6 +430,18 @@ def build_parser() -> argparse.ArgumentParser:
     r2_b.add_argument("--drop-frozen", action="store_true",
                       help="drop zero-trade minutes (off by default: it hides illiquidity)")
     r2_b.set_defaults(fn=cmd_data_bars_r2)
+
+    imp_f = d.add_parser("import-funding",
+                         help="import monthly USD-M funding rate ZIPs from a local folder")
+    imp_f.add_argument("--root", required=True)
+    imp_f.set_defaults(fn=cmd_data_import_funding)
+
+    aud_f = d.add_parser("audit-funding", aliases=("check-funding",),
+                         help="audit local USD-M funding rate partitions")
+    aud_f.add_argument("--symbols",
+                       help="comma-separated approved symbols; defaults to the 12-symbol pre-cutoff inventory")
+    aud_f.add_argument("--sha256", action="store_true")
+    aud_f.set_defaults(fn=cmd_data_audit_funding)
 
     lg = sub.add_parser("ledger").add_subparsers(dest="action", required=True)
     n = lg.add_parser("new")
