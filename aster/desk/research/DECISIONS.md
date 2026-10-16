@@ -13,6 +13,11 @@
 
 Clarification on git and files: "rewriting git history" means `rebase`, `reset --hard` on pushed commits, `push --force`, or amending pushed commits. A normal commit that removes, renames or fixes a tracked file or symlink (for example a wrongly committed `data` symlink) is **GREEN**. So is repairing local links and paths inside the desk. Only deleting actual market data files is RED; when data is missing, re-import it (GREEN).
 
+Two rules from the 2026-10-16 review:
+- A run whose weights are all zero or whose statistics are `None` is an **infrastructure failure**. It is never recorded as a rejection; fix the pipeline and re-run in the same family.
+- The base cost case uses the real Binance VIP 0 fees (spot taker 10 bps, USDⓈ-M taker 5 bps, per side) plus the grid's spread and impact. ×2 and ×3 are **stress tests**, never the base hurdle. Report the hurdle in bps per round trip, and keep the same number in notes, QUEUE and chat.
+- Before saying "no READY item left", list every item whose status is `BLOCKED_ON` and check whether its dependencies are now DONE. If they are, it is READY.
+
 Rule of thumb: if it is not RED, it is not a question. Pick what you would recommend, log it if ORANGE, and continue.
 
 ## 2. Decisions already taken (2026-10-16, Samuel)
