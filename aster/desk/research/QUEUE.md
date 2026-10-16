@@ -80,9 +80,9 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 - **Q10 — N3 per alt** (GARCH/EGARCH/GJR, inverse leverage effect, HAR-RV, Diebold–Mariano vs naïve, compression → expansion). `DONE (2026-10-16, 6e1ce7d)` · former D
   Preregistration: `research/notes/2026-10-16-Q10-prereg.md`. Descriptive pseudo-OOS forecast grid; no strategy hypothesis.
   Artefact: `research/atlas/q10_volatility.json` (60 comparison cells, 5,129 forecasts); memo: `research/memos/2026-10-16-Q10-N5.md`; tests: `tests/test_q10_volatility.py` (3) plus `tests/test_n3_vol.py` (3). Findings: HAR beats the fixed naïve forecast in 18/20 BH-FDR cells and is sign-stable in 18/20; 52/60 cells pass BH q<0.05, 50/60 are sign-stable. Forecast value only, no alpha/candidate.
-- **Q11 — N4 per alt** (threshold/Markov/HMM, BTC-correlation regimes, re-read of N1–N3 by regime). `DONE (2026-10-16, pending commit)` · former D
+- **Q11 — N4 per alt** (threshold/Markov/HMM, BTC-correlation regimes, re-read of N1–N3 by regime). `DONE (2026-10-16, db0a63c)` · former D
   Preregistration: `research/notes/2026-10-16-Q11-prereg.md`; artefact: `research/atlas/q11_regimes.json`; memo: `research/memos/2026-10-16-Q11-N4.md`. 870 descriptive cells, 77 nominal p<0.01 before correction; no candidate and no ledger hypothesis.
-- **Q12 — N5 per alt** (flow on klines, then on aggTrades where Q4 is extended). `DONE (2026-10-16, pending commit)` · former D
+- **Q12 — N5 per alt** (flow on klines, then on aggTrades where Q4 is extended). `DONE (2026-10-16, 084afde)` · former D
   Preregistration: `research/notes/2026-10-16-Q12-prereg.md`; artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`. 128 capped descriptive cells, 5 nominal before correction, 0 cost survivors; no candidate.
 - **Q13 — Dependence structure (6.1).** `READY` · former E · skills: `lopez-de-prado-ml-asset-managers` ch02–04, `tsay` ch08–09, `hull-risk-management` ch11
   Denoised/detoned correlation by horizon and regime, clustering, DCC, tail dependence in crashes.
