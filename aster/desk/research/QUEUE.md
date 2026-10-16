@@ -84,7 +84,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
   Preregistration: `research/notes/2026-10-16-Q11-prereg.md`; artefact: `research/atlas/q11_regimes.json`; memo: `research/memos/2026-10-16-Q11-N4.md`. 870 descriptive cells, 77 nominal p<0.01 before correction; no candidate and no ledger hypothesis.
 - **Q12 — N5 per alt** (flow on klines, then on aggTrades where Q4 is extended). `DONE (2026-10-16, 084afde)` · former D
   Preregistration: `research/notes/2026-10-16-Q12-prereg.md`; artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`. 128 capped descriptive cells, 5 nominal before correction, 0 cost survivors; no candidate.
-- **Q13 — Dependence structure (6.1).** `READY` · former E · skills: `lopez-de-prado-ml-asset-managers` ch02–04, `tsay` ch08–09, `hull-risk-management` ch11
+- **Q13 — Dependence structure (6.1).** `DONE (2026-10-16, b742e01)` · former E · skills: `lopez-de-prado-ml-asset-managers` ch02–04, `tsay` ch08–09, `hull-risk-management` ch11
   Denoised/detoned correlation by horizon and regime, clustering, DCC, tail dependence in crashes.
 - **Q14 — Panel and relative value (6.3).** `READY` · former E · skills: `pairs-trading-partial-cointegration`
   Fixed-effects panel tests of every surviving signal; sector pairs (L1 SOL/NEAR/SUI, AI FET/RENDER, payments XRP/DOGE, DeFi AAVE/LINK); intraday residual mean reversion; cross-sectional momentum/reversal on residuals at 1h–1w. State the narrow cross-section and survivorship bound in the report.
