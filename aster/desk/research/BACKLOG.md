@@ -79,3 +79,23 @@ The 12-symbol Q3 funding store contains 4,929 aligned 8-hour fixing rows. Mean f
 - High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs.
 
 No new strategy hypothesis is registered from BTC/ETH N2 alone. The next stage is a multi-factor residual model on the 8-asset panel (backlog item 12); a strategy requires its own memo and ledger preregistration.
+
+31. **Q21 — Tick microstructure V2 (BTC 1min only) — descriptive only, no candidate (2026-10-16).**
+
+BTCUSDT aggTrades Q4 (2 M-row deterministic stride, 172 800 1min bars). All observables (Kyle λ t = 47.3, Amihud, Roll, VPIN, signed-flow Spearman, Q4−Q0 quintile) computed. H-20261016-005 falsification bar (Q4−Q0 gross > 60 bps) NOT cleared: Q4−Q0 = 2.05 bps gross, cost 60 bps ⇒ net −57.95 bps. **No candidate, no ledger hypothesis, no holdout, no live, no paper, no order, no key, no new download.** Artefact: `research/atlas/q21_microstructure.json`; memo: `research/memos/2026-10-16-Q21-N10.md`; module: `src/aster/research/q21_microstructure.py`; tests: `tests/test_q21_microstructure.py` + `tests/test_q21_artefact.py`.
+
+32. **Q22 — Tick microstructure V3: 5m/15m bars + ETH leg (D3 GREEN) — descriptive only, no candidate (2026-10-16).**
+
+ETHUSDT aggTrades 2022-01..02 imported via `aster.data.aggtrades.import_archive` (40.9 M raw rows ⇒ 2 × 2 M-row deterministic stride samples for analysis). ZIPs were stream-and-discarded via `/tmp` (deleted after Parquet write, never persisted as a 28 GB block). 8 axes tested: BTC/ETH × {1m, 5m, 15m} + BTC↔ETH cross-asset lead-lag at {5m, 15m}.
+
+| Axis | n_bars | Spearman | Q4−Q0 gross bps | Net (60 bps cost) | Candidate? |
+|---|---:|---:|---:|---:|---|
+| BTC 1min  | 172 800 | 0.130 | 2.05  | −57.95 | no |
+| BTC 5min  |  34 560 | 0.158 | 4.13  | −55.87 | no |
+| BTC 15min |  11 520 | 0.180 | 7.16  | −52.84 | no |
+| ETH 1min  |  84 960 | 0.167 | 2.49  | −57.51 | no |
+| ETH 5min  |  16 992 | 0.238 | 6.59  | −53.41 | no |
+| ETH 15min |   5 664 | **0.268** | **14.37** | −45.63 | no |
+
+Cross-asset signed-flow lead-lag (BTC↔ETH) at 5m and 15m is **symmetric and flat** (ρ ≈ 0.07 at 5m, 0.09 at 15m, no lead-lag structure). H-20261022-001 (signed-flow Spearman × Q4−Q0 > 60 bps) **falsified** on all 6 axes. H-20261022-002 (BTC→ETH lead-lag ρ > 0.05 at lag = +1) **falsified as a directional signal** (only contemporaneous co-movement). No ledger hypothesis, no candidate, no holdout, no live, no paper, no order, no key, no spend. Artefact: `research/atlas/q22_microstructure.json`; memo: `research/memos/2026-10-16-Q22-N11.md`; module: `src/aster/research/q22_microstructure_v3.py`; tests: `tests/test_q22_microstructure.py` + `tests/test_q22_artefact.py`.
+

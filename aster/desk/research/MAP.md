@@ -33,6 +33,7 @@ Global exploration cutoff: `2024-07-01T00:00:00Z`. Outside a one-shot holdout ru
 - [x] Q17 atlas index `research/atlas/q17_atlas.json` and tests `tests/test_q17_atlas.py` + `tests/test_q17_atlas_index.py`.
 - [x] Q20 weekly state-of-research memo + JSON artefact (`research/atlas/q20_state.json`, `research/memos/2026-10-16-Q20-N9.md`) and test `tests/test_q20_state.py`.
 - [x] Q21 tick-data microstructure V2: 9 observables (Kyle λ, Amihud, Roll, VPIN, predictive signed flow, quintile return, cross-asset lag) on existing BTCUSDT 4 partitions; H-20261016-005 falsified on cost hurdle (Q4−Q0 = 2.05 bps gross, 6 bps cost ⇒ net −3.95 bps). 9 unit tests + 3 artefact tests, all green.
+- [x] Q22 tick-data microstructure V3: 5m/15m bars + ETH leg (D3 GREEN), 8 axes, 0 candidates. H-20261022-001 (signed-flow → next-bar return > 60 bps after cost) and H-20261022-002 (BTC→ETH 5m lead-lag ρ > 0.05) both falsified. 5 unit tests + 4 artefact tests, all green.
 
 ## Evidence discipline
 

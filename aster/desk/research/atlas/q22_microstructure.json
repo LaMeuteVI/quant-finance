@@ -1,0 +1,425 @@
+{
+  "protocol": "Q22 V3 (D3 GREEN)",
+  "axes": {
+    "BTCUSDT_1min": {
+      "symbol": "BTCUSDT",
+      "bar_freq": "1min",
+      "n_trades": 2000000,
+      "n_bars": 172800,
+      "kyle_lambda": {
+        "lambda": 0.0001385568944420423,
+        "t_stat": 47.25561766070538,
+        "n": 172799,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 5.465674478211523e-06,
+        "spearman_abs_to_next_abs": -0.04082843872060824,
+        "n": 172799,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 9.57241853220265e-08,
+        "n": 172799,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.028013019797865503,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.13042393201855304,
+        "n": 172798,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -1.0373049918177921,
+          "Q1": -0.6647947037830868,
+          "Q2": -0.031434580160421485,
+          "Q3": 0.6754866619346707,
+          "Q4": 1.0146030697965713,
+          "Q_max_minus_Q_min": 2.0519080616143635,
+          "n": 172798
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.13042393201855304,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 2.0519080616143635,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "BTCUSDT_5min": {
+      "symbol": "BTCUSDT",
+      "bar_freq": "5min",
+      "n_trades": 2000000,
+      "n_bars": 34560,
+      "kyle_lambda": {
+        "lambda": 0.0005522268991507247,
+        "t_stat": 25.71659769461904,
+        "n": 34559,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 3.294080989442532e-07,
+        "spearman_abs_to_next_abs": 0.018503056885267537,
+        "n": 34559,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 5.426117887949888e-07,
+        "n": 34559,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.03019866924395426,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.1584867381410348,
+        "n": 34558,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -2.187289309831607,
+          "Q1": -1.0649180982091548,
+          "Q2": -0.041030579397766755,
+          "Q3": 1.1280726722574597,
+          "Q4": 1.9401634442077489,
+          "Q_max_minus_Q_min": 4.127452754039355,
+          "n": 34558
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.1584867381410348,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 4.127452754039355,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "BTCUSDT_15min": {
+      "symbol": "BTCUSDT",
+      "bar_freq": "15min",
+      "n_trades": 2000000,
+      "n_bars": 11520,
+      "kyle_lambda": {
+        "lambda": 0.0014699966901535843,
+        "t_stat": 16.623255579991095,
+        "n": 11519,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 1.928993027997314e-07,
+        "spearman_abs_to_next_abs": 0.03797128858676652,
+        "n": 11519,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 1.5879117076912857e-06,
+        "n": 11519,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.030885764495011365,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.179667345343798,
+        "n": 11518,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -3.830728593528721,
+          "Q1": -2.619552675201406,
+          "Q2": 0.16789874376225603,
+          "Q3": 2.2704605505994624,
+          "Q4": 3.328647732818646,
+          "Q_max_minus_Q_min": 7.159376326347367,
+          "n": 11518
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.179667345343798,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 7.159376326347367,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "ETHUSDT_1min": {
+      "symbol": "ETHUSDT",
+      "bar_freq": "1min",
+      "n_trades": 2000000,
+      "n_bars": 84960,
+      "kyle_lambda": {
+        "lambda": 0.00029156963630065305,
+        "t_stat": 41.44543170995887,
+        "n": 84959,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 5.004530182444819e-07,
+        "spearman_abs_to_next_abs": -0.00428312475068239,
+        "n": 84959,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 2.2043323566129525e-07,
+        "n": 84959,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.02859102980936805,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.1673965209072072,
+        "n": 84958,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -1.2930159087727242,
+          "Q1": -0.8408404010901734,
+          "Q2": -0.03042267214518554,
+          "Q3": 0.8589149306417337,
+          "Q4": 1.1990264728365128,
+          "Q_max_minus_Q_min": 2.492042381609237,
+          "n": 84958
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.1673965209072072,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 2.492042381609237,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "ETHUSDT_5min": {
+      "symbol": "ETHUSDT",
+      "bar_freq": "5min",
+      "n_trades": 2000000,
+      "n_bars": 16992,
+      "kyle_lambda": {
+        "lambda": 0.0014893689365771687,
+        "t_stat": 25.837222342597588,
+        "n": 16991,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 1.822472977236657e-07,
+        "spearman_abs_to_next_abs": -0.0007342250637010323,
+        "n": 16991,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 1.3546128567692907e-06,
+        "n": 16991,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.028409401156886865,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.23792396694702642,
+        "n": 16990,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -3.2394131468526686,
+          "Q1": -2.3037307924195427,
+          "Q2": -0.1591818892723142,
+          "Q3": 1.8059657830013547,
+          "Q4": 3.355397113840871,
+          "Q_max_minus_Q_min": 6.5948102606935395,
+          "n": 16990
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.23792396694702642,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 6.5948102606935395,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "ETHUSDT_15min": {
+      "symbol": "ETHUSDT",
+      "bar_freq": "15min",
+      "n_trades": 2000000,
+      "n_bars": 5664,
+      "kyle_lambda": {
+        "lambda": 0.004155870159935337,
+        "t_stat": 16.95148306421987,
+        "n": 5663,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 2.605345285409107e-07,
+        "spearman_abs_to_next_abs": 0.021313920295017975,
+        "n": 5663,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 4.019174995442515e-06,
+        "n": 5663,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.031010027808086836,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.2677419925932383,
+        "n": 5662,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -7.076062239633098,
+          "Q1": -3.842088858627039,
+          "Q2": 0.19377367486858962,
+          "Q3": 1.7863356322106372,
+          "Q4": 7.298872885328438,
+          "Q_max_minus_Q_min": 14.374935124961535,
+          "n": 5662
+        },
+        "valid": true
+      },
+      "verdict": {
+        "spearman_signed_flow": 0.2677419925932383,
+        "spearman_sign_ok": true,
+        "quintile_q4_minus_q0_bps": 14.374935124961535,
+        "above_3x_cost_hurdle": false,
+        "candidate": false
+      }
+    },
+    "BTC_ETH_cross_5min": {
+      "pair": "BTCUSDT-ETHUSDT",
+      "bar_freq": "5min",
+      "lags": {
+        "-5": {
+          "rho": 0.07065280494869802,
+          "n": 16987
+        },
+        "-4": {
+          "rho": 0.07067672288508717,
+          "n": 16988
+        },
+        "-3": {
+          "rho": 0.07078921901853959,
+          "n": 16989
+        },
+        "-2": {
+          "rho": 0.0708029549137329,
+          "n": 16990
+        },
+        "-1": {
+          "rho": 0.07071810029257965,
+          "n": 16991
+        },
+        "0": {
+          "rho": 0.07078588490282799,
+          "n": 16992
+        },
+        "1": {
+          "rho": 0.07071810029257965,
+          "n": 16991
+        },
+        "2": {
+          "rho": 0.0708029549137329,
+          "n": 16990
+        },
+        "3": {
+          "rho": 0.07078921901853959,
+          "n": 16989
+        },
+        "4": {
+          "rho": 0.07067672288508717,
+          "n": 16988
+        },
+        "5": {
+          "rho": 0.07065280494869802,
+          "n": 16987
+        }
+      },
+      "n_intersection": 16992
+    },
+    "BTC_ETH_cross_15min": {
+      "pair": "BTCUSDT-ETHUSDT",
+      "bar_freq": "15min",
+      "lags": {
+        "-5": {
+          "rho": 0.0891985406636985,
+          "n": 5659
+        },
+        "-4": {
+          "rho": 0.08931638661217119,
+          "n": 5660
+        },
+        "-3": {
+          "rho": 0.08934813267786318,
+          "n": 5661
+        },
+        "-2": {
+          "rho": 0.08964570234626057,
+          "n": 5662
+        },
+        "-1": {
+          "rho": 0.08971305056688234,
+          "n": 5663
+        },
+        "0": {
+          "rho": 0.08978928925122631,
+          "n": 5664
+        },
+        "1": {
+          "rho": 0.08971305056688234,
+          "n": 5663
+        },
+        "2": {
+          "rho": 0.08964570234626057,
+          "n": 5662
+        },
+        "3": {
+          "rho": 0.08934813267786318,
+          "n": 5661
+        },
+        "4": {
+          "rho": 0.08931638661217119,
+          "n": 5660
+        },
+        "5": {
+          "rho": 0.0891985406636985,
+          "n": 5659
+        }
+      },
+      "n_intersection": 5664
+    }
+  }
+}
