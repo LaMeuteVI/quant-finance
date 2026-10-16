@@ -140,6 +140,90 @@ def cmd_data_audit_funding(a) -> None:
     _print(audit_local(symbols, verify_sha256=a.sha256))
 
 
+def cmd_data_import_aggtrades(a) -> None:
+    """Import monthly aggTrades ZIPs from a local folder into Parquet partitions."""
+    from aster.data.aggtrades import import_archive
+
+    root = Path(a.root)
+    if not root.exists():
+        raise SystemExit(f"--root {root} does not exist")
+    desk_root = Path(os.environ.get("ASTER_DESK", "."))
+    dest_root = desk_root / "data" / "r2" / "market" / "spot" / "aggtrades"
+    files = sorted(root.glob("*-aggTrades-*.zip"))
+    results = []
+    for z in files:
+        results.append(import_archive(z, dest_root, archive_url=f"https://data.binance.vision/{z.name}"))
+    _print({"imported": len(results), "rows": sum(r["rows"] for r in results),
+            "files": [str(r["source"]) for r in results[:5]],
+            "total_files": len(results)})
+
+
+def cmd_data_audit_aggtrades(a) -> None:
+    """Audit the local aggTrades store: manifest, cutoff and (optional) SHA-256."""
+    from aster.data.aggtrades import audit_local
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else ("BTCUSDT", "ETHUSDT")
+    _print(audit_local(symbols, verify_sha256=a.sha256))
+
+
+def cmd_data_build_volume_bars(a) -> None:
+    """Build information bars (volume / dollar / taker-imbalance) from aggTrades.
+
+    Reads the aggTrades Parquet partitions under ``data/r2/market/spot/aggtrades``,
+    builds the requested family, and writes a sibling Parquet under
+    ``data/r2/market/spot/aggtrades_bars/<family>/``. Returns a JSON report with
+    the bar counts and a manifest of the input partitions that contributed.
+    """
+    from aster.data import aggtrades, information_bars
+
+    family = a.family
+    if family not in ("volume", "dollar", "taker_imbalance"):
+        raise SystemExit(f"--family must be one of volume/dollar/taker_imbalance; got {family}")
+
+    desk_root = Path(os.environ.get("ASTER_DESK", "."))
+    src_root = desk_root / "data" / "r2" / "market" / "spot" / "aggtrades"
+    if not src_root.exists():
+        raise SystemExit(f"aggTrades store not built: {src_root} missing")
+    out_root = desk_root / "data" / "r2" / "market" / "spot" / "aggtrades_bars" / family
+    out_root.mkdir(parents=True, exist_ok=True)
+
+    builders = {
+        "volume": information_bars.build_volume_bars,
+        "dollar": information_bars.build_dollar_bars,
+        "taker_imbalance": information_bars.build_taker_imbalance_bars,
+    }
+
+    symbols = tuple(a.symbols.split(",")) if a.symbols else ("BTCUSDT", "ETHUSDT")
+    summary: dict = {"family": family, "symbols": {}, "out_root": str(out_root)}
+    for sym in symbols:
+        sym_dir = src_root / f"symbol={sym}"
+        if not sym_dir.exists():
+            continue
+        partitions = sorted(sym_dir.glob("year=*/month=*/part-0.parquet"))
+        all_bars = []
+        for part in partitions:
+            table = pd.read_parquet(part)
+            spec = builders[family](table, sym)
+            if len(spec.bars):
+                all_bars.append(spec.bars)
+        if all_bars:
+            bars = pd.concat(all_bars).sort_index()
+            out = out_root / f"symbol={sym}.parquet"
+            bars.to_parquet(out, engine="pyarrow", compression="snappy")
+            manifest = {
+                "family": family, "symbol": sym, "rows": int(len(bars)),
+                "start": bars.index.min().isoformat(),
+                "end": bars.index.max().isoformat(),
+                "partitions_used": [p.name for p in partitions],
+                "source_store": str(src_root),
+            }
+            (out.with_suffix(out.suffix + ".manifest.json")).write_text(
+                json.dumps(manifest, indent=2, sort_keys=True)
+            )
+            summary["symbols"][sym] = manifest
+    _print(summary)
+
+
 def cmd_data_quality_r2(a) -> None:
     """Profile pre-cutoff minute quality. Never reads post-cutoff values."""
     from aster.data.minute_quality import profile_symbols
@@ -442,6 +526,26 @@ def build_parser() -> argparse.ArgumentParser:
                        help="comma-separated approved symbols; defaults to the 12-symbol pre-cutoff inventory")
     aud_f.add_argument("--sha256", action="store_true")
     aud_f.set_defaults(fn=cmd_data_audit_funding)
+
+    imp_a = d.add_parser("import-aggtrades",
+                         help="import monthly spot aggTrades ZIPs from a local folder")
+    imp_a.add_argument("--root", required=True)
+    imp_a.set_defaults(fn=cmd_data_import_aggtrades)
+
+    aud_a = d.add_parser("audit-aggtrades", aliases=("check-aggtrades",),
+                         help="audit local spot aggTrades partitions")
+    aud_a.add_argument("--symbols", default="BTCUSDT,ETHUSDT",
+                       help="comma-separated approved symbols; defaults to BTCUSDT,ETHUSDT")
+    aud_a.add_argument("--sha256", action="store_true")
+    aud_a.set_defaults(fn=cmd_data_audit_aggtrades)
+
+    bar_a = d.add_parser("build-volume-bars",
+                         help="build information bars (volume/dollar/taker_imbalance) from aggTrades")
+    bar_a.add_argument("--family", default="volume",
+                       help="bar family: volume | dollar | taker_imbalance")
+    bar_a.add_argument("--symbols", default="BTCUSDT,ETHUSDT",
+                       help="comma-separated approved symbols; defaults to BTCUSDT,ETHUSDT")
+    bar_a.set_defaults(fn=cmd_data_build_volume_bars)
 
     lg = sub.add_parser("ledger").add_subparsers(dest="action", required=True)
     n = lg.add_parser("new")

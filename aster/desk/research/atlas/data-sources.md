@@ -17,6 +17,15 @@ Q3 (2026-10-16, prereg `research/notes/2026-10-16-Q3-prereg.md`, importer `aster
 - **`premiumIndexKlines`**, **`markPriceKlines`**, **`metrics`** (open interest, long/short ratios): the public archive has no pre-cutoff ZIPs for these datasets on the standard path conventions (probe returned 404 on 2026-10-16 across all paths tried). Historical OI therefore requires a paid source (D3 → RED). Document as a known gap; revisit only if F1/F2 need OI for sizing or risk.
 - **`klines 1m` UM** (Binance Vision `data/futures/um/monthly/klines/<SYM>/1m/<SYM>-1m-YYYY-MM.zip`): public archive holds pre-cutoff files for BTCUSDT and ETHUSDT from 2020-01 onwards. Not imported in this iteration (scope kept to `fundingRate` for the carry family); next importable surface for the perp basis leg of F1.
 
+## Spot aggTrades
+
+Q4 (2026-10-16, prereg `research/notes/2026-10-16-Q4-prereg.md`, importer `aster/desk/src/aster/data/aggtrades.py`, bar builders `aster/desk/src/aster/data/information_bars.py`, CLI `desk data import-aggtrades`, `desk data audit-aggtrades [--sha256]`, `desk data build-volume-bars --family {volume,dollar,taker_imbalance}`).
+
+- **Source**: `data.binance.vision/data/spot/monthly/aggTrades/<SYM>/<SYM>-aggTrades-YYYY-MM.zip`, **headerless 8-column CSV** per the official README: `agg_trade_id, price, quantity, first_trade_id, last_trade_id, transact_time (ms epoch), is_buyer_maker, is_best_price_match`. The importer drops `first_trade_id`, `last_trade_id`, `is_best_price_match` and ships a 5-column Parquet (agg_trade_id:int64, price:float64, quantity:float64, transact_time:int64, is_buyer_maker:bool). Manifest metadata-only: `{source, key, size_bytes, sha256, rows, start, end, timestamp_unit, cutoff_exclusive}` — no record values.
+- **Cutoff**: strictly pre-2024-07-01 UTC. A monthly archive that crosses the cutoff raises `CutoffViolationError`; the pre-2022-01 months are present on the public archive but were not imported (focus on 2022-01→2024-06 per the brief).
+- **Imported as of 2026-10-16**: 4 pre-cutoff Parquet partitions / 1 symbol (BTCUSDT) / 107 730 009 rows / 1.37 GB under `data/r2/market/spot/aggtrades/`. The download and import of the remaining 56 partitions (BTC 2022-05→2024-06 + ETH 2022-01→2024-06) is in flight; final numbers will refresh here as the import run completes. `desk data audit-aggtrades --sha256` green on the imported partitions.
+- **Information bars (afml ch02)**: volume bars (fixed BTC notional per bar), dollar bars (fixed USD notional), taker-imbalance bars (closing on extreme running signed imbalance). Smoke test on 1M-row sample of BTCUSDT 2022-01: 863 volume bars, 1 712 dollar bars, 5 taker-imbalance bars; imbalance mean ≈ −0.024, std ≈ 0.009 (efficient-market null). 7 unit tests in `tests/test_information_bars.py` cover the three families (sustained trading, threshold stability, empty input, dollar notional, taker-imbalance extremes, balanced flow, causal close label).
+
 ## Atlas conventions
 
 - `research/atlas/` is the only directory that holds pre-cutoff descriptive tables, lead-lag grids, regime labels and cost grids. All values derive from pre-cutoff sources.
