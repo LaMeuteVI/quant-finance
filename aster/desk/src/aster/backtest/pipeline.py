@@ -24,8 +24,9 @@ from aster.data import store
 from aster.data.quality import check_ohlcv
 from aster.ledger.db import Ledger, LedgerError
 from aster.strategies import get as get_strategy
-from aster.validation.cv import sealed_split
+from aster.validation.cv import sealed_split, walk_forward
 from aster.validation.lookahead import check_truncation_invariance
+from aster.validation.pbo import pbo_cscv
 from aster.validation.stats import (deflated_sharpe, expected_max_sharpe, haircut_sharpe_bonferroni,
                                     min_track_record_length, probabilistic_sharpe)
 
@@ -85,6 +86,95 @@ def _build_holdout_prices(ledger: Ledger, hypothesis_id: str, symbols: list[str]
     return wide
 
 
+def _walk_forward_report(returns: pd.Series, timeframe: str) -> dict:
+    """Per-fold Sharpe / drawdown / max-Loss table on the base backtest.
+
+    Uses :func:`aster.validation.cv.walk_forward` with defaults that
+    match a daily-bar strategy: 1-year train, quarterly test, one
+    trading-week embargo, expanding window. The function does NOT
+    refit the strategy per fold — it slices the realised returns of
+    the base backtest — so the table measures the temporal stability
+    of the backtested Sharpe, not the out-of-sample performance of a
+    re-fitted strategy (which is the more demanding contract; that
+    would require a strategy that exposes ``refit`` and the desk
+    will add it as part of the F-family work).
+
+    Returns a dict with ``n_folds``, the per-fold list of records
+    (start, end, sharpe_ann, max_drawdown, n_obs) and a stability
+    summary (mean / std of fold Sharpes, worst-fold Sharpe).
+    """
+    n = len(returns)
+    train_bars, test_bars, embargo_bars = 252, 63, 5
+    if n < train_bars + embargo_bars + test_bars:
+        return {"n_folds": 0, "folds": [], "stability": None,
+                "reason": f"need >= {train_bars + embargo_bars + test_bars} bars, got {n}"}
+    folds = []
+    ppy = PERIODS_PER_YEAR[timeframe]
+    for _, test_idx in walk_forward(returns.index, train_bars=train_bars,
+                                    test_bars=test_bars, embargo_bars=embargo_bars,
+                                    expanding=True):
+        if len(test_idx) < 2:
+            continue
+        r = returns.iloc[test_idx].dropna()
+        if r.std(ddof=1) == 0 or len(r) < 2:
+            continue
+        sr_pp = float(r.mean() / r.std(ddof=1))
+        sr_ann = float(sr_pp * np.sqrt(ppy))
+        eq = (1 + r).cumprod()
+        max_dd = float((eq / eq.cummax() - 1).min())
+        folds.append({
+            "start": str(returns.index[test_idx[0]]),
+            "end": str(returns.index[test_idx[-1]]),
+            "n_obs": int(len(r)),
+            "sharpe_ann": sr_ann,
+            "max_drawdown": max_dd,
+        })
+    if not folds:
+        return {"n_folds": 0, "folds": [], "stability": None,
+                "reason": "walk_forward produced no usable folds"}
+    sharpes = np.array([f["sharpe_ann"] for f in folds])
+    return {
+        "n_folds": len(folds),
+        "folds": folds,
+        "stability": {
+            "mean_sharpe_ann": float(sharpes.mean()),
+            "std_sharpe_ann": float(sharpes.std(ddof=1)) if len(sharpes) > 1 else 0.0,
+            "worst_fold_sharpe_ann": float(sharpes.min()),
+            "best_fold_sharpe_ann": float(sharpes.max()),
+        },
+        "config": {"train_bars": train_bars, "test_bars": test_bars,
+                   "embargo_bars": embargo_bars, "expanding": True},
+    }
+
+
+def _pbo_report(strat_factory, prices: pd.DataFrame, params_grid: list[dict],
+                costs, timeframe: str, funding, perp_legs, AUM) -> dict:
+    """PBO across a parameter sweep.
+
+    ``strat_factory`` is a callable that takes a ``params`` dict and
+    returns a strategy object (anything :func:`pipeline.run` would
+    accept as the ``strategy`` argument). The function runs one
+    backtest per configuration, stacks the per-bar returns into a
+    wide DataFrame, and feeds it to :func:`pbo_cscv` with
+    ``n_splits=16`` (the standard AFML recommendation for stable
+    logits).
+    """
+    rets = {}
+    for params in params_grid:
+        strat = strat_factory(params)
+        w = strat.target_weights(prices)
+        result = run_backtest(prices, w, costs, lag=1, funding=funding,
+                              perp_legs=perp_legs, AUM=AUM)
+        rets[json.dumps(params, sort_keys=True)] = result.returns
+    panel = pd.concat(rets, axis=1).dropna()
+    if panel.shape[1] < 4:
+        return {"pbo": None, "n_configs": panel.shape[1],
+                "reason": "PBO needs >= 4 configurations; got fewer"}
+    pbo = pbo_cscv(panel, n_splits=16)
+    return {"pbo": pbo["pbo"], "n_configs": panel.shape[1],
+            "n_splits": 16, "logit_mean": pbo["logit_mean"]}
+
+
 def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
              funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None,
              AUM: float | None = None) -> dict:
@@ -129,7 +219,8 @@ def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, time
 
 def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: str = "dev",
         ledger: Ledger | None = None, prices: pd.DataFrame | None = None,
-        funding: pd.DataFrame | None = None, notes: str = "") -> dict:
+        funding: pd.DataFrame | None = None, notes: str = "",
+        params_grid: list[dict] | None = None) -> dict:
     cfg = paths.load_config("desk")
     ledger = ledger or Ledger()
     params = params or {}
@@ -294,6 +385,17 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
 
     # ---- artifacts -------------------------------------------------------------
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    # ---- P5: walk-forward + optional PBO across a parameter sweep -----------
+    walk_forward_block: dict = {}
+    pbo_block: dict = {}
+    if sample == "dev" and len(returns) > 0:
+        walk_forward_block = _walk_forward_report(returns, timeframe)
+    if sample == "dev" and params_grid:
+        def _factory(p):
+            return get_strategy(strategy)(**p)
+        pbo_block = _pbo_report(_factory, px, params_grid, costs, timeframe,
+                                 funding, perp_legs, default_aum)
+
     out_dir = paths.path("backtests", hypothesis_id, f"{stamp}-{sample}-{strat.name}-v{strat.version}")
     out_dir.mkdir(parents=True, exist_ok=True)
     report = {
@@ -302,6 +404,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         "holdout_start": holdout_start.isoformat(), "period": [str(returns.index[0]), str(returns.index[-1])]
         if len(returns) else None, "costs": costs.__dict__, "data_quality": quality, **ev, "statistics": stats_out,
         "aum_sweep": sweep_results, "capacity_max_AUM_usd": capacity_usd, "default_aum_usd": default_aum,
+        "walk_forward": walk_forward_block, "pbo_cscv": pbo_block,
         "notes": notes,
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str))
