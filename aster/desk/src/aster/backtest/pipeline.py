@@ -31,6 +31,16 @@ from aster.validation.stats import (deflated_sharpe, expected_max_sharpe, haircu
                                     min_track_record_length, probabilistic_sharpe)
 
 
+class PipelineEmptyWeightsError(LedgerError):
+    """Raised when a strategy returns all-zero (or all-NaN) weights.
+
+    Per DECISIONS.md:17 a run whose weights are all zero or whose
+    statistics are ``None`` is an infrastructure failure, not a
+    rejection. The pipeline refuses to write a report so the trial
+    cannot be miscounted as a falsification.
+    """
+
+
 def _gates(cfg: dict, prediction: dict) -> dict:
     g = dict(cfg.get("gates", {}))
     g.update({k: v for k, v in prediction.items() if k in g})
@@ -177,7 +187,9 @@ def _pbo_report(strat_factory, prices: pd.DataFrame, params_grid: list[dict],
 
 def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
              funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None,
-             AUM: float | None = None) -> dict:
+             AUM: float | None = None,
+             perp_close: pd.DataFrame | None = None,
+             perp_fixing_mask: pd.Series | None = None) -> dict:
     """Base + stress backtests, restricted to bars >= start (holdout) when given.
 
     ``perp_legs`` follows the engine contract (None, ``"all"`` or iterable).
@@ -196,14 +208,18 @@ def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, time
         return s if start is None else s[s.index >= start]
 
     base = run_backtest(prices, weights, costs, lag=1, funding=funding,
-                        perp_legs=perp_legs, AUM=AUM)
+                        perp_legs=perp_legs, AUM=AUM,
+                        perp_close=perp_close, perp_fixing_mask=perp_fixing_mask)
     stress = {
         "costs_x2": run_backtest(prices, weights, costs.scaled(2), lag=1, funding=funding,
-                                 perp_legs=perp_legs, AUM=AUM),
+                                 perp_legs=perp_legs, AUM=AUM,
+                                 perp_close=perp_close, perp_fixing_mask=perp_fixing_mask),
         "costs_x3": run_backtest(prices, weights, costs.scaled(3), lag=1, funding=funding,
-                                 perp_legs=perp_legs, AUM=AUM),
+                                 perp_legs=perp_legs, AUM=AUM,
+                                 perp_close=perp_close, perp_fixing_mask=perp_fixing_mask),
         "lag_2": run_backtest(prices, weights, costs, lag=2, funding=funding,
-                              perp_legs=perp_legs, AUM=AUM),
+                              perp_legs=perp_legs, AUM=AUM,
+                              perp_close=perp_close, perp_fixing_mask=perp_fixing_mask),
     }
     r = cut(base.returns)
     window = {"1d": 30, "4h": 180, "1h": 720, "15m": 720, "5m": 720}.get(timeframe, 30)
@@ -258,9 +274,39 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
                 raise ValueError(f"data quality errors for {s}: {rep.errors}")
         prices = store.load_closes(cfg["exchange"], symbols, timeframe)
         if perp_legs:
-            # Funding panel for perp symbols. Reindexed to the weight frame
-            # columns by the engine; the store loader keeps the union.
-            funding = store.load_funding(cfg["exchange"], symbols, timeframe)
+            # P6: materialise the R2 Hive-partitioned funding store into
+            # the standard pipeline layout (``data/funding/.../<timeframe>.parquet``)
+            # so the legacy ``store.load_funding`` path works end to end.
+            # The materialiser also returns the per-bar aligned panels
+            # so the engine can apply the per-8h fixing mask (otherwise
+            # the naive ``held * ffill(rate)`` would triple-count).
+            from aster.data.funding_materialise import (
+                materialise_funding_panel,
+                perp_fixing_rate_per_bar,
+            )
+            aligned = materialise_funding_panel(
+                symbols, bar_index=prices.index,
+                exchange=cfg["exchange"], timeframe=timeframe,
+            )
+            funding = pd.concat(aligned, axis=1) if aligned else None
+            if funding is not None:
+                funding.columns = list(aligned.keys())
+            perp_fixing_mask = perp_fixing_rate_per_bar(prices.index) if funding is not None else None
+        else:
+            perp_fixing_mask = None
+        if perp_legs and funding is None:
+            # A perp-aware prereg with no funding data on disk is an
+            # infrastructure failure, not a research outcome. Fail fast
+            # with a clear message rather than producing a report with
+            # all-None statistics.
+            raise PipelineEmptyWeightsError(
+                f"perp_legs is set on {hypothesis_id!r} but no funding panel "
+                f"could be materialised for symbols {symbols} at {timeframe}. "
+                f"Run the Q3 import (aster.data.funding_rate.import_archive) and "
+                f"re-try."
+            )
+    else:
+        perp_fixing_mask = None
 
     holdout_start = CUTOFF  # P3: sealed cutoff, NOT holdout_frac on the pre-cutoff index
     if hyp["holdout_start"]:
@@ -306,7 +352,27 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
 
     # ---- look-ahead test (on what the strategy is allowed to see) ----------
     la = check_truncation_invariance(strat.target_weights, px[px.index < holdout_start])
-    weights = strat.target_weights(px)
+    # P6: inject the funding panel into the strategy as a kwarg.
+    # Strategies that consume it through the ``target_weights(prices, **kwargs)``
+    # legacy API (F1 v1) and the ``MarketData.funding`` API (F1v2, F2)
+    # both receive the same panel. The engine receives the same panel
+    # and the fixing mask to apply it at 00/08/16 UTC.
+    if funding is not None:
+        weights = strat.target_weights(px, funding=funding)
+    else:
+        weights = strat.target_weights(px)
+    # P6 DoD: a strategy that returns all-zero weights is an
+    # infrastructure failure, not a falsification. Refuse to write a
+    # report so the trial cannot be miscounted.
+    if weights is None or (isinstance(weights, pd.DataFrame) and
+                           (weights.fillna(0.0).abs().sum(axis=1) <= 0.0).all()):
+        raise PipelineEmptyWeightsError(
+            f"strategy {strat.name!r} (v{strat.version}) returned all-zero "
+            f"weights on the {sample} sample of {hypothesis_id!r}. "
+            f"This is an infrastructure failure (DECISIONS.md:17), not a "
+            f"rejection. Check that the funding panel and perp_legs reach "
+            f"the strategy."
+        )
 
     costs = CostModel(**cfg.get("costs", {}))
     # P4: every dev backtest now reports a net-Sharpe sweep at the four
@@ -316,7 +382,8 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     default_aum = float(cfg.get("default_aum_usd", 1_000_000.0))
     aum_sweep = tuple(float(a) for a in cfg.get(
         "aum_sweep_usd", (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)))
-    ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start, AUM=default_aum)
+    ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start, AUM=default_aum,
+                  perp_fixing_mask=perp_fixing_mask)
     base = ev["base"]
     returns = ev.pop("_returns")
     sweep_results: dict = {}
