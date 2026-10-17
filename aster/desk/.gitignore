@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Aster desk: secrets and heavy data
+.env
+.env.*
+config/.env
+state/kill_switch
+journal/decisions.jsonl.lock
+
+# Raw kline data is large and regenerable; keep provenance only
+data/r2/
+data/aggtrades/
+data/ohlcv/parquet/
+*.parquet
+
+# Backtest store is large and regenerable
+data/r2_backtest_store/
+
+# Hermes scratch
+audit/
+references/

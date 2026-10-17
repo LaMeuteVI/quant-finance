@@ -1,0 +1,23 @@
+# HARD RISK LIMITS — enforced by aster.risk.gate.check_order before every order.
+# This file is protected: in the Aster Hermes profile, any agent write to it
+# requires human approval. Change it yourself, by hand, deliberately.
+
+mode: paper                    # paper | testnet | live
+
+# Live only: equity used for all % limits is min(account equity, this cap).
+# The real hard cap is the money on the exchange sub-account: fund it with
+# what you accept to lose entirely.
+capital_cap_usd: 1000
+
+max_daily_loss_pct: 3.0        # breach latches the kill switch
+max_drawdown_pct: 15.0         # from peak equity; breach latches the kill switch
+max_gross_leverage: 1.0        # spot, no leverage
+max_net_leverage: 1.0
+max_position_pct: 40.0         # per asset, % of equity
+max_order_notional_usd: 2500
+max_orders_per_day: 40
+max_price_deviation_bps: 75    # order reference price vs market
+stale_price_seconds: 180
+allow_shorts: false
+
+allowed_symbols: [BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT]

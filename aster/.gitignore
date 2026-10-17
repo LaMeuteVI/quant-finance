@@ -1,0 +1,16 @@
+# secrets
+.env
+desk/config/.env
+auth.json
+
+# runtime state and user data (never versioned)
+desk/.venv/
+desk/data/
+desk/state/
+desk/memory/
+desk/journal/
+desk/backtests/
+__pycache__/
+.pytest_cache/
+*.pyc
+.DS_Store
