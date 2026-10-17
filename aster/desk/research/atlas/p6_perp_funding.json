@@ -1,0 +1,40 @@
+{
+  "id": "p6_perp_funding",
+  "status": "GREEN",
+  "date_utc": "2026-10-16",
+  "branch": "feat/aster-agent",
+  "doD": "research/QUEUE.md:53",
+  "tests": {
+    "module": "tests/test_p6_perp_funding.py",
+    "count": 9,
+    "all_pass": true,
+    "results": [
+      {"name": "test_p6_synthetic_funding_3bps_per_day", "value_bps": "+90 bps received over 30 days", "expected": "+90 bps ±5 bps", "verdict": "pass"},
+      {"name": "test_p6_all_zero_weights_raise", "value": "engine returns 0 returns, pipeline raises PipelineEmptyWeightsError (a LedgerError)", "verdict": "pass"},
+      {"name": "test_p6_kwargs_and_marketdata_match", "value_bps": "+40 bps received (7d × 2 bps/fixing × 3 fixings, lag=1 drops 1 bar)", "verdict": "pass"},
+      {"name": "test_p6_spot_only_earns_zero_funding", "value_bps": "0 bps (spot-only book has no perp leg; engine ignores funding panel)", "verdict": "pass"},
+      {"name": "test_p6_perp_without_perp_close_raises", "value": "ValueError('perp leg has no price source')", "verdict": "pass"},
+      {"name": "test_p6_spot_equals_perp_zero_gross_pnl", "value_bps": "0 bps (long spot, short perp, identical series ⇒ price legs cancel exactly)", "verdict": "pass"},
+      {"name": "test_p6_perp_fixing_mask_basic", "value": "6 fixings in 2 days (3 per day at 00/08/16 UTC)", "verdict": "pass"},
+      {"name": "test_p6_funding_causal_ffill", "value": "first bar = first fixing rate; last bar = last fixing rate; no bfill", "verdict": "pass"},
+      {"name": "test_p6_funding_no_post_cutoff", "value": "FileNotFoundError for unknown symbol", "verdict": "pass"}
+    ]
+  },
+  "engine_changes": [
+    "perp_set check: a perp leg without a price source (spot or perp_close) raises ValueError",
+    "tradable mask: built from price_source (spot + perp_close) reindexed to weights.columns; perp columns without a price source still raise",
+    "perp_close merge: only overwrite the rets frame on perp_close.columns (not on spot columns that have NaN in perp_close after reindex)",
+    "price_source: combine_first(perp_close) so a real perp value replaces any all-NaN column produced by an earlier reindex",
+    "funding charge: per-bar = held × perp_panel × fixing_mask; mask from perp_fixing_mask.reindex(prices.index); spot columns are zeroed out of perp_panel so spot funding cannot pollute the sum"
+  ],
+  "pipeline_changes": [
+    "loads funding store from data/r2/market/futures/um/funding_rate/ via materialise_funding_panel",
+    "mirrors spot funding to the perp column so the engine's f.reindex(columns=weights.columns) finds a value on the perp leg",
+    "injects funding=... into the strategy kwargs and into MarketData.funding",
+    "raises PipelineEmptyWeightsError on all-zero weight frames (engine returns 0 returns gracefully; the pipeline raises)"
+  ],
+  "carry_bar_source": "config/desk.yaml:gates (min_obs=500, sharpe_ann_min=0.8, max_drawdown_floor=-0.35, dsr_min=0.95, stress_sharpe_ann_min=0.3)",
+  "q8_prior": "+1.234 bps mean funding per 8h fixing ≈ 3.7 bps/day ≈ 13 %/yr gross (informative, not a bar)",
+  "test_suite_total": 525,
+  "f1_h_20261016_002_status": "invalid run, infrastructure; reopened as F1v2 (trial count continues in family 'btc-funding-carry')"
+}

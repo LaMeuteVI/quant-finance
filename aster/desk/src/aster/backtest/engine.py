@@ -139,6 +139,11 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame,
         raise ValueError("lag must be >= 1: a signal cannot trade on the bar that produced it")
     cost_model = _to_cost_model(costs)
     prices = prices.sort_index()
+    # The original spot price panel (before reindex). We keep a
+    # reference so the perp-set check below can detect "perp leg
+    # with no price source" by looking at the **spot** panel and
+    # ``perp_close`` only, not the reindexed price frame.
+    spot_prices = prices
     # Reindex weights to (prices.index, union(prices.columns, weights.columns))
     # so the perp leg column survives: a delta-neutral book has BOTH
     # ``BTCUSDT`` and ``BTCUSDT:USDT`` columns in the weight frame, and
@@ -159,44 +164,52 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame,
     # the perp leg must be marked to its own price.
     if perp_close is not None:
         perp_rets = perp_close.sort_index().pct_change(fill_method=None)
+        # Only overwrite the rets frame on perp columns that actually
+        # have data in ``perp_close``. The ``reindex`` above adds
+        # spot columns as all-NaN; if we used those, we'd overwrite
+        # the spot return with zero and break a true delta-neutral
+        # book.
         perp_rets = perp_rets.reindex(index=prices.index, columns=weights.columns)
-        # Spot columns fall through to the spot return; perp columns
-        # are overwritten by the perp return. Missing perp columns are
-        # treated as zero (legacy fallback).
         merged = perp_rets.where(perp_rets.notna(), 0.0)
         rets = prices.pct_change(fill_method=None).where(
             prices.notna() & prices.shift(1).notna(), 0.0
         ).copy()
-        perp_cols = [c for c in merged.columns if c in weights.columns]
-        for c in perp_cols:
-            rets[c] = merged[c]
+        for c in perp_close.columns:
+            if c in rets.columns:
+                rets[c] = merged[c]
     else:
         rets = prices.pct_change(fill_method=None)
     # A column is tradable when its price panel is present and the
-    # bar is not the first row. The ``prices`` panel may be the spot
-    # panel only — a perp leg's price comes from ``perp_close`` (or is
-    # zero, when the perp is on a hedge leg whose return is irrelevant
-    # because funding is the only P&L the strategy collects on it).
-    # We therefore build ``tradable`` from the union of the two
-    # price panels and the weight frame's column set; a perp leg
-    # with no price is still tradable because the funding charge is
-    # a per-bar cash flow that does not need a price to compute.
+    # bar is not the first row. The ``prices`` panel is the spot
+    # panel; a perp leg's price comes from ``perp_close``. A perp
+    # column with no price source must raise — a long-spot/short-perp
+    # book with no perp prices would silently become an unhedged
+    # long spot book and inherit the bull-market beta.
+    if perp_set:
+        for c in perp_set:
+            has_prices = (c in spot_prices.columns) or (
+                perp_close is not None and c in perp_close.columns
+            )
+            if not has_prices:
+                raise ValueError(
+                    f"perp leg {c!r} has no price source: provide perp_close "
+                    f"for the leg or drop it from weights"
+                )
     price_source = prices.copy()
     if perp_close is not None:
         for c in perp_close.columns:
+            # ``reindex`` may have added the perp column as all-NaN
+            # if ``perp_close`` was reindexed by the caller; in that
+            # case the assignment below overwrites with the real
+            # perp series. We use ``combine_first`` so a real value
+            # in ``perp_close`` replaces the NaN without dropping
+            # a real spot value.
             if c not in price_source.columns:
                 price_source[c] = perp_close[c]
+            else:
+                price_source[c] = price_source[c].combine_first(perp_close[c])
     price_aligned = price_source.reindex(columns=weights.columns)
-    # Tradable: present in either prices or perp_close, AND not the
-    # first row of the panel.
-    spot_leg_ok = price_aligned.notna()
-    perp_leg_ok = pd.DataFrame(False, index=price_aligned.index, columns=price_aligned.columns)
-    if perp_set:
-        for c in perp_set:
-            if c in perp_leg_ok.columns:
-                perp_leg_ok[c] = True
-    has_price = spot_leg_ok | perp_leg_ok
-    tradable = has_price & has_price.shift(1).fillna(False)
+    tradable = price_aligned.notna() & price_aligned.shift(1).notna()
     held = weights.shift(lag).fillna(0.0).where(tradable, 0.0)
     rets = rets.where(tradable, 0.0).fillna(0.0)
 
