@@ -158,7 +158,9 @@ def _walk_forward_report(returns: pd.Series, timeframe: str) -> dict:
 
 
 def _pbo_report(strat_factory, prices: pd.DataFrame, params_grid: list[dict],
-                costs, timeframe: str, funding, perp_legs, AUM) -> dict:
+                costs, timeframe: str, funding, perp_legs, AUM,
+                *, perp_close: pd.DataFrame | None = None,
+                perp_fixing_mask: pd.Series | None = None) -> dict:
     """PBO across a parameter sweep.
 
     ``strat_factory`` is a callable that takes a ``params`` dict and
@@ -174,7 +176,9 @@ def _pbo_report(strat_factory, prices: pd.DataFrame, params_grid: list[dict],
         strat = strat_factory(params)
         w = strat.target_weights(prices)
         result = run_backtest(prices, w, costs, lag=1, funding=funding,
-                              perp_legs=perp_legs, AUM=AUM)
+                              perp_legs=perp_legs, AUM=AUM,
+                              perp_close=perp_close,
+                              perp_fixing_mask=perp_fixing_mask)
         rets[json.dumps(params, sort_keys=True)] = result.returns
     panel = pd.concat(rets, axis=1).dropna()
     if panel.shape[1] < 4:
@@ -264,6 +268,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         raise LedgerError(f"dev backtests are for preregistered hypotheses (status: {hyp['status']})")
 
     # ---- data ---------------------------------------------------------------
+    perp_close: pd.DataFrame | None = None
     quality = {}
     symbols = list(universe)  # used by both the loader and the holdout reader
     if prices is None:
@@ -292,8 +297,26 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             if funding is not None:
                 funding.columns = list(aligned.keys())
             perp_fixing_mask = perp_fixing_rate_per_bar(prices.index) if funding is not None else None
+            # Q3b: materialise the perp close store (Hive -> wide panel)
+            # for the engine's ``perp_close`` kwarg. A prereg that sets
+            # ``perp_legs`` with no perp close on disk raises
+            # PipelineEmptyWeightsError (the engine cannot charge a
+            # leg it cannot price).
+            from aster.data.perp_loader import load_perp_close
+            try:
+                perp_close = load_perp_close(
+                    symbols, bar_index=prices.index,
+                    exchange=cfg["exchange"], stream="klines_1h",
+                )
+            except FileNotFoundError as exc:
+                raise PipelineEmptyWeightsError(
+                    f"perp_legs is set on {hypothesis_id!r} but no perp close "
+                    f"could be materialised for symbols {symbols}: {exc}. "
+                    f"Run `python -m aster.scripts.q3b_download_perp`."
+                ) from exc
         else:
             perp_fixing_mask = None
+            perp_close = None
         if perp_legs and funding is None:
             # A perp-aware prereg with no funding data on disk is an
             # infrastructure failure, not a research outcome. Fail fast
@@ -357,10 +380,35 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     # legacy API (F1 v1) and the ``MarketData.funding`` API (F1v2, F2)
     # both receive the same panel. The engine receives the same panel
     # and the fixing mask to apply it at 00/08/16 UTC.
-    if funding is not None:
-        weights = strat.target_weights(px, funding=funding)
+    # Q3b: when perp_legs is set, forward the perp close panel to the
+    # strategy (F1v2 reads it from MarketData; F1 v1 reads it from
+    # kwargs). The engine receives the same panel through ``perp_close``.
+    if perp_legs and perp_close is not None and funding is not None:
+        weights_kwargs = dict(
+            funding=funding,
+            perp_close=perp_close,
+            perp_legs=perp_legs,
+            perp_fixing_mask=perp_fixing_mask,
+        )
+    elif funding is not None:
+        weights_kwargs = {"funding": funding}
     else:
-        weights = strat.target_weights(px)
+        weights_kwargs = {}
+    try:
+        if weights_kwargs:
+            weights = strat.target_weights(px, **weights_kwargs)
+        else:
+            weights = strat.target_weights(px)
+    except TypeError:
+        # Strategy does not accept some kwargs (F1 v1 legacy path).
+        # Fall back to funding only, then to no kwargs.
+        if funding is not None:
+            try:
+                weights = strat.target_weights(px, funding=funding)
+            except TypeError:
+                weights = strat.target_weights(px)
+        else:
+            weights = strat.target_weights(px)
     # P6 DoD: a strategy that returns all-zero weights is an
     # infrastructure failure, not a falsification. Refuse to write a
     # report so the trial cannot be miscounted.
@@ -383,14 +431,16 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     aum_sweep = tuple(float(a) for a in cfg.get(
         "aum_sweep_usd", (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)))
     ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start, AUM=default_aum,
-                  perp_fixing_mask=perp_fixing_mask)
+                  perp_close=perp_close, perp_fixing_mask=perp_fixing_mask)
     base = ev["base"]
     returns = ev.pop("_returns")
     sweep_results: dict = {}
     if sample == "dev":
         for aum in aum_sweep:
             ev_s = evaluate(px, weights, costs, timeframe, funding, perp_legs,
-                            start, AUM=aum)
+                            start, AUM=aum,
+                            perp_close=perp_close,
+                            perp_fixing_mask=perp_fixing_mask)
             sweep_results[f"{aum:.0f}"] = {
                 "sharpe_ann_net": ev_s["base"].get("sharpe_ann"),
                 "sharpe_ann_gross": None,  # gross is reported on the default run below
@@ -461,7 +511,9 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         def _factory(p):
             return get_strategy(strategy)(**p)
         pbo_block = _pbo_report(_factory, px, params_grid, costs, timeframe,
-                                 funding, perp_legs, default_aum)
+                                 funding, perp_legs, default_aum,
+                                 perp_close=perp_close,
+                                 perp_fixing_mask=perp_fixing_mask)
 
     out_dir = paths.path("backtests", hypothesis_id, f"{stamp}-{sample}-{strat.name}-v{strat.version}")
     out_dir.mkdir(parents=True, exist_ok=True)
