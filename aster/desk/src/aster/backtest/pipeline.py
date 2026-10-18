@@ -47,6 +47,38 @@ def _gates(cfg: dict, prediction: dict) -> dict:
     return g
 
 
+# Pipeline symbols (the desk's spot slugs, e.g. ``BTC-USDT``) and the
+# Binance perp R2 symbols (e.g. ``BTCUSDT``) are NOT the same string.
+# The pipeline translates the prereg universe (pipeline slugs) to the
+# R2 symbol when reading the funding and perp-close stores, and
+# translates back when renaming the loaded panel to the strategy's
+# spot column. Without this, a perp-aware prereg either fails to find
+# the data on disk (slugs do not match) or returns a panel whose
+# columns do not align with the spot close panel (strategy returns
+# all-zero weights -> ``PipelineEmptyWeightsError``).
+def _to_r2_symbol(pipeline_symbol: str) -> str:
+    """Pipeline spot slug -> Binance perp R2 symbol.
+
+    The store layout is ``data/.../futures/um/<stream>/symbol=<X>/...``
+    where ``<X>`` is the Binance-style ticker (``BTCUSDT``, no dash).
+    The spot slugs the desk uses are Binance-style too but with a
+    dash (``BTC-USDT``). The translator strips the dash and the
+    optional ``/`` separator.
+    """
+    return pipeline_symbol.replace("-", "").replace("/", "")
+
+
+def _perp_columns(pipeline_symbols: list[str]) -> list[str]:
+    """The perp-side weight frame columns for a delta-neutral book.
+
+    The convention is ``f"{spot_slug}:USDT"`` (e.g. ``BTC-USDT:USDT``).
+    The strategy emits two columns per spot symbol: the spot slug and
+    the perp column; the engine only charges funding on the perp
+    column when ``perp_legs`` lists it.
+    """
+    return [f"{s}:USDT" for s in pipeline_symbols]
+
+
 def _build_holdout_prices(ledger: Ledger, hypothesis_id: str, symbols: list[str],
                           *, exchange: str, timeframe: str) -> pd.DataFrame:
     """Assemble the post-cutoff close panel for a holdout backtest.
@@ -281,7 +313,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         if perp_legs:
             # P6: materialise the R2 Hive-partitioned funding store into
             # the standard pipeline layout (``data/funding/.../<timeframe>.parquet``)
-            # so the legacy ``store.load_funding`` path works end to end.
+            # so the legacy ``store.load_funding` path works end to end.
             # The materialiser also returns the per-bar aligned panels
             # so the engine can apply the per-8h fixing mask (otherwise
             # the naive ``held * ffill(rate)`` would triple-count).
@@ -289,13 +321,23 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
                 materialise_funding_panel,
                 perp_fixing_rate_per_bar,
             )
+            # Translate the prereg universe (pipeline slugs) to the R2
+            # perp symbols used in the on-disk layout. The materialiser
+            # reads ``symbol=BTCUSDT/...``; the prereg carries
+            # ``BTC-USDT``. Without this the loader finds nothing.
+            r2_symbols = [_to_r2_symbol(s) for s in symbols]
             aligned = materialise_funding_panel(
-                symbols, bar_index=prices.index,
+                r2_symbols, bar_index=prices.index,
                 exchange=cfg["exchange"], timeframe=timeframe,
             )
+            # Rename the materialised panel from R2 columns
+            # (``BTCUSDT``) to the perp weight column convention
+            # (``BTC-USDT:USDT``) so the engine's ``perp_legs`` matches
+            # both the funding columns and the perp-side of the
+            # delta-neutral weight frame.
             funding = pd.concat(aligned, axis=1) if aligned else None
             if funding is not None:
-                funding.columns = list(aligned.keys())
+                funding.columns = _perp_columns(symbols)
             perp_fixing_mask = perp_fixing_rate_per_bar(prices.index) if funding is not None else None
             # Q3b: materialise the perp close store (Hive -> wide panel)
             # for the engine's ``perp_close`` kwarg. A prereg that sets
@@ -305,7 +347,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             from aster.data.perp_loader import load_perp_close
             try:
                 perp_close = load_perp_close(
-                    symbols, bar_index=prices.index,
+                    r2_symbols, bar_index=prices.index,
                     exchange=cfg["exchange"], stream="klines_1h",
                 )
             except FileNotFoundError as exc:
@@ -314,6 +356,16 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
                     f"could be materialised for symbols {symbols}: {exc}. "
                     f"Run `python -m aster.scripts.q3b_download_perp`."
                 ) from exc
+            # Rename perp close columns from R2 (``BTCUSDT``) to the
+            # perp leg convention (``BTC-USDT:USDT``) so the engine's
+            # perp-set check ``c in perp_close.columns`` aligns with
+            # the perp leg (``perp_legs``) and the perp-side of the
+            # weight frame. The V1.1.0 strategy's basis guard
+            # (``perp_close - prices``) is OFF by default, so the
+            # reindex there would produce NaNs and not be used.
+            if not perp_close.empty:
+                perp_close = perp_close.copy()
+                perp_close.columns = _perp_columns(symbols)
         else:
             perp_fixing_mask = None
             perp_close = None
