@@ -102,7 +102,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 
 ## Block 3: literature, atlas, synthesis
 - **Q5-V2 — Intraday seasonality (hour UTC, weekday, funding fixings 00/08/16).** `DONE (2026-10-19, be490e7, research/notes/2026-10-19-Q5-V2-prereg.md, research/atlas/q5_v2_seasonality.json, research/memos/2026-10-19-Q5-V2-N19.md, aster/desk/src/aster/research/q5_v2_seasonality.py, aster/desk/tests/test_q5_v2_seasonality.py)`
-- **Q5-V3 — Jumps + CUSUM/SADF bubbles on BTC/ETH intraday.** `READY (2026-10-19)` · reuses Q5 code on `data/r2/market/spot/klines_1h/` · tests at the 5m, 15m, 1h, 4h horizons on BTC and ETH, pre-cutoff · FDR over the full grid · cost hurdle 3× taker proxy.
+- **Q5-V3 — Jumps + CUSUM/SADF bubbles on BTC/ETH intraday.** `DONE (2026-10-19, 8cc6d91, research/notes/2026-10-19-Q5-V3-prereg.md, research/atlas/q5_v3_jumps.json, research/memos/2026-10-19-Q5-V3-N20.md, aster/desk/src/aster/research/q5_v3_jumps.py, aster/desk/tests/test_q5_v3_jumps.py)`
 - **Q15 — ETH `fvg_down_entry_h1` follow-up.** `IDEA` · from BACKLOG item 8; re-test on the panel before anything else.
 - **Q16 — Veille (former G, section 7).** `DONE (2026-10-16, 8c197c0)` · former E
   SSRN, arXiv q-fin, AQR/Man/Robeco/Two Sigma, Kaiko/Coin Metrics/Glassnode on crypto return predictability, funding, microstructure, intraday seasonality. Per source: reference, claim, period, assumed costs, ladder level. Top 3 claims become replication sub-items in this queue.
