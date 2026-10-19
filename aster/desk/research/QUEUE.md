@@ -7,6 +7,20 @@
 > **Programme closed 2026-10-19** (Samuel « Continue et clôture »). See `research/CLOSURE.md` for the final state. No READY, IDEA or IN_PROGRESS item remains; only Q18 BLOCKED_ON primary feature persists as documentation. New work requires Samuel explicit restart per the closure file.
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-19 (Claude, for Samuel): proposed reopening, active only once Samuel sends the reopen message
+Closing the programme is RED and needs Samuel's own decision. The F track does not support closure yet: F2 is a clean falsification, but F3 is a near miss whose diagnosis points at costs, and F1v2 tested a different rule from the carry hypothesis and left no evidence in the memo.
+
+- **R1 — Rewrite the F1v2 memo from its report.json.** `READY`
+  `research/memos/2026-10-18-F1v2-N15.md` is 257 bytes and ends in `...[truncated]`: no number, no decomposition. Rewrite it from `backtests/H-20261016-002*/…/report.json` and the c8b1e88 run: Sharpe, DSR, funding P&L, basis (price) P&L, costs, turnover, share of bars in position, worst windows 2021-05 / 2022-06 / 2022-11, capacity. If the report lacks the decomposition, extend `pipeline.evaluate` to report `gross_price_pnl`, `funding_pnl`, `cost_pnl` and `time_in_market` (code, GREEN), then re-read the same trial without a new run.
+- **R2 — Q3c: perp prices for ETH and the liquid alts.** `READY`
+  Q3b imported BTCUSDT only. Run the same importer for ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, DOGEUSDT, LINKUSDT (klines 1h, premiumIndexKlines, markPriceKlines, metrics), pre-cutoff, with manifests and audit.
+- **R3 — F1v3: the carry rule the hypothesis actually states.** `READY` after R1, R2 · family of H-20261016-002 (trial count continues; version bump with written diagnosis)
+  Diagnosis to write in `--notes`: v1.1 enters only when the 7-day mean funding exceeds a 2 bps **per fixing** cushion, i.e. only above about 22 %/yr. The hypothesis is "carry when expected funding net of **amortised** costs is positive", while the panel mean is 1.23 bps per fixing. v1.1 therefore sat flat most of the time and traded only the overheated periods. v3: cushion = round-trip cost of both legs (spot 20 bps + perp 10 bps + grid) divided by the expected holding period in fixings, with entry/exit hysteresis (enter above the cushion, exit below zero) to avoid churn. Long spot / short perp only (no spot shorting), BTC + ETH, then the R2 panel equal-risk. Report the R1 decomposition. Gates unchanged.
+- **R4 — F3 v1.1: same signals, turnover control.** `READY` · family `btc-daily-tsmom` (trial 3)
+  Diagnosis: turnover 31.6×/yr and cost drag 4.74 %/yr on a 20–120 day trend ensemble; gross of costs the Sharpe is roughly (12.6 % + 4.7 %) / 19.7 % ≈ 0.88. The daily vol-target rebalancing churns. v1.1: no-trade band on target weights (`config/desk.yaml` `rebalance_band` 0.02 already exists for execution), vol estimate on a longer half-life, weekly rebalance. Same signals, same universe, same gates. This is a cost-execution revision, not a new signal search.
+- **R5 — Universe for F3 and F1v3.** `READY` with R3/R4
+  Run on the widest pre-cutoff panel available (the 12 R2 symbols, XMR kept as survivorship guard), not only 5 majors: breadth is where IR ≈ IC·√breadth comes from.
+
 ## Former labels
 A = holdout seal (done as option A, superseded by Q1) · B = Q6 · C = Q9 · D = Q10–Q12 · E = Q13–Q14 · F = Q17 · G = Q16.
 
