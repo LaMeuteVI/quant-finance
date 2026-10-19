@@ -101,6 +101,8 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
   Fixed-effects panel tests of every surviving signal; sector pairs (L1 SOL/NEAR/SUI, AI FET/RENDER, payments XRP/DOGE, DeFi AAVE/LINK); intraday residual mean reversion; cross-sectional momentum/reversal on residuals at 1h–1w. State the narrow cross-section and survivorship bound in the report.
 
 ## Block 3: literature, atlas, synthesis
+- **Q5-V2 — Intraday seasonality (hour UTC, weekday, funding fixings 00/08/16).** `READY (2026-10-19)` · reuses Q5 code on `data/r2/market/spot/klines_1h/` (BTC/ETH) and `data/r2/market/futures/um/funding_rate/` (BTCUSDT/ETHUSDT) · tests at the 5m, 15m, 1h, 4h horizons on BTC and ETH, pre-cutoff · FDR over the full grid · cost hurdle 3× taker proxy.
+- **Q5-V3 — Jumps + CUSUM/SADF bubbles on BTC/ETH intraday.** `READY (2026-10-19)` · reuses Q5 code on `data/r2/market/spot/klines_1h/` · tests at the 5m, 15m, 1h, 4h horizons on BTC and ETH, pre-cutoff · FDR over the full grid · cost hurdle 3× taker proxy.
 - **Q15 — ETH `fvg_down_entry_h1` follow-up.** `IDEA` · from BACKLOG item 8; re-test on the panel before anything else.
 - **Q16 — Veille (former G, section 7).** `DONE (2026-10-16, 8c197c0)` · former E
   SSRN, arXiv q-fin, AQR/Man/Robeco/Two Sigma, Kaiko/Coin Metrics/Glassnode on crypto return predictability, funding, microstructure, intraday seasonality. Per source: reference, claim, period, assumed costs, ladder level. Top 3 claims become replication sub-items in this queue.
