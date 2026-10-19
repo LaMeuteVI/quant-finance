@@ -110,8 +110,6 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
   One `research/assets/<SYMBOL>.md` per asset with the level reached (N0 → N7) at the top, linking the dated artefacts; `research/atlas/` lead-lag, regimes, costs, data-sources. MAP updated.
 - **Q18 — N6 financial ML.** `BLOCKED_ON a primary feature from Q5–Q14`
   Meta-labeling on primary signals, triple barrier, purged CV with embargo, MDA/SFI by feature clusters, trial count reported.
-- **Q19 — N7 synthesis and preregistration.** `READY` after F1v2, F2, F3 verdicts (Q5–Q14 are DONE)
-  Per asset: signal map (horizon, IC with CI, corrected t, IC decay, bps vs cost, regime dependence, capacity, correlation to other signals). Register the 1–3 most mature hypotheses (ORANGE), dev backtests (ORANGE), Skeptic and Breaker, capacity at 100k/1M/10M/50M. **Holdout read and paper are RED.**
 - **Q20 — Weekly "État de la recherche".** `DONE (2026-10-16, c056f3c)`, every Sunday: matrix, candidates, what died and why, effort reallocation.
 - **Q21 — Free tick-data microstructure V2 (D3, GREEN).** `DONE (2026-10-16, 0f2bd7b)`
   Extend Q4/Q6 with the free Binance Vision tick surface: (a) Lee-Ready / tick-rule / Kyle λ / Amihud / Roll spread / VPIN on a deterministic aggTrades sample (BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT) over ≥ 12 pre-cutoff months; (b) mark-price klines for the perp leg (basis, premium); (c) cross-asset lead-lag on signed flow at 1m / 5m / 15m. Preregister mechanism, falsification bar, cost hurdle (3× taker proxy). No new vendor, no key, no order, no holdout, no live.
