@@ -4,11 +4,13 @@ from aster.strategies.base import Strategy
 from aster.strategies.tsmom import TSMom
 from aster.strategies.btc_daily_tsmom_60 import BTCDailyTSMom60
 from aster.strategies.funding_carry_dn import FundingCarryDN
+from aster.strategies.crowding_premium import CrowdingPremium
 
 REGISTRY: dict[str, type[Strategy]] = {
     TSMom.name: TSMom,
     BTCDailyTSMom60.name: BTCDailyTSMom60,
     FundingCarryDN.name: FundingCarryDN,
+    CrowdingPremium.name: CrowdingPremium,
 }
 
 

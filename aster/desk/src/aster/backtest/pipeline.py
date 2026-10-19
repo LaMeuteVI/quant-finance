@@ -301,6 +301,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
 
     # ---- data ---------------------------------------------------------------
     perp_close: pd.DataFrame | None = None
+    oi_panel: pd.DataFrame | None = None
     quality = {}
     symbols = list(universe)  # used by both the loader and the holdout reader
     if prices is None:
@@ -344,7 +345,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             # ``perp_legs`` with no perp close on disk raises
             # PipelineEmptyWeightsError (the engine cannot charge a
             # leg it cannot price).
-            from aster.data.perp_loader import load_perp_close
+            from aster.data.perp_loader import load_perp_close, load_perp_oi
             try:
                 perp_close = load_perp_close(
                     r2_symbols, bar_index=prices.index,
@@ -356,6 +357,18 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
                     f"could be materialised for symbols {symbols}: {exc}. "
                     f"Run `python -m aster.scripts.q3b_download_perp`."
                 ) from exc
+            # F2 (crowding-premium family): the strategy also needs a
+            # wide open-interest panel (daily metrics, ffill-aligned to
+            # the bar index). The loader returns the R2 column names;
+            # we rename to the spot slug so the strategy's
+            # ``oi.reindex(columns=prices.columns)`` aligns.
+            oi_panel = load_perp_oi(
+                r2_symbols, bar_index=prices.index,
+                exchange=cfg["exchange"],
+            )
+            if not oi_panel.empty:
+                oi_panel = oi_panel.copy()
+                oi_panel.columns = list(symbols)
             # Rename perp close columns from R2 (``BTCUSDT``) to the
             # perp leg convention (``BTC-USDT:USDT``) so the engine's
             # perp-set check ``c in perp_close.columns`` aligns with
@@ -442,6 +455,10 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             perp_legs=perp_legs,
             perp_fixing_mask=perp_fixing_mask,
         )
+        # F2: pass the OI panel as a kwarg if the materialisation
+        # produced one. The F1 strategy ignores it.
+        if oi_panel is not None and not oi_panel.empty:
+            weights_kwargs["oi"] = oi_panel
     elif funding is not None:
         weights_kwargs = {"funding": funding}
     else:

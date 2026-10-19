@@ -128,6 +128,34 @@ def load_perp_close(symbols: Iterable[str],
     return pd.DataFrame(panels).sort_index()
 
 
+def load_perp_oi(symbols: Iterable[str],
+                 *, bar_index: pd.DatetimeIndex,
+                 exchange: str = "binance",
+                 cutoff: pd.Timestamp = DEFAULT_CUTOFF) -> pd.DataFrame:
+    """Wide open-interest panel (UTC index x symbols), aligned to
+    ``bar_index`` via causal forward-fill.
+
+    The metrics stream is daily; the loader forward-fills the daily
+    OI value to the bar index. Per the F2 prereg (2026-10-18), the
+    daily OI step at the 4h bar resolution is sufficient for the
+    ``oi_z`` conditioning (the lag-1 OI diff in bars is bounded by
+    the OI change per day, not per bar).
+    """
+    long_form = load_perp_metrics(symbols, exchange=exchange, cutoff=cutoff)
+    if long_form.empty:
+        return pd.DataFrame()
+    if "sum_open_interest" not in long_form.columns:
+        return pd.DataFrame()
+    panels: dict[str, pd.Series] = {}
+    for sym, g in long_form.groupby("symbol"):
+        s = g["sum_open_interest"].copy()
+        s.index = pd.to_datetime(s.index, utc=True)
+        # Causal ffill to the bar index.
+        aligned = s.reindex(s.index.union(bar_index)).sort_index().ffill()
+        panels[sym] = aligned.reindex(bar_index)
+    return pd.DataFrame(panels).sort_index()
+
+
 def load_perp_metrics(symbols: Iterable[str],
                        *,
                        exchange: str = "binance",
@@ -235,5 +263,6 @@ __all__ = [
     "KLINE_STREAMS",
     "load_perp_close",
     "load_perp_metrics",
+    "load_perp_oi",
     "audit_perp_streams",
 ]
