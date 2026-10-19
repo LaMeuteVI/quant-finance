@@ -103,7 +103,7 @@ One `delegate_task` sub-agent per asset, in parallel, never reading each other; 
 ## Block 3: literature, atlas, synthesis
 - **Q5-V2 — Intraday seasonality (hour UTC, weekday, funding fixings 00/08/16).** `DONE (2026-10-19, be490e7, research/notes/2026-10-19-Q5-V2-prereg.md, research/atlas/q5_v2_seasonality.json, research/memos/2026-10-19-Q5-V2-N19.md, aster/desk/src/aster/research/q5_v2_seasonality.py, aster/desk/tests/test_q5_v2_seasonality.py)`
 - **Q5-V3 — Jumps + CUSUM/SADF bubbles on BTC/ETH intraday.** `DONE (2026-10-19, 8cc6d91, research/notes/2026-10-19-Q5-V3-prereg.md, research/atlas/q5_v3_jumps.json, research/memos/2026-10-19-Q5-V3-N20.md, aster/desk/src/aster/research/q5_v3_jumps.py, aster/desk/tests/test_q5_v3_jumps.py)`
-- **Q15 — ETH `fvg_down_entry_h1` follow-up.** `IDEA` · from BACKLOG item 8; re-test on the panel before anything else.
+- **Q15 — ETH `fvg_down_entry_h1` panel re-test.** `IN_PROGRESS (2026-10-19)` · promoted from IDEA → prereg first · multi-TF (1d, 4h, 1h), multi-asset (ETH/BTC/BNB/SOL/XRP), multi-horizon (fwd 1/2/5/10 bars), BH-FDR over the panel, placebos on gap size and direction · output `research/atlas/q15_fvg_panel.json` + memo · depends on existing spot parquets (no download required) · prereg `research/notes/2026-10-19-Q15-prereg.md`
 - **Q16 — Veille (former G, section 7).** `DONE (2026-10-16, 8c197c0)` · former E
   SSRN, arXiv q-fin, AQR/Man/Robeco/Two Sigma, Kaiko/Coin Metrics/Glassnode on crypto return predictability, funding, microstructure, intraday seasonality. Per source: reference, claim, period, assumed costs, ladder level. Top 3 claims become replication sub-items in this queue.
 - **Q17 — Atlas and asset dossiers (former F).** `DONE (2026-10-16, 1c571a2)` · former F after each block
