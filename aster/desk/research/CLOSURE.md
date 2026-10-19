@@ -1,8 +1,10 @@
-# Aster desk research programme — closure (2026-10-19)
+# Aster desk research programme — SUSPENDED 2026-10-19 by Samuel, REOPENED 2026-10-19
 
-**Status**: closed by Samuel's explicit « Continue et clôture » (2026-10-19).
+**Status**: suspended (Samuel explicit « Je rouvre le programme »). Closure revoked; the F-track was not sufficiently diagnosed before closure (F3 is a near-miss on costs, F1v2 didn't test the carry hypothesis), so additional work is required before any closure decision.
+
 **Branch**: `feat/aster-agent`.
-**Commit final**: see below.
+**Commit suspend**: `005c76a` (closure commit).
+**Commit reopen**: see `git log origin/feat/aster-agent` (this session).
 
 ## Final state
 

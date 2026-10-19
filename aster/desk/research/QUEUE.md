@@ -4,7 +4,6 @@
 > Worked top to bottom by the `aster-autopilot` skill. Decisions and the autonomy charter: `research/DECISIONS.md`.
 > Statuses: `READY` · `IN_PROGRESS (date)` · `BLOCKED_ON <id or reason>` · `DONE (date, commit, artefact)` · `IDEA` (not yet scheduled) · `RED` (needs Samuel).
 >
-> **Programme closed 2026-10-19** (Samuel « Continue et clôture »). See `research/CLOSURE.md` for the final state. No READY, IDEA or IN_PROGRESS item remains; only Q18 BLOCKED_ON primary feature persists as documentation. New work requires Samuel explicit restart per the closure file.
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
 ## Review 2026-10-19 (Claude, for Samuel): proposed reopening, active only once Samuel sends the reopen message
