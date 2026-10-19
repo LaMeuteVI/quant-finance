@@ -60,7 +60,7 @@ These come from the literature and the brief's mechanism list, not from our data
 
 - **F2 — Funding and premium as a crowding signal.** `REJECTED (2026-10-18, 2d71a19, H-20261018-005)`
   Directional perp position against extreme funding or premium z-scores, conditioned on open-interest change. Mechanism: crowded leveraged positioning is forced out (liquidations). F2 v1.0.0 falsified on all gates: Sharpe_ann=-0.62 (<0.8), max DD=-0.74 (<-0.35), DSR=0.05 (<0.95), capacity=0 USD. The OI-agreement short signal fires in trending basis regimes (2021 bull, 2022 luna) where mean-reversion does not materialise in the 30-day window. Turnover 49x, cost drag 7.3%/an. Strategy directionally loses. `crowding-premium` family closed at 1 trial. Memo: `research/memos/2026-10-18-F2-N16.md`.
-- **F3 — Vol-targeted trend ensemble on the panel.** `READY` (P1 and P4 are DONE) · runs on spot closes, does not need P6
+- **F3 — Vol-targeted trend ensemble on the panel.** `REJECTED (2026-10-19, TBD, H-20261019-001)` · memo: `research/memos/2026-10-19-F3-N17.md`
   Blend of 20–120 day trend signals, long/short perps, volatility targeting, 8–10 assets, XMR kept as a survivorship guard. Same idea as the rejected `H-20261013-001`, so the trials count **in the existing family `btc-daily-tsmom`**: no new family to reset the DSR. It differs in diversification, shorting and sizing, so the preregistration must say why it should pass where the BTC long/cash version failed its drawdown floor.
 
 ## Block 1: the unexplored intraday and perp space (highest priority after Block P)

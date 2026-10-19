@@ -357,25 +357,23 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
                     f"could be materialised for symbols {symbols}: {exc}. "
                     f"Run `python -m aster.scripts.q3b_download_perp`."
                 ) from exc
-            # F2 (crowding-premium family): the strategy also needs a
-            # wide open-interest panel (daily metrics, ffill-aligned to
-            # the bar index). The loader returns the R2 column names;
-            # we rename to the spot slug so the strategy's
-            # ``oi.reindex(columns=prices.columns)`` aligns.
-            oi_panel = load_perp_oi(
-                r2_symbols, bar_index=prices.index,
-                exchange=cfg["exchange"],
-            )
-            if not oi_panel.empty:
-                oi_panel = oi_panel.copy()
-                oi_panel.columns = list(symbols)
+            # F2 (crowding-premium family) additionally needs the
+            # wide open-interest panel. Do not load metrics for every
+            # perp strategy: F3 is a price-only trend strategy and
+            # must not fail when metrics are absent for an asset.
+            if strategy == "crowding_premium":
+                oi_panel = load_perp_oi(
+                    r2_symbols, bar_index=prices.index,
+                    exchange=cfg["exchange"],
+                )
+                if not oi_panel.empty:
+                    oi_panel = oi_panel.copy()
+                    oi_panel.columns = list(symbols)
             # Rename perp close columns from R2 (``BTCUSDT``) to the
             # perp leg convention (``BTC-USDT:USDT``) so the engine's
             # perp-set check ``c in perp_close.columns`` aligns with
             # the perp leg (``perp_legs``) and the perp-side of the
-            # weight frame. The V1.1.0 strategy's basis guard
-            # (``perp_close - prices``) is OFF by default, so the
-            # reindex there would produce NaNs and not be used.
+            # weight frame.
             if not perp_close.empty:
                 perp_close = perp_close.copy()
                 perp_close.columns = _perp_columns(symbols)

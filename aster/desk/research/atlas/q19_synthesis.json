@@ -1,0 +1,73 @@
+{
+  "task": "Q19",
+  "title": "N7 synthesis and capital allocation",
+  "date": "2026-10-19",
+  "scope": "Synthesis of F1v2, F2, F3 dev verdicts and capital allocation across the surviving F-strategies. The allocator supports risk_parity, min_variance and equal schemes.",
+  "input_strategies": [
+    {
+      "id": "H-20261018-003",
+      "family": "funding-carry-dn",
+      "title": "F1v2 funding carry delta-neutral",
+      "verdict": "REJECTED",
+      "trials_in_family": 2,
+      "sharpe_ann": 0.18,
+      "max_drawdown": -0.17,
+      "dsr": null,
+      "cost_drag_ann": 0.027,
+      "turnover_ann": 18.0,
+      "funding_received_ann": -0.061,
+      "capacity_net_sharpe_1_usd": 0,
+      "report": "backtests/H-20261018-003/20261018T200544Z-dev-funding_carry_dn-v1.1.0/report.json"
+    },
+    {
+      "id": "H-20261018-005",
+      "family": "crowding-premium",
+      "title": "F2 crowding premium perp-only directional",
+      "verdict": "REJECTED",
+      "trials_in_family": 1,
+      "sharpe_ann": -0.618,
+      "max_drawdown": -0.7416,
+      "dsr": 0.0497,
+      "cost_drag_ann": 0.0735,
+      "turnover_ann": 49.0,
+      "funding_received_ann": -0.0037,
+      "capacity_net_sharpe_1_usd": 0,
+      "report": "backtests/H-20261018-005/20261019T071418Z-dev-crowding_premium-v1.0.0/report.json"
+    },
+    {
+      "id": "H-20261019-001",
+      "family": "btc-daily-tsmom",
+      "title": "F3 vol-targeted trend ensemble on the panel",
+      "verdict": "REJECTED",
+      "trials_in_family": 2,
+      "sharpe_ann": 0.7021,
+      "max_drawdown": -0.3373,
+      "dsr": 0.9070,
+      "cost_drag_ann": 0.0474,
+      "turnover_ann": 31.585,
+      "funding_received_ann": 0.0094,
+      "capacity_net_sharpe_1_usd": 0,
+      "report": "backtests/H-20261019-001/20261019T072904Z-dev-vol_target_trend_ensemble-v1.0.0/report.json"
+    }
+  ],
+  "allocation": {
+    "equal_weight": {"F1v2": 0.0, "F2": 0.0, "F3": 0.0},
+    "risk_parity": {"F1v2": 0.0, "F2": 0.0, "F3": 0.0},
+    "min_variance": {"F1v2": 0.0, "F2": 0.0, "F3": 0.0},
+    "note": "All three F-strategies are falsified on the desk gates. Risk_parity caps any negative-Sharpe weight to zero and re-balances the rest; with no positive-Sharpe strategy present, the allocator returns the equal-weight fallback (each survivor at 0)."
+  },
+  "correlation_of_returns": null,
+  "decision": {
+    "live_candidate": null,
+    "promotable_to_paper": null,
+    "promotable_to_holdout": null,
+    "reason": "F1v2, F2 and F3 all fail Sharpe 0.8, DSR 0.95 or DD -0.35; capacity is 0 USD in every case. No paper, no holdout, no live, no key, no order."
+  },
+  "gate_provenance": "config/desk.yaml: sharpe_ann_min=0.8, max_drawdown_floor=-0.35, dsr_min=0.95, stress_sharpe_ann_min=0.3",
+  "next_directions": [
+    "Q18 N6 financial ML (BLOCKED on primary feature)",
+    "Intentionally look for a cheaper/faster signal class (e.g. funding seasonality, perp-spot arbitrage at hourly horizon)",
+    "Expand F3 family to include basis-momentum or cross-sectional funding reversal (different family)",
+    "Re-examine H-20261013-001 BTC long/cash for a specific regime filter"
+  ]
+}
