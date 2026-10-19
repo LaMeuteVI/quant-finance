@@ -99,3 +99,35 @@ ETHUSDT aggTrades 2022-01..02 imported via `aster.data.aggtrades.import_archive`
 
 Cross-asset signed-flow lead-lag (BTC↔ETH) at 5m and 15m is **symmetric and flat** (ρ ≈ 0.07 at 5m, 0.09 at 15m, no lead-lag structure). H-20261022-001 (signed-flow Spearman × Q4−Q0 > 60 bps) **falsified** on all 6 axes. H-20261022-002 (BTC→ETH lead-lag ρ > 0.05 at lag = +1) **falsified as a directional signal** (only contemporaneous co-movement). No ledger hypothesis, no candidate, no holdout, no live, no paper, no order, no key, no spend. Artefact: `research/atlas/q22_microstructure.json`; memo: `research/memos/2026-10-16-Q22-N11.md`; module: `src/aster/research/q22_microstructure_v3.py`; tests: `tests/test_q22_microstructure.py` + `tests/test_q22_artefact.py`.
 
+## Falsified-on-coverage (2026-10-19, autopilot stop)
+
+Pre-cutoff coverage check complete (`research/DECISIONS.md` §3). Cell-by-cell verdict:
+
+| Cell | Status | Source |
+|---|---|---|
+| Horizons 1m-1w | **COUVERTE** | Q5 V1 (5 TF), Q9, Q21, Q22 |
+| Bars time + information | **COUVERTE** | Q4 |
+| Flow (taker ratio, signed cumul, Kyle λ, Amihud, Roll, VPIN) | **COUVERTE** | Q6, Q12, Q21, Q22 |
+| Seasonality (hour UTC, weekday, fixing hours) | **COUVERTE funding**, **VIDE spot** | Q5-V2 (BH-falsifié spot 0/212; funding autocorr mean 0.785 sur 5 symboles) |
+| Jumps + post-jump + CUSUM + SADF | **Jumps+CUSUM VIDES, SADF REPLETI** | Q5-V3 (BTC SADF +8.51, ETH +4.71; jumps 0.017 % des bars 5m; CUSUM 0/6 sustained) |
+| Volatility (GARCH/EGARCH/HAR-RV) | **COUVERTE** | Q10 |
+| Regimes (threshold/Markov/HMM) | **COUVERTE** | Q11 |
+| Perps (funding/basis/OI) | **COUVERTE** | Q3, Q3b, Q8 |
+| Inter-asset (lead-lag/panel) | **COUVERTE** | Q7, Q13, Q14 |
+| Literature | **COUVERTE** | Q16 |
+| Second venue check | **RED** (D3 paid data) | — |
+| F-track (funding carry, crowding-premium, vol-target tsmom) | **3/3 FALSIFIÉES** | F1v2 (`c8b1e88`), F2 (`2d71a19`), F3 (`18cd2a2`) |
+| Q19 N7 synthesis | **0 live candidate** | `18cd2a2` |
+
+**Conclusion** : toutes les cellules faisables sur Binance Vision gratuit pré-cutoff sont couvertes ; tous les F-strategies du track sont falsifiés ; aucun candidat live.
+
+**Options pour Samuel (RED par DECISIONS.md §1)** :
+1. **Clôturer le programme de recherche** : la couverture est complète sur les axes gratuits ; les axes payants sont RED (D3) ; aucun F-candidate n'a passé les gates.
+2. **Ouvrir une nouvelle famille sur une hypothèse spéculative** (ex. cross-sectional funding reversal, BTC-FVG panel re-test Q15 IDEA) — RED : requires Samuel's approval since these are out-of-track and may not have prior empirical support.
+3. **Re-tester la famille `btc-daily-tsmom` avec un filtre de régime** : il reste 3 essais dans cette famille (max 5) ; un filtre bear-market pourrait faire passer DD ou Sharpe — RED-lit : requires Samuel's go on a new F-hypothesis with a clear mechanism rationale.
+
+**Recommandation** : option 1 (clôture). Le coverage check + le track F-3/3-falsifié remplissent le critère du protocole (`aster-autopilot` : « when the coverage check is complete and the remaining axes are all explicitly RED, the autopilot has reached a valid stopping state »). Les options 2 et 3 sont des paris spéculatifs hors coverage.
+
+**État technique** : 577 tests verts, 1 skipped (Q5-V3 atlas nécessite le store R2). Aucun holdout lu, aucun live, paper, ordre, clé. Commit `98ad73e` pinné sur `origin/feat/aster-agent`.
+
+
