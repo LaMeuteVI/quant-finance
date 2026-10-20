@@ -9,7 +9,7 @@
 ## Review 2026-10-20 (Claude, for Samuel): F3 v1.1 audit before any holdout read
 F3 v1.1 (`H-20261020-004`) passed the dev gates, but the holdout can be read only once: a bug found afterwards would burn it. Every item below is GREEN and must be DONE before Aster asks Samuel for the holdout (RED). Items run in this order; a failure in V1–V4 sends F3 back to diagnosis, not to the holdout.
 
-- **V0 — Push everything.** `READY`
+- **V0 — Push everything.** `DONE 2026-10-20` · pull+merge `1ad4a19` (review 2026-10-20 by Claude) · push `4414429` + `03e46e8` · `git log --oneline -15 origin/feat/aster-agent` shows R1-R4 commits (7a4f2e5, fd1d592, 0fbd1ec, 4414429) all on origin · 593 passed / 1 skipped
   R1–R4 commits (`7a4f2e5` and the following ones) are not on `origin`. Push them, then paste `git log --oneline -15 origin/feat/aster-agent` in the report. Nothing below counts until the code is on GitHub.
 - **V1 — Explain the gross P&L jump.** `READY`
   v1.0 → v1.1 was meant to change only turnover (band, weekly rebalance, longer vol lookback), yet gross price P&L went from 12.6 %/yr to 23.0 %/yr. Lower turnover lowers costs; it does not double gross returns. Decompose the +10.4 pp: run v1.1 with each change alone (band only, weekly only, vol lookback only) **as diagnostics outside the ledger family count only if they reuse the v1.1 trial's returns; otherwise count them as trials**. Also state whether the `scaled.reindex(columns=perp_cols)` bug fix changed v1.0's effective positions (if v1.0 was buggy, its numbers are not a valid baseline). DoD: a table that sums to the observed gap.

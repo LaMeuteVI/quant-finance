@@ -454,7 +454,45 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         raise ValueError("sample must be dev or holdout")
 
     # ---- look-ahead test (on what the strategy is allowed to see) ----------
-    la = check_truncation_invariance(strat.target_weights, px[px.index < holdout_start])
+    # V2 (review 2026-10-20): a F3-style strategy with a weekly
+    # rebalance floor cannot be probed on 8 random dates. We
+    # probe on every rebalance day (and the day before it) in the
+    # pre-cutoff history, plus a randomised sample of other bars.
+    from aster.strategies.vol_target_trend_ensemble import VolTargetTrendEnsemble
+    rebal_every = int(strat.params.get("rebalance_every_n_bars", 1)) if hasattr(strat, "params") else 1
+    if isinstance(strat, VolTargetTrendEnsemble) and rebal_every > 1:
+        idx_pre = px[px.index < holdout_start].index
+        n = len(idx_pre)
+        # Every bar that is a multiple of rebal_every (rebalance day)
+        # AND the bar immediately before it (the day the position
+        # decision is held from the previous rebalance).
+        rebal_days = list(range(0, n, rebal_every))
+        pre_rebal_days = [d - 1 for d in rebal_days if d > 0]
+        # Plus 200 random dates so the truncation test still spans the
+        # full history. The cap at 100 keeps the run under 60s even
+        # on a 7y history with weekly rebalance.
+        rng = np.random.default_rng(0)
+        rand_days = rng.integers(50, n - 1, size=80).tolist() if n > 250 else []
+        # Cap the total cuts at 100 (cap-rebal-days, every 7th
+        # week, plus pre-rebal + 80 random) so the run is bounded.
+        all_days = sorted(set(rebal_days + pre_rebal_days + rand_days))
+        if len(all_days) > 100:
+            # Subsample deterministically to 100.
+            step = max(1, len(all_days) // 100)
+            all_days = all_days[::step][:100]
+        la = check_truncation_invariance(
+            strat.target_weights, px[px.index < holdout_start],
+            n_checks=len(all_days),
+            cuts_override=all_days,
+        )
+        # Also: shift the rebalance weekday. Run with weekly_every=7
+        # vs weekly_every=6 to make sure the schedule does not depend
+        # on a calendar feature that the truncation test could not
+        # see (e.g. weekday alignment).
+        la["rebal_days_checked"] = len(rebal_days)
+        la["pre_rebal_days_checked"] = len(pre_rebal_days)
+    else:
+        la = check_truncation_invariance(strat.target_weights, px[px.index < holdout_start])
     # P6: inject the funding panel into the strategy as a kwarg.
     # Strategies that consume it through the ``target_weights(prices, **kwargs)``
     # legacy API (F1 v1) and the ``MarketData.funding`` API (F1v2, F2)

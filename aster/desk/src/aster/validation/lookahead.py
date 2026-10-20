@@ -16,11 +16,14 @@ import pandas as pd
 
 def check_truncation_invariance(weights_fn: Callable[[pd.DataFrame], pd.DataFrame], prices: pd.DataFrame,
                                 n_checks: int = 8, min_history: int = 50, seed: int = 0,
-                                atol: float = 1e-9) -> dict:
+                                atol: float = 1e-9, cuts_override: list[int] | None = None) -> dict:
     full = weights_fn(prices)
-    rng = np.random.default_rng(seed)
-    lo = min(min_history, len(prices) - 2)
-    cuts = sorted(set(rng.integers(lo, len(prices) - 1, size=n_checks).tolist()))
+    if cuts_override is None:
+        rng = np.random.default_rng(seed)
+        lo = min(min_history, len(prices) - 2)
+        cuts = sorted(set(rng.integers(lo, len(prices) - 1, size=n_checks).tolist()))
+    else:
+        cuts = sorted(set(int(c) for c in cuts_override if min_history <= c <= len(prices) - 2))
     violations = []
     for c in cuts:
         partial = weights_fn(prices.iloc[: c + 1])
