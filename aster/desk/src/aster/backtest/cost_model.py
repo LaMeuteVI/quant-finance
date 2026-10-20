@@ -37,6 +37,50 @@ DEFAULT_GRID_PATH = Path("research/atlas/cost-grid.csv")
 # point to avoid under-stating impact).
 REPORT_SIZES = (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)
 
+# ---- C1b: venue-specific fee schedules (VIP 0 taker, no discount) ----
+#
+# The desk's C1 DoD requires the fee charged to follow the *leg's*
+# instrument, not a single flat rate.  USDⓈ-M taker is half the spot
+# taker, and F3 v1.1 holds perp legs only: charging it the spot fee
+# overstated its cost drag by ~10 bps per round trip (C2b lesson).
+FEE_BPS_PER_SIDE = {"spot": 10.0, "perp": 5.0}
+
+
+def infer_venue(column: str,
+                perp_legs: list[str] | tuple[str, ...] | None = None) -> str:
+    """Classify an engine price-column name as ``"perp"`` or ``"spot"``.
+
+    Two signals, in order of authority:
+
+    1. An explicit ``perp_legs`` list from the preregistration is
+       authoritative *and exhaustive*: a column it lists is a perp leg,
+       a column it omits is spot.  ``perp_legs=[]`` therefore means
+       "spot-only book", which is what a spot hypothesis declares.
+       This is the path F3 v1.1 takes, so the fee charged matches what
+       the hypothesis declared it trades.
+    2. Otherwise (``perp_legs is None``) the desk's naming convention:
+       perp columns are ``<spot_slug>:USDT`` (e.g. ``BTC-USDT:USDT``),
+       spot columns are the plain ``<spot_slug>`` (e.g. ``BTC-USDT``).
+       Binance perp R2 symbols such as ``BTCUSDT`` are also perp.
+
+    Anything matching neither signal is treated as spot — the
+    conservative choice, since the spot taker fee is twice the perp
+    one: a misclassification can over-state cost but never under-state
+    it.
+    """
+    if perp_legs is not None:
+        # An explicit list from the preregistration is authoritative and
+        # exhaustive: a column it lists is a perp leg, a column it omits
+        # is spot.  ``perp_legs=[]`` therefore means "no perp leg here",
+        # which is exactly what a spot-only hypothesis declares.
+        return "perp" if str(column) in {str(x) for x in perp_legs} else "spot"
+    col = str(column)
+    if col.endswith(":USDT"):
+        return "perp"
+    if "/" not in col and "-" not in col and col.replace("_", "").upper().endswith("USDT"):
+        return "perp"
+    return "spot"
+
 
 class GridCostModel:
     """Per-asset, per-UTC-hour, per-size round-trip cost in bps.
@@ -57,13 +101,23 @@ class GridCostModel:
             raise ValueError(
                 "cost grid must have columns symbol, utc_hour, notional, round_trip_bps"
             )
+        # C1b: carry the per-venue round-trip columns through, so a perp
+        # leg is charged 2*5 + spread + impact and a spot leg
+        # 2*10 + spread + impact.  A grid without them still loads
+        # (pre-C1b fixtures) and falls back to the flat ``round_trip_bps``.
+        keep = ["symbol", "utc_hour", "notional", "round_trip_bps"]
+        for venue in FEE_BPS_PER_SIDE:
+            col = f"round_trip_bps_{venue}"
+            if col in grid.columns:
+                keep.append(col)
         # Pin a deterministic order: notional ascending, utc_hour
         # ascending, symbol ascending. This keeps the interpolation
         # between grid sizes monotone and reproducible.
         self.grid = (
-            grid[["symbol", "utc_hour", "notional", "round_trip_bps"]]
-            .astype({"symbol": str, "utc_hour": int, "notional": float,
-                     "round_trip_bps": float})
+            grid[keep]
+            .astype({"symbol": str, "utc_hour": int,
+                     **{c: float for c in keep
+                        if c not in ("symbol", "utc_hour")}})
             .sort_values(["symbol", "utc_hour", "notional"])
             .reset_index(drop=True)
         )
@@ -73,7 +127,7 @@ class GridCostModel:
         # and again for each stress/AUM sweep. Cache the conservative
         # grid lookup so the realistic default does not turn a normal
         # backtest into an hours-long dataframe filter loop.
-        self._lookup_cache: dict[tuple[str, int, float], float] = {}
+        self._lookup_cache: dict[tuple[str, int, float, str], float] = {}
         if self.stress <= 0:
             raise ValueError("stress must be > 0")
 
@@ -96,7 +150,8 @@ class GridCostModel:
 
     # ---- lookup ----------------------------------------------------------
 
-    def round_trip_bps(self, symbol: str, utc_hour: int, notional: float) -> float:
+    def round_trip_bps(self, symbol: str, utc_hour: int, notional: float,
+                       *, venue: str | None = None) -> float:
         """Look up the round-trip cost in bps for a single (symbol, hour, size) cell.
 
         If ``notional`` does not match a grid point exactly, the next
@@ -104,20 +159,38 @@ class GridCostModel:
         up, never down). This avoids under-stating impact for an AUM
         that sits between two grid points, which would be the worst
         failure mode of a capacity report.
+
+        ``venue`` selects the fee schedule (``"perp"`` = 5 bps/side
+        USDⓈ-M taker VIP 0, ``"spot"`` = 10 bps/side).  When ``None``
+        the venue is inferred from the column name: ``*:USDT`` (or an
+        explicit ``perp_legs`` entry) is a perp leg, anything else is
+        spot.  C1b: F3 v1.1 holds perp legs only, so charging it the
+        spot fee overstated the cost drag by ~10 bps per round trip.
         """
-        # Normalise to the grid slug (``BTCUSDT``). The engine /
-        # ``perp_symbols`` config passes ``BTC/USDT`` or
-        # ``BTC/USDT:USDT``; both should look up the same row.
-        slug = str(symbol).replace("/", "").replace(":USDT", "")
-        key = (slug, int(utc_hour), float(notional))
+        venue = venue or infer_venue(symbol)
+        # Normalise to the grid slug (``BTCUSDT``).  The engine may pass
+        # the spot slug ``BTC-USDT`` / ``BTC/USDT`` or the perp column
+        # ``BTC-USDT:USDT`` / ``BTC/USDT:USDT`` — all four must resolve
+        # to the same ``BTCUSDT`` grid row, with the venue choosing the
+        # fee schedule.  Strip only the perp settlement suffix first
+        # (``BTC-USDT:USDT`` -> ``BTC-USDT``), then every separator.
+        slug = str(symbol)
+        if slug.endswith(":USDT"):
+            slug = slug[: -len(":USDT")]
+        slug = slug.replace("/", "").replace(":", "").replace("-", "").replace("_", "")
+        key = (slug, int(utc_hour), float(notional), venue)
         if key in self._lookup_cache:
             return self._lookup_cache[key]
         sub = self.grid[(self.grid["symbol"] == slug)
                         & (self.grid["utc_hour"] == int(utc_hour))]
         if sub.empty:
             raise KeyError(f"no cost-grid cell for {symbol} at hour {utc_hour}")
+        col = f"round_trip_bps_{venue}"
+        if col not in sub.columns:
+            # Pre-C1b grid: fall back to the flat column (spot fee).
+            col = "round_trip_bps"
         notionals = sub["notional"].to_numpy()
-        bps = sub["round_trip_bps"].to_numpy()
+        bps = sub[col].to_numpy()
         idx = np.searchsorted(notionals, [notional], side="left")[0]
         if idx >= len(notionals):
             idx = len(notionals) - 1
@@ -128,12 +201,19 @@ class GridCostModel:
     # ---- engine-facing API ----------------------------------------------
 
     def per_trade_cost_bps(self, weights: pd.DataFrame, prices: pd.DataFrame,
-                           AUM: float) -> pd.DataFrame:
+                           AUM: float,
+                           perp_legs: list[str] | tuple[str, ...] | None = None
+                           ) -> pd.DataFrame:
         """Wide panel of per-bar, per-symbol round-trip cost in bps.
 
-        The cost is constant per (symbol, utc_hour) cell; the wide
+        The cost is constant per (symbol, utc_hour, venue) cell; the wide
         index/columns mirrors ``weights`` so the engine can multiply
         ``|delta_weight| * cost / 1e4`` cell-wise.
+
+        ``perp_legs`` (C1b) selects the fee schedule per column: a perp
+        leg is charged the USDⓈ-M taker fee (5 bps/side, VIP 0), a spot
+        leg the spot taker fee (10 bps/side).  Omit it and the venue is
+        inferred from the column naming convention.
         """
         if AUM <= 0:
             raise ValueError(f"AUM must be > 0; got {AUM}")
@@ -144,8 +224,9 @@ class GridCostModel:
         utc_hour = pd.DatetimeIndex(prices.index).hour.to_numpy()
         out = pd.DataFrame(index=prices.index, columns=prices.columns, dtype=float)
         for col in prices.columns:
+            v = infer_venue(col, perp_legs)
             hour_cost = np.array([
-                self.round_trip_bps(col, int(h), AUM) for h in utc_hour
+                self.round_trip_bps(col, int(h), AUM, venue=v) for h in utc_hour
             ])
             out[col] = hour_cost
         return out
@@ -165,7 +246,12 @@ class ConstantCostModel:
     stress: float = 1.0
 
     def per_trade_cost_bps(self, weights: pd.DataFrame, prices: pd.DataFrame,
-                           AUM: float) -> pd.DataFrame:
+                           AUM: float,
+                           perp_legs: list[str] | tuple[str, ...] | None = None
+                           ) -> pd.DataFrame:
+        # ``perp_legs`` is ignored: this adapter is the flat legacy
+        # scalar model, whose fee/slippage pair already encodes whatever
+        # single schedule the caller asked for.
         bps = (self.fee_bps + self.slippage_bps) * self.stress
         return pd.DataFrame(
             np.full(weights.shape, bps, dtype=float),

@@ -67,14 +67,14 @@ def test_c1_grid_round_trip_btc_at_100k_is_below_old():
 
 
 def test_c1_grid_hash_recorded_in_costs_md():
-    """costs.md must record the SHA-256 of the regenerated grid."""
+    """costs.md must record the SHA-256 of the active cost-grid.csv."""
     import hashlib, re
     text = (ROOT / "research/atlas/costs.md").read_text(encoding="utf-8")
-    m = re.search(r"cost-grid\.csv` \(nouveau\)[^\`]*SHA-256 `([0-9a-f]+)`", text)
-    assert m, "costs.md missing SHA-256 of new cost-grid.csv"
-    recorded = m.group(1)
+    # Find every SHA-256 recorded in the file and require the active
+    # grid's digest to be among them (the table format moved in C1b).
+    digests = set(re.findall(r"\b([0-9a-f]{64})\b", text))
+    assert digests, "costs.md records no SHA-256"
     actual = hashlib.sha256(GRID.read_bytes()).hexdigest()
-    assert recorded == actual, (
-        f"costs.md SHA mismatch: recorded {recorded[:16]}… "
-        f"vs actual {actual[:16]}…"
+    assert actual in digests, (
+        f"costs.md does not record the active grid SHA-256 {actual[:16]}…"
     )

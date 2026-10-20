@@ -27,10 +27,17 @@ from aster.backtest.cost_model import ConstantCostModel
 
 
 class _CostLike(Protocol):
-    """Anything the engine can ask for a per-bar, per-symbol cost panel."""
+    """Anything the engine can ask for a per-bar, per-symbol cost panel.
+
+    ``perp_legs`` (C1b) is optional so legacy scalar adapters keep
+    satisfying the protocol; the grid model uses it to charge each leg
+    its own venue's taker fee.
+    """
 
     def per_trade_cost_bps(self, weights: pd.DataFrame, prices: pd.DataFrame,
-                           AUM: float) -> pd.DataFrame: ...
+                           AUM: float,
+                           perp_legs: list[str] | tuple[str, ...] | None = None
+                           ) -> pd.DataFrame: ...
 
 
 def _to_cost_model(costs: "_CostLike | CostModel | None") -> _CostLike:
@@ -227,7 +234,13 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame,
         cost = turnover * cost_model.per_trade_cost_bps(
             weights, prices, 1.0).mean().mean() / 1e4
     else:
-        cost_panel = cost_model.per_trade_cost_bps(weights, prices, AUM)
+        # C1b: pass ``perp_legs`` so the cost model charges each leg its
+        # own venue's taker fee (USDⓈ-M 5 bps/side, spot 10 bps/side).
+        # Always pass the validated list — including the empty one, which
+        # declares a spot-only book — so the venue never falls back to
+        # the naming convention on a book that was explicitly declared.
+        cost_panel = cost_model.per_trade_cost_bps(weights, prices, AUM,
+                                                   perp_legs=sorted(perp_set))
         per_leg_turnover = (held - drifted.shift(1).fillna(0.0)).abs()
         per_leg_cost = per_leg_turnover * cost_panel / 1e4
         cost = per_leg_cost.sum(axis=1)
