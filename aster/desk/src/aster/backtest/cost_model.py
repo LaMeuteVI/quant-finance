@@ -69,6 +69,11 @@ class GridCostModel:
         )
         self.sizes = tuple(sorted(float(s) for s in sizes))
         self.stress = float(stress)
+        # The same (symbol, hour, AUM) lookup is repeated once per bar
+        # and again for each stress/AUM sweep. Cache the conservative
+        # grid lookup so the realistic default does not turn a normal
+        # backtest into an hours-long dataframe filter loop.
+        self._lookup_cache: dict[tuple[str, int, float], float] = {}
         if self.stress <= 0:
             raise ValueError("stress must be > 0")
 
@@ -100,7 +105,14 @@ class GridCostModel:
         that sits between two grid points, which would be the worst
         failure mode of a capacity report.
         """
-        sub = self.grid[(self.grid["symbol"] == symbol)
+        # Normalise to the grid slug (``BTCUSDT``). The engine /
+        # ``perp_symbols`` config passes ``BTC/USDT`` or
+        # ``BTC/USDT:USDT``; both should look up the same row.
+        slug = str(symbol).replace("/", "").replace(":USDT", "")
+        key = (slug, int(utc_hour), float(notional))
+        if key in self._lookup_cache:
+            return self._lookup_cache[key]
+        sub = self.grid[(self.grid["symbol"] == slug)
                         & (self.grid["utc_hour"] == int(utc_hour))]
         if sub.empty:
             raise KeyError(f"no cost-grid cell for {symbol} at hour {utc_hour}")
@@ -109,7 +121,9 @@ class GridCostModel:
         idx = np.searchsorted(notionals, [notional], side="left")[0]
         if idx >= len(notionals):
             idx = len(notionals) - 1
-        return float(bps[idx]) * self.stress
+        value = float(bps[idx]) * self.stress
+        self._lookup_cache[key] = value
+        return value
 
     # ---- engine-facing API ----------------------------------------------
 

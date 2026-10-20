@@ -17,6 +17,9 @@ import numpy as np
 import pandas as pd
 
 from aster import paths
+from aster.backtest.cost_model import (
+    ConstantCostModel, GridCostModel, DEFAULT_GRID_PATH,
+)
 from aster.backtest.engine import CostModel, run_backtest
 from aster.backtest.metrics import PERIODS_PER_YEAR, summary, worst_windows
 from aster.data.r2_klines import CUTOFF, read_holdout as _read_holdout
@@ -221,7 +224,8 @@ def _pbo_report(strat_factory, prices: pd.DataFrame, params_grid: list[dict],
             "n_splits": 16, "logit_mean": pbo["logit_mean"]}
 
 
-def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, timeframe: str,
+def evaluate(prices: pd.DataFrame, weights: pd.DataFrame,
+             costs: "CostModel | ConstantCostModel | GridCostModel", timeframe: str,
              funding: pd.DataFrame | None, perp_legs=None, start: pd.Timestamp | None = None,
              AUM: float | None = None,
              perp_close: pd.DataFrame | None = None,
@@ -289,7 +293,9 @@ def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, time
 def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: str = "dev",
         ledger: Ledger | None = None, prices: pd.DataFrame | None = None,
         funding: pd.DataFrame | None = None, notes: str = "",
-        params_grid: list[dict] | None = None) -> dict:
+        params_grid: list[dict] | None = None,
+        aum_usd: float | None = None,
+        lookahead_checks: int | None = None) -> dict:
     cfg = paths.load_config("desk")
     ledger = ledger or Ledger()
     params = params or {}
@@ -297,18 +303,39 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     if not ledger.verify_prereg(hypothesis_id):
         raise LedgerError("pre-registration hash mismatch: the hypothesis was tampered with")
 
+    # H1 (Review 2026-10-20 b): the AUM is preregistered in the
+    # ledger as ``prediction.aum_usd`` (single value, not range).
+    # Callers may override with ``aum_usd=...`` for re-runs, but the
+    # default (None) means "use the preregistered value or the
+    # desk.yaml default". This makes the AUM an audit-able input.
+    if aum_usd is None:
+        pred_aum = (hyp.get("prediction", {}) or {}).get("aum_usd")
+        if isinstance(pred_aum, list) and len(pred_aum) == 1:
+            aum_usd = float(pred_aum[0])
+        elif isinstance(pred_aum, (int, float)):
+            aum_usd = float(pred_aum)
+
     # ---- P2: timeframe + universe + perp_legs come from the prereg first ----
     # The legacy config-level timeframe and universe stay as the fallback so
     # the original daily strategies keep working. A prereg may TIGHTEN the
     # universe (or move to a different horizon) but never silently widen.
     pred = hyp.get("prediction", {}) or {}
     timeframe = pred.get("timeframe") or cfg["timeframe"]
+    if isinstance(timeframe, list):
+        if len(timeframe) != 1:
+            raise ValueError(
+                f"pre-registered timeframe {timeframe!r} must be a scalar "
+                f"string or a single-element list"
+            )
+        timeframe = timeframe[0]
     if timeframe not in {"1d", "4h", "1h", "15m", "5m"}:
         raise ValueError(
             f"pre-registered timeframe {timeframe!r} is not supported by the bar bridge"
         )
     perp_legs = pred.get("perp_legs", None)  # None, "all" or iterable of symbols
     universe = pred.get("universe") or cfg["universe"]
+    if isinstance(universe, list) and len(universe) == 1 and isinstance(universe[0], list):
+        universe = universe[0]
 
     strat = get_strategy(strategy)(timeframe=timeframe, **params)
     ledger.check_revision_budget(hypothesis_id, strat.version)
@@ -468,18 +495,28 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         # decision is held from the previous rebalance).
         rebal_days = list(range(0, n, rebal_every))
         pre_rebal_days = [d - 1 for d in rebal_days if d > 0]
-        # Plus 200 random dates so the truncation test still spans the
-        # full history. The cap at 100 keeps the run under 60s even
-        # on a 7y history with weekly rebalance.
+        # Plus 80 random dates so the truncation test still spans
+        # the full history. H2 (review 2026-10-20 b): brief asks for
+        # >= 300 dates; the cap of 300 keeps the wall time below
+        # ~3 min on a 7y weekly history (rebal 359 + pre 358 + 80
+        # random = 797 candidates → take every other one).
         rng = np.random.default_rng(0)
         rand_days = rng.integers(50, n - 1, size=80).tolist() if n > 250 else []
-        # Cap the total cuts at 100 (cap-rebal-days, every 7th
-        # week, plus pre-rebal + 80 random) so the run is bounded.
         all_days = sorted(set(rebal_days + pre_rebal_days + rand_days))
-        if len(all_days) > 100:
-            # Subsample deterministically to 100.
-            step = max(1, len(all_days) // 100)
-            all_days = all_days[::step][:100]
+        # H2 requires at least 300 actual truncation checks. Use a
+        # deterministic 300-cut subset for the pipeline run; the
+        # metadata retains the complete rebalance/pre-rebalance
+        # candidate counts. A dedicated H2 validation below checks
+        # the full candidate set if required.
+        target_n_checks = 300 if lookahead_checks is None else max(0, int(lookahead_checks))
+        if len(all_days) > target_n_checks:
+            if target_n_checks == 0:
+                all_days = []
+            else:
+                positions = np.linspace(0, len(all_days) - 1, target_n_checks, dtype=int)
+                all_days = [all_days[i] for i in positions]
+        # Short histories may have fewer candidates; never fabricate cuts.
+        all_days = sorted(set(all_days))
         la = check_truncation_invariance(
             strat.target_weights, px[px.index < holdout_start],
             n_checks=len(all_days),
@@ -544,14 +581,44 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             f"the strategy."
         )
 
-    costs = CostModel(**cfg.get("costs", {}))
+    # H0 (Review 2026-10-20 b): the pipeline default is now the realistic
+    # grid cost model; the scalar ``ConstantCostModel`` is only used
+    # when ``cfg["costs"]["model"] == "constant"`` is set explicitly.
+    # Without this, the AUM sweep (see P4 in evaluate / capacity block)
+    # is flat across 100k..50M USD because impact does not scale with
+    # size, which is the bug V5 caught in the previous audit. The
+    # grid makes the dev gate stricter, not weaker.
+    costs_cfg = cfg.get("costs", {}) or {}
+    if costs_cfg.get("model") == "constant":
+        costs = ConstantCostModel(
+            fee_bps=float(costs_cfg.get("fee_bps", 10.0)),
+            slippage_bps=float(costs_cfg.get("slippage_bps", 5.0)),
+            stress=float(costs_cfg.get("stress", 1.0)),
+        )
+    else:
+        costs = GridCostModel.from_csv(
+            DEFAULT_GRID_PATH,
+            stress=float(costs_cfg.get("stress", 1.0)),
+        )
     # P4: every dev backtest now reports a net-Sharpe sweep at the four
     # brief §9 sizes (100k / 1M / 10M / 50M USD) and the linearly
     # interpolated AUM at which net Sharpe first crosses 1.0.
     # The default-size evaluation (used for the gate) is run at 1M USD.
-    default_aum = float(cfg.get("default_aum_usd", 1_000_000.0))
-    aum_sweep = tuple(float(a) for a in cfg.get(
-        "aum_sweep_usd", (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)))
+    # H1 (Review 2026-10-20 b): an AUM preregistered in the ledger
+    # (``prediction.aum_usd``) overrides the desk.yaml default. This
+    # is the audit-able input for the trial.
+    if aum_usd is not None:
+        default_aum = float(aum_usd)
+        aum_sweep = (
+            float(aum_usd),
+            float(aum_usd) * 4.0,
+            float(aum_usd) * 40.0,
+            float(aum_usd) * 200.0,
+        )
+    else:
+        default_aum = float(cfg.get("default_aum_usd", 1_000_000.0))
+        aum_sweep = tuple(float(a) for a in cfg.get(
+            "aum_sweep_usd", (100_000.0, 1_000_000.0, 10_000_000.0, 50_000_000.0)))
     ev = evaluate(px, weights, costs, timeframe, funding, perp_legs, start, AUM=default_aum,
                   perp_close=perp_close, perp_fixing_mask=perp_fixing_mask)
     base = ev["base"]
@@ -643,7 +710,9 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         "hypothesis_id": hypothesis_id, "sample": sample, "strategy": strat.describe(),
         "prediction": hyp["prediction"], "gates": g, "checks": checks, "passed": passed,
         "holdout_start": holdout_start.isoformat(), "period": [str(returns.index[0]), str(returns.index[-1])]
-        if len(returns) else None, "costs": costs.__dict__, "data_quality": quality, **ev, "statistics": stats_out,
+        if len(returns) else None, "costs": {
+            k: v for k, v in costs.__dict__.items() if k != "_lookup_cache"
+        }, "data_quality": quality, **ev, "statistics": stats_out,
         "aum_sweep": sweep_results, "capacity_max_AUM_usd": capacity_usd, "default_aum_usd": default_aum,
         "walk_forward": walk_forward_block, "pbo_cscv": pbo_block,
         "notes": notes,

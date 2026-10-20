@@ -63,6 +63,10 @@ class VolTargetTrendEnsemble(Strategy):
         "rebalance_band_target": 0.02,
         # V1.1: minimum holding period in bars (weekly rebalance).
         "rebalance_every_n_bars": 7,
+        # H2 audit knob. ``None`` preserves the v1.1 positional
+        # schedule; ``mon``/``wed``/``fri`` aligns weekly updates to
+        # a calendar weekday for the weekday-shift robustness check.
+        "rebalance_weekday": None,
     }
 
     def target_weights(self, prices: pd.DataFrame, **kwargs) -> pd.DataFrame:
@@ -137,28 +141,50 @@ class VolTargetTrendEnsemble(Strategy):
         rebal_every = int(p.get("rebalance_every_n_bars", 7))
         if band > 0 or rebal_every > 1:
             n = len(idx)
-            update_mask = pd.Series(
-                [(i % rebal_every) == 0 for i in range(n)], index=idx
+            weekday = p.get("rebalance_weekday")
+            if weekday is None:
+                update_mask = pd.Series(
+                    [(i % rebal_every) == 0 for i in range(n)], index=idx
+                )
+            else:
+                weekday_map = {"mon": 0, "monday": 0,
+                               "wed": 2, "wednesday": 2,
+                               "fri": 4, "friday": 4}
+                key = str(weekday).lower()
+                if key not in weekday_map:
+                    raise ValueError(
+                        "rebalance_weekday must be one of mon, wed, fri, or None"
+                    )
+                update_mask = pd.Series(
+                    pd.DatetimeIndex(idx).dayofweek == weekday_map[key], index=idx
+                )
+            # Hold the last scheduled target.  The previous implementation
+            # used row-wise ``loc`` assignment here, which made H2's 300-cut
+            # truncation audit unnecessarily slow.  Mask+ffill is identical
+            # for the positional schedule and vectorises the expensive part.
+            mask2d = np.broadcast_to(
+                update_mask.to_numpy()[:, None], scaled.shape
             )
-            smoothed = pd.DataFrame(0.0, index=idx, columns=spot_cols)
-            last = pd.Series(0.0, index=spot_cols)
-            for i, t in enumerate(idx):
-                if update_mask.iloc[i]:
-                    last = scaled.iloc[i].fillna(0.0)
-                smoothed.loc[t] = last.values
-            # No-trade band: keep the held weight when the new
-            # target moves by less than ``band * |held|``.
-            band_applied = smoothed.copy()
-            prev = pd.Series(0.0, index=spot_cols)
-            for t in idx:
-                new = smoothed.loc[t]
-                delta = (new - prev).abs()
-                rel = delta / prev.abs().replace(0, np.nan)
-                keep = (rel < band) & (prev.abs() > 0)
-                out = new.where(~keep, prev)
-                band_applied.loc[t] = out.fillna(new).values
-                prev = out.fillna(0.0)
-            scaled = band_applied
+            scheduled = scaled.where(mask2d)
+            smoothed = scheduled.ffill().fillna(0.0)
+
+            # No-trade band: keep the held weight when the new target moves
+            # by less than ``band * |held|``.  This remains sequential by
+            # design, but uses NumPy arrays rather than pandas row writes.
+            vals = smoothed.to_numpy(dtype=float, copy=False)
+            held = np.zeros_like(vals)
+            prev = np.zeros(vals.shape[1], dtype=float)
+            for i in range(len(vals)):
+                new = vals[i]
+                delta = np.abs(new - prev)
+                rel = np.divide(delta, np.abs(prev),
+                                 out=np.full_like(delta, np.inf),
+                                 where=np.abs(prev) > 0)
+                keep = (rel < band) & (np.abs(prev) > 0)
+                out = np.where(keep, prev, new)
+                held[i] = out
+                prev = out
+            scaled = pd.DataFrame(held, index=idx, columns=spot_cols)
 
         # 5. Build the 2N-column frame: spot (= 0) + perp.
         all_cols = [c for pair in zip(spot_cols, perp_cols) for c in pair]

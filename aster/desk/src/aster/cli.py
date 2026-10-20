@@ -412,7 +412,9 @@ def cmd_ledger(a) -> None:
 def cmd_backtest(a) -> None:
     from aster.backtest import pipeline
 
-    rep = pipeline.run(a.hypothesis, a.strategy, json.loads(a.params or "{}"), a.sample, notes=a.notes or "")
+    rep = pipeline.run(a.hypothesis, a.strategy, json.loads(a.params or "{}"), a.sample,
+                       notes=a.notes or "", aum_usd=a.aum,
+                       lookahead_checks=a.lookahead_checks)
     keep = ("hypothesis_id", "sample", "passed", "checks", "base", "stress", "statistics",
             "cost_drag_ann", "funding_drag_ann", "worst_windows", "trial_id", "artifact", "period")
     _print({k: rep[k] for k in keep if k in rep})
@@ -690,6 +692,12 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--hypothesis", required=True); b.add_argument("--strategy", required=True)
     b.add_argument("--params"); b.add_argument("--sample", default="dev", choices=["dev", "holdout"])
     b.add_argument("--notes")
+    b.add_argument("--aum", type=float, default=None,
+                   help="Override the default AUM (USD). If omitted, the value preregistered "
+                        "in the ledger as ``prediction.aum_usd`` is used, falling back to "
+                        "config/desk.yaml ``default_aum_usd``.")
+    b.add_argument("--lookahead-checks", type=int, default=None,
+                   help="Override the number of truncation cuts (H2; default 300).")
     b.set_defaults(fn=cmd_backtest)
 
     pb = sub.add_parser("pbo")
