@@ -259,11 +259,28 @@ def evaluate(prices: pd.DataFrame, weights: pd.DataFrame, costs: CostModel, time
     }
     r = cut(base.returns)
     window = {"1d": 30, "4h": 180, "1h": 720, "15m": 720, "5m": 720}.get(timeframe, 30)
+    # ---- P&L decomposition (R1 of QUEUE 2026-10-19) ----
+    # The pipeline already separates `base.gross_returns`, `base.costs`,
+    # `base.funding`, `base.held`, `base.turnover`. We expose them here so
+    # that report.json carries the auditable decomposition:
+    #   - gross_price_pnl_ann = annualised mean of gross price returns
+    #   - funding_pnl_ann     = annualised mean of perp funding P&L (negative = received)
+    #   - cost_pnl_ann        = annualised mean of trading costs (positive = paid)
+    #   - time_in_market      = average fraction of bars where |held| > epsilon
+    # Net per-bar return = gross + funding - costs (engine invariant).
+    ppy = PERIODS_PER_YEAR[timeframe]
+    held_abs = base.held.abs().sum(axis=1) if hasattr(base.held, "abs") else base.held
+    tim = float((held_abs > 1e-9).mean()) if len(held_abs) else 0.0
     return {
         "base": summary(r, timeframe, cut(base.turnover)),
         "stress": {k: summary(cut(v.returns), timeframe) for k, v in stress.items()},
-        "cost_drag_ann": float(cut(base.costs).mean() * PERIODS_PER_YEAR[timeframe]),
-        "funding_drag_ann": float(cut(base.funding).mean() * PERIODS_PER_YEAR[timeframe]),
+        "cost_drag_ann": float(cut(base.costs).mean() * ppy),
+        "funding_drag_ann": float(cut(base.funding).mean() * ppy),
+        "gross_price_pnl_ann": float(cut(base.gross_returns).mean() * ppy),
+        "funding_pnl_ann": float(cut(base.funding).mean() * ppy),
+        "cost_pnl_ann": float(cut(base.costs).mean() * ppy),
+        "time_in_market": tim,
+        "turnover_ann": float(cut(base.turnover).mean() * ppy) if len(base.turnover) else 0.0,
         "worst_windows": worst_windows(r, window),
         "_returns": r,
     }
