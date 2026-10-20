@@ -6,6 +6,14 @@
 >
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-20 d (Claude, for Samuel): C1 is incomplete, C2 still overcharges F3
+C1 fixed the spread (BTC 0.48 bps, source `aggtrades_effective`), but its DoD also required **fees per instrument: spot taker 10 bps/side, USDⓈ-M taker 5 bps/side**. The rebuilt grid still has `fee_bps_per_side = 10.0` on every row, and F3 v1.1 holds **perp legs only** (spot weights are 0 in `vol_target_trend_ensemble.py`). C2 (`H-20261020-016`, Sharpe 0.901, DSR 0.926) was therefore charged spot fees on perp trades: about 10 bps too much per round trip, roughly 1.5–2 %/yr of its 4.22 %/yr cost drag. Also: gates in the C2 report that are not in `config/desk.yaml` (PSR ≥ 0.85, lag 2 ≥ 0.5, time in market ≤ 0.7) must be removed; `time_in_market` 0.649 is outside its preregistered [0.30, 0.60].
+
+- **C1b — Instrument-specific fees in the grid and the engine.** `READY`
+  The cost model charges the fee of the leg's instrument: perp columns (`*:USDT`, or `perp_legs` in the prereg) 5 bps/side, spot columns 10 bps/side, VIP 0 taker, no discount. Spread and impact unchanged from C1. Test: a perp-only round trip on BTC at 100k costs 2×5 bps + spread + impact; a spot-only one 2×10 bps + spread + impact. Re-freeze the grid hash in `research/atlas/costs.md`. Built without looking at any strategy result.
+- **C2b — One last re-read of F3 v1.1 under C1b.** `READY` after C1b
+  Identical config, panel and AUM (250 000 USD). Counted trial in `btc-daily-tsmom` (the family count rises by one; report it). Gates = `config/desk.yaml` only. This is the **last** re-read of this configuration: pass → H2 (≥ 300 look-ahead dates, weekday shift, lag 2, PBO) → H4; fail → F3 closed with the lesson, no further cost or parameter re-read.
+
 ## Review 2026-10-20 c (Claude, for Samuel): the cost grid breaks the desk's own rule
 `research/atlas/cost-grid.csv` uses **Corwin–Schultz** high-low spreads for every symbol (BTC 15–21 bps, SOL ≈ 40 bps) and a **10 bps/side spot fee on every leg**. BACKLOG ("Closed cost work") says: *"High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs."* Result: BTCUSDT round trip ≈ 43 bps at 100k and 53 bps at 1M, SOL ≈ 91 bps, where BTC/ETH perps cost ≈ 10 bps fees + well under 1 bp spread + impact. H1 (`H-20261020-014`) was therefore judged on a cost model the desk itself prohibits. This does **not** make F3 a candidate: its HAC alpha t-stat on the effective window is 1.53 (not significant) and its DSR now counts 14+ trials. It means the verdict must be re-read under a valid model, once, with the model fixed **independently of F3**.
 
