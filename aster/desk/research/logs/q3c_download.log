@@ -1,0 +1,503 @@
+
+=== ETHUSDT from 2017-08 to 2024-06 ===
+SKIP klines_1h 2017-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2017-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2017-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2017-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  klines_1h: 54 months OK, 29 skipped, 0 rows total (76s)
+SKIP premium_index_klines_1h 2017-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2017-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2017-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2017-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  premium_index_klines_1h: 108 months OK, 58 skipped, 0 rows total (137s)
+SKIP mark_price_klines_1h 2017-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2017-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2017-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2017-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  mark_price_klines_1h: 162 months OK, 87 skipped, 0 rows total (205s)
+SKIP metrics 2017-08-01: HTTP error
+SKIP metrics 2017-09-01: HTTP error
+SKIP metrics 2017-10-01: HTTP error
+SKIP metrics 2017-11-01: HTTP error
+SKIP metrics 2017-12-01: HTTP error
+SKIP metrics 2018-01-01: HTTP error
+SKIP metrics 2018-02-01: HTTP error
+SKIP metrics 2018-03-01: HTTP error
+SKIP metrics 2018-04-01: HTTP error
+SKIP metrics 2018-05-01: HTTP error
+SKIP metrics 2018-06-01: HTTP error
+SKIP metrics 2018-07-01: HTTP error
+SKIP metrics 2018-08-01: HTTP error
+SKIP metrics 2018-09-01: HTTP error
+SKIP metrics 2018-10-01: HTTP error
+SKIP metrics 2018-11-01: HTTP error
+SKIP metrics 2018-12-01: HTTP error
+SKIP metrics 2019-01-01: HTTP error
+SKIP metrics 2019-02-01: HTTP error
+SKIP metrics 2019-03-01: HTTP error
+SKIP metrics 2019-04-01: HTTP error
+SKIP metrics 2019-05-01: HTTP error
+SKIP metrics 2019-06-01: HTTP error
+SKIP metrics 2019-07-01: HTTP error
+SKIP metrics 2019-08-01: HTTP error
+SKIP metrics 2019-09-01: HTTP error
+SKIP metrics 2019-10-01: HTTP error
+SKIP metrics 2019-11-01: HTTP error
+SKIP metrics 2019-12-01: HTTP error
+SKIP metrics 2020-01-01: HTTP error
+SKIP metrics 2020-02-01: HTTP error
+SKIP metrics 2020-03-01: HTTP error
+SKIP metrics 2020-04-01: HTTP error
+SKIP metrics 2020-05-01: HTTP error
+SKIP metrics 2020-06-01: HTTP error
+SKIP metrics 2020-07-01: HTTP error
+SKIP metrics 2020-08-01: HTTP error
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 8928 rows imported, 244s
+
+=== BNBUSDT from 2017-12 to 2024-06 ===
+SKIP klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+  klines_1h: 53 months OK, 26 skipped, 0 rows total (67s)
+SKIP premium_index_klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+  premium_index_klines_1h: 106 months OK, 52 skipped, 0 rows total (126s)
+SKIP mark_price_klines_1h 2017-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+  mark_price_klines_1h: 159 months OK, 78 skipped, 0 rows total (186s)
+SKIP metrics 2017-12-01: HTTP error
+SKIP metrics 2018-01-01: HTTP error
+SKIP metrics 2018-02-01: HTTP error
+SKIP metrics 2018-03-01: HTTP error
+SKIP metrics 2018-04-01: HTTP error
+SKIP metrics 2018-05-01: HTTP error
+SKIP metrics 2018-06-01: HTTP error
+SKIP metrics 2018-07-01: HTTP error
+SKIP metrics 2018-08-01: HTTP error
+SKIP metrics 2018-09-01: HTTP error
+SKIP metrics 2018-10-01: HTTP error
+SKIP metrics 2018-11-01: HTTP error
+SKIP metrics 2018-12-01: HTTP error
+SKIP metrics 2019-01-01: HTTP error
+SKIP metrics 2019-02-01: HTTP error
+SKIP metrics 2019-03-01: HTTP error
+SKIP metrics 2019-04-01: HTTP error
+SKIP metrics 2019-05-01: HTTP error
+SKIP metrics 2019-06-01: HTTP error
+SKIP metrics 2019-07-01: HTTP error
+SKIP metrics 2019-08-01: HTTP error
+SKIP metrics 2019-09-01: HTTP error
+SKIP metrics 2019-10-01: HTTP error
+SKIP metrics 2019-11-01: HTTP error
+SKIP metrics 2019-12-01: HTTP error
+SKIP metrics 2020-01-01: HTTP error
+SKIP metrics 2020-02-01: HTTP error
+SKIP metrics 2020-03-01: HTTP error
+SKIP metrics 2020-04-01: HTTP error
+SKIP metrics 2020-05-01: HTTP error
+SKIP metrics 2020-06-01: HTTP error
+SKIP metrics 2020-07-01: HTTP error
+SKIP metrics 2020-08-01: HTTP error
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 8928 rows imported, 223s
+
+=== SOLUSDT from 2020-09 to 2024-06 ===
+  klines_1h: 46 months OK, 0 skipped, 0 rows total (51s)
+  premium_index_klines_1h: 92 months OK, 0 skipped, 0 rows total (97s)
+  mark_price_klines_1h: 138 months OK, 0 skipped, 0 rows total (142s)
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 8928 rows imported, 163s
+
+=== XRPUSDT from 2019-06 to 2024-06 ===
+SKIP klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  klines_1h: 54 months OK, 7 skipped, 0 rows total (62s)
+SKIP premium_index_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  premium_index_klines_1h: 108 months OK, 14 skipped, 0 rows total (116s)
+SKIP mark_price_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  mark_price_klines_1h: 162 months OK, 21 skipped, 0 rows total (171s)
+SKIP metrics 2019-06-01: HTTP error
+SKIP metrics 2019-07-01: HTTP error
+SKIP metrics 2019-08-01: HTTP error
+SKIP metrics 2019-09-01: HTTP error
+SKIP metrics 2019-10-01: HTTP error
+SKIP metrics 2019-11-01: HTTP error
+SKIP metrics 2019-12-01: HTTP error
+SKIP metrics 2020-01-01: HTTP error
+SKIP metrics 2020-02-01: HTTP error
+SKIP metrics 2020-03-01: HTTP error
+SKIP metrics 2020-04-01: HTTP error
+SKIP metrics 2020-05-01: HTTP error
+SKIP metrics 2020-06-01: HTTP error
+SKIP metrics 2020-07-01: HTTP error
+SKIP metrics 2020-08-01: HTTP error
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 8928 rows imported, 195s
+
+=== DOGEUSDT from 2019-08 to 2024-06 ===
+SKIP klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2020-06: HTTP error (curl: (22) The requested URL returned error: 404)
+  klines_1h: 48 months OK, 11 skipped, 34839 rows total (58s)
+SKIP premium_index_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2020-06: HTTP error (curl: (22) The requested URL returned error: 404)
+  premium_index_klines_1h: 96 months OK, 22 skipped, 69509 rows total (108s)
+SKIP mark_price_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2020-06: HTTP error (curl: (22) The requested URL returned error: 404)
+  mark_price_klines_1h: 144 months OK, 33 skipped, 104306 rows total (155s)
+SKIP metrics 2019-08-01: HTTP error
+SKIP metrics 2019-09-01: HTTP error
+SKIP metrics 2019-10-01: HTTP error
+SKIP metrics 2019-11-01: HTTP error
+SKIP metrics 2019-12-01: HTTP error
+SKIP metrics 2020-01-01: HTTP error
+SKIP metrics 2020-02-01: HTTP error
+SKIP metrics 2020-03-01: HTTP error
+SKIP metrics 2020-04-01: HTTP error
+SKIP metrics 2020-05-01: HTTP error
+SKIP metrics 2020-06-01: HTTP error
+SKIP metrics 2020-07-01: HTTP error
+SKIP metrics 2020-08-01: HTTP error
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 113234 rows imported, 179s
+
+=== LINKUSDT from 2018-12 to 2024-06 ===
+SKIP klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  klines_1h: 54 months OK, 13 skipped, 39040 rows total (64s)
+SKIP premium_index_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP premium_index_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  premium_index_klines_1h: 108 months OK, 26 skipped, 77911 rows total (118s)
+SKIP mark_price_klines_1h 2018-12: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-01: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-02: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-03: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-04: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-05: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-06: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-07: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-08: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-09: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-10: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-11: HTTP error (curl: (22) The requested URL returned error: 404)
+SKIP mark_price_klines_1h 2019-12: HTTP error (curl: (22) The requested URL returned error: 404)
+  mark_price_klines_1h: 162 months OK, 39 skipped, 116760 rows total (174s)
+SKIP metrics 2018-12-01: HTTP error
+SKIP metrics 2019-01-01: HTTP error
+SKIP metrics 2019-02-01: HTTP error
+SKIP metrics 2019-03-01: HTTP error
+SKIP metrics 2019-04-01: HTTP error
+SKIP metrics 2019-05-01: HTTP error
+SKIP metrics 2019-06-01: HTTP error
+SKIP metrics 2019-07-01: HTTP error
+SKIP metrics 2019-08-01: HTTP error
+SKIP metrics 2019-09-01: HTTP error
+SKIP metrics 2019-10-01: HTTP error
+SKIP metrics 2019-11-01: HTTP error
+SKIP metrics 2019-12-01: HTTP error
+SKIP metrics 2020-01-01: HTTP error
+SKIP metrics 2020-02-01: HTTP error
+SKIP metrics 2020-03-01: HTTP error
+SKIP metrics 2020-04-01: HTTP error
+SKIP metrics 2020-05-01: HTTP error
+SKIP metrics 2020-06-01: HTTP error
+SKIP metrics 2020-07-01: HTTP error
+SKIP metrics 2020-08-01: HTTP error
+SKIP metrics 2020-09-01: HTTP error
+SKIP metrics 2020-10-01: HTTP error
+SKIP metrics 2020-11-01: HTTP error
+SKIP metrics 2020-12-01: HTTP error
+SKIP metrics 2021-01-01: HTTP error
+SKIP metrics 2021-02-01: HTTP error
+SKIP metrics 2021-03-01: HTTP error
+SKIP metrics 2021-04-01: HTTP error
+SKIP metrics 2021-05-01: HTTP error
+SKIP metrics 2021-06-01: HTTP error
+SKIP metrics 2021-07-01: HTTP error
+SKIP metrics 2021-08-01: HTTP error
+SKIP metrics 2021-09-01: HTTP error
+SKIP metrics 2021-10-01: HTTP error
+SKIP metrics 2021-11-01: HTTP error
+DONE: 125688 rows imported, 208s
