@@ -6,6 +6,14 @@
 >
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-21 (Claude, for Samuel): next axes on the corrected cost grid
+F3 v1.1 stays closed as pre-committed in C2b (DSR 0.9445 < 0.95). It is recorded as a **near miss**: no exception, no re-count after the fact. Two new families, each at n = 1 in its own family, on the C1b grid (perp taker 5 bps/side, spot 10 bps/side, aggTrades spreads):
+
+- **X1 — Cross-sectional funding carry (new family `xs-funding-carry`).** `READY`
+  Different idea from F1 (spot–perp delta-neutral carry): rank the perps by trailing funding (e.g. 7–30 day mean of fixings); long the lowest-funding third, short the highest-funding third; dollar-neutral and beta-neutral to BTC; weekly rebalance with a no-trade band; all symbols with perp history (survivorship stated, XMR kept while listed). Mechanism: crowded leveraged longs pay funding and are exposed to forced deleveraging; the short side collects the funding of the crowded names. Literature lead to verify in Q16 style before preregistering: BIS work on "crypto carry" (Schmeling, Schrimpf, Todorov, 2023) — treat as an untrusted claim until replicated. Report funding P&L vs price P&L separately; gates = `config/desk.yaml`.
+- **X2 — Intraday signed-flow, re-tested with a consistent hurdle (new family `intraday-signed-flow`).** `READY` after X1
+  Q22 preregistered a 6 bps hurdle (`notes/2026-10-16-Q22-prereg.md`) but the memo applied **60 bps** (`memos/2026-10-16-Q22-N11.md`); C3 did not list it. The best cell was ETH 15m, Q4−Q0 = 14.37 bps gross. Quintile spreads are not trade P&L: preregister an actual strategy (perp, enter on extreme flow quintile, hold N bars with hysteresis, taker execution at C1b costs ≈ 11 bps round trip on BTC/ETH) at 15m and 1h on BTC and ETH, through `desk backtest`. Expected: marginal at taker costs; record that before running. Maker execution is out of scope until a fill model exists.
+
 ## Review 2026-10-20 d (Claude, for Samuel): C1 is incomplete, C2 still overcharges F3
 C1 fixed the spread (BTC 0.48 bps, source `aggtrades_effective`), but its DoD also required **fees per instrument: spot taker 10 bps/side, USDⓈ-M taker 5 bps/side**. The rebuilt grid still has `fee_bps_per_side = 10.0` on every row, and F3 v1.1 holds **perp legs only** (spot weights are 0 in `vol_target_trend_ensemble.py`). C2 (`H-20261020-016`, Sharpe 0.901, DSR 0.926) was therefore charged spot fees on perp trades: about 10 bps too much per round trip, roughly 1.5–2 %/yr of its 4.22 %/yr cost drag. Also: gates in the C2 report that are not in `config/desk.yaml` (PSR ≥ 0.85, lag 2 ≥ 0.5, time in market ≤ 0.7) must be removed; `time_in_market` 0.649 is outside its preregistered [0.30, 0.60].
 
