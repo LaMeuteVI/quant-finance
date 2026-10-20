@@ -6,6 +6,27 @@
 >
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-20 (Claude, for Samuel): F3 v1.1 audit before any holdout read
+F3 v1.1 (`H-20261020-004`) passed the dev gates, but the holdout can be read only once: a bug found afterwards would burn it. Every item below is GREEN and must be DONE before Aster asks Samuel for the holdout (RED). Items run in this order; a failure in V1–V4 sends F3 back to diagnosis, not to the holdout.
+
+- **V0 — Push everything.** `READY`
+  R1–R4 commits (`7a4f2e5` and the following ones) are not on `origin`. Push them, then paste `git log --oneline -15 origin/feat/aster-agent` in the report. Nothing below counts until the code is on GitHub.
+- **V1 — Explain the gross P&L jump.** `READY`
+  v1.0 → v1.1 was meant to change only turnover (band, weekly rebalance, longer vol lookback), yet gross price P&L went from 12.6 %/yr to 23.0 %/yr. Lower turnover lowers costs; it does not double gross returns. Decompose the +10.4 pp: run v1.1 with each change alone (band only, weekly only, vol lookback only) **as diagnostics outside the ledger family count only if they reuse the v1.1 trial's returns; otherwise count them as trials**. Also state whether the `scaled.reindex(columns=perp_cols)` bug fix changed v1.0's effective positions (if v1.0 was buggy, its numbers are not a valid baseline). DoD: a table that sums to the observed gap.
+- **V2 — Look-ahead at the weekly rebalance.** `READY`
+  Re-run the truncation test on at least 300 dates including every rebalance day and the day before it (8 checks is too few). Check the weekly schedule is built from data up to the decision close only (no `resample('W')` label at week end forward-filled onto the week's first days). Shift the rebalance weekday (Mon → Wed) and lag 2: the Sharpe must stay within ±0.2.
+- **V3 — Is it just beta?** `READY`
+  Report correlation and beta of F3 v1.1 returns to BTC buy-and-hold and to an equal-weight buy-and-hold of the same 5 assets over the same dev window, their Sharpe ratios, and the alpha t-stat of F3 on each benchmark (HAC). A trend book with 65 % time in market and Sharpe 1.05 must beat holding the assets on a risk-adjusted basis, not only on drawdown.
+- **V4 — Robustness map.** `READY`
+  Sharpe by calendar year and by regime (2018 bear, 2019–21 bull, 2022 bear, 2023–24 recovery); walk-forward folds listed with dates (the worst fold is −2.57); ±25 % on each of the three v1.1 parameters as a PBO matrix (`desk pbo`, reject if PBO > 0.3).
+- **V5 — Capacity that actually varies with size.** `READY`
+  The AUM sweep is constant from 100k to 50M, so square-root impact is not applied. Fix it (impact on ADV per asset, participation cap 1–5 %), add a test where the 50M net Sharpe is strictly below the 100k one, re-read the same trial. Report capacity at net Sharpe ≥ 1.
+- **V6 — Fix the prereg reading.** `READY`
+  `time_in_market` = 0.649 is **outside** the preregistered [0.30, 0.60] range: report it as a miss, not a hit. Check every other prereg range the same way.
+- **V7 — Skeptic and Breaker.** `READY` after V1–V6
+  Brief section 10: Skeptic memo on mechanism, crowding, survivorship (5 survivors), costs; Breaker memo on stress, regimes, cost ×3, lag 2. Then a one-page holdout request for Samuel: numbers from V1–V6, the exact holdout command, and what result would reject.
+- **R5 note.** Importing perp klines for XMR, AAVE, SUI, NEAR, FET from Binance Vision is **GREEN** (free public data, charter §1). Import what exists; a symbol with no perp history is excluded from the short leg with a one-line note. R5 runs on the resulting panel as a separate trial in the same family.
+
 ## Review 2026-10-19 (Claude, for Samuel): proposed reopening, active only once Samuel sends the reopen message
 Closing the programme is RED and needs Samuel's own decision. The F track does not support closure yet: F2 is a clean falsification, but F3 is a near miss whose diagnosis points at costs, and F1v2 tested a different rule from the carry hypothesis and left no evidence in the memo.
 
