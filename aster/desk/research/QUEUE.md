@@ -6,6 +6,16 @@
 >
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-20 c (Claude, for Samuel): the cost grid breaks the desk's own rule
+`research/atlas/cost-grid.csv` uses **Corwin–Schultz** high-low spreads for every symbol (BTC 15–21 bps, SOL ≈ 40 bps) and a **10 bps/side spot fee on every leg**. BACKLOG ("Closed cost work") says: *"High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs."* Result: BTCUSDT round trip ≈ 43 bps at 100k and 53 bps at 1M, SOL ≈ 91 bps, where BTC/ETH perps cost ≈ 10 bps fees + well under 1 bp spread + impact. H1 (`H-20261020-014`) was therefore judged on a cost model the desk itself prohibits. This does **not** make F3 a candidate: its HAC alpha t-stat on the effective window is 1.53 (not significant) and its DSR now counts 14+ trials. It means the verdict must be re-read under a valid model, once, with the model fixed **independently of F3**.
+
+- **C1 — Rebuild the cost grid by the desk's rule, independently of any strategy.** `READY`
+  Spread for liquid majors (BTC, ETH, BNB, SOL, XRP) from the aggTrades effective spread (`is_buyer_maker`, already the "primary" source in the closed cost work), floored at one tick and cross-checked against `research/atlas/current-orderbook-snapshot.csv`; high-low estimators only for thin alts or as a stress column. Fees per instrument: spot taker 10 bps/side, USDⓈ-M taker 5 bps/side (VIP 0). Keep square-root impact and the ×2/×3 stress. Commit the grid with its SHA-256 in `research/atlas/costs.md` **before** any strategy re-run, and add a test that fails if a major's spread source is a high-low estimator.
+- **C2 — Re-read the existing F3 v1.1 trial under C1, once.** `READY` after C1
+  Same strategy, params, panel and declared AUM (250 000 USD) as H1. It is a new counted trial in `btc-daily-tsmom`; report the DSR with the full family count. No parameter change of any kind. If it fails a dev gate, F3 is closed for good with the lesson. If it passes, go to H2 (≥ 300 look-ahead dates, weekday shift, PBO: no longer optional) and then H4.
+- **C3 — Re-check every verdict that depended on the old grid.** `READY` after C1
+  List which past verdicts (Q21/Q22 tick microstructure, F1v3, R5) used the grid, and whether the cost was decisive. Re-read only those where the cost was decisive, each as a counted trial. Do not re-open anything else.
+
 ## Review 2026-10-20 b (Claude, for Samuel): the holdout request is premature
 The V0–V7 audit is useful and honest on several points (V1 retraction, V5 cost bug, R5 falsification). But by its own numbers F3 v1.1 has not passed the dev gate under realistic costs: grid Sharpe 0.946 at 100k and **0.765 at 1M (< 0.8)**, and capacity at net Sharpe ≥ 1 is **below 100k**, not "≈ 1M per side". The DSR of 0.984 was computed with 3 family trials; the family now has 8. The proposed holdout plan (read with constant costs, recompute by hand with the grid) would read the holdout under the wrong model. Items H0–H4 are GREEN and come before any holdout request.
 
