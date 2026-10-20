@@ -346,6 +346,8 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     # ---- data ---------------------------------------------------------------
     perp_close: pd.DataFrame | None = None
     oi_panel: pd.DataFrame | None = None
+    signed_flow_panel: pd.DataFrame | None = None
+    signed_flow_quality: dict = {}
     quality = {}
     symbols = list(universe)  # used by both the loader and the holdout reader
     if prices is None:
@@ -355,6 +357,28 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
             if not rep.ok:
                 raise ValueError(f"data quality errors for {s}: {rep.errors}")
         prices = store.load_closes(cfg["exchange"], symbols, timeframe)
+        # X2 exact signed-flow channel. It is declared in the preregistration,
+        # so load it only for this family; the loader aggregates every local
+        # aggTrades partition file-by-file and enforces the exploration cutoff.
+        if strat.name == "intraday_signed_flow":
+            from aster.data.signed_flow_materialise import (
+                load_signed_flow_panel,
+                panel_report,
+            )
+            signed_flow_panel = load_signed_flow_panel(
+                symbols, prices.index, timeframe="15min",
+            )
+            signed_flow_quality = panel_report(signed_flow_panel)
+            # The hypothesis is defined on the signed-flow observation window.
+            # Do not annualise a sparse channel over pre-channel price history:
+            # restricting to rows with at least one finite flow observation keeps
+            # the report period, n_obs, walk-forward and DSR sample honest.
+            active = signed_flow_panel.notna().any(axis=1)
+            prices = prices.loc[active].copy()
+            signed_flow_panel = signed_flow_panel.loc[active].copy()
+            signed_flow_quality["active_rows"] = int(active.sum())
+            signed_flow_quality["active_start"] = prices.index.min().isoformat()
+            signed_flow_quality["active_end"] = prices.index.max().isoformat()
         if perp_legs:
             # P6: materialise the R2 Hive-partitioned funding store into
             # the standard pipeline layout (``data/funding/.../<timeframe>.parquet``)
@@ -481,6 +505,23 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         raise ValueError("sample must be dev or holdout")
 
     # ---- look-ahead test (on what the strategy is allowed to see) ----------
+    # Feature channels must be present in the truncation function too. A
+    # signed-flow strategy with no panel would otherwise look flat and the
+    # validator would test the wrong object.
+    def _weights_for_frame(frame: pd.DataFrame) -> pd.DataFrame:
+        feature_kwargs: dict = {}
+        if signed_flow_panel is not None:
+            feature_kwargs["signed_flow_panel"] = signed_flow_panel.reindex(frame.index)
+        if funding is not None:
+            feature_kwargs["funding"] = funding.reindex(frame.index)
+        if perp_close is not None:
+            feature_kwargs["perp_close"] = perp_close.reindex(frame.index)
+        if perp_legs is not None:
+            feature_kwargs["perp_legs"] = perp_legs
+        if perp_fixing_mask is not None:
+            feature_kwargs["perp_fixing_mask"] = perp_fixing_mask.reindex(frame.index)
+        return strat.target_weights(frame, **feature_kwargs)
+
     # V2 (review 2026-10-20): a F3-style strategy with a weekly
     # rebalance floor cannot be probed on 8 random dates. We
     # probe on every rebalance day (and the day before it) in the
@@ -518,7 +559,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         # Short histories may have fewer candidates; never fabricate cuts.
         all_days = sorted(set(all_days))
         la = check_truncation_invariance(
-            strat.target_weights, px[px.index < holdout_start],
+            _weights_for_frame, px[px.index < holdout_start],
             n_checks=len(all_days),
             cuts_override=all_days,
         )
@@ -529,7 +570,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         la["rebal_days_checked"] = len(rebal_days)
         la["pre_rebal_days_checked"] = len(pre_rebal_days)
     else:
-        la = check_truncation_invariance(strat.target_weights, px[px.index < holdout_start])
+        la = check_truncation_invariance(_weights_for_frame, px[px.index < holdout_start])
     # P6: inject the funding panel into the strategy as a kwarg.
     # Strategies that consume it through the ``target_weights(prices, **kwargs)``
     # legacy API (F1 v1) and the ``MarketData.funding`` API (F1v2, F2)
@@ -538,21 +579,23 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
     # Q3b: when perp_legs is set, forward the perp close panel to the
     # strategy (F1v2 reads it from MarketData; F1 v1 reads it from
     # kwargs). The engine receives the same panel through ``perp_close``.
+    weights_kwargs: dict = {}
+    if signed_flow_panel is not None:
+        weights_kwargs["signed_flow_panel"] = signed_flow_panel
     if perp_legs and perp_close is not None and funding is not None:
-        weights_kwargs = dict(
-            funding=funding,
-            perp_close=perp_close,
-            perp_legs=perp_legs,
-            perp_fixing_mask=perp_fixing_mask,
-        )
+        weights_kwargs.update({
+            "funding": funding,
+            "perp_close": perp_close,
+            "perp_legs": perp_legs,
+            "perp_fixing_mask": perp_fixing_mask,
+        })
         # F2: pass the OI panel as a kwarg if the materialisation
         # produced one. The F1 strategy ignores it.
         if oi_panel is not None and not oi_panel.empty:
             weights_kwargs["oi"] = oi_panel
     elif funding is not None:
-        weights_kwargs = {"funding": funding}
-    else:
-        weights_kwargs = {}
+        weights_kwargs["funding"] = funding
+    # No channel kwargs means the strategy receives only prices.
     try:
         if weights_kwargs:
             weights = strat.target_weights(px, **weights_kwargs)
@@ -713,6 +756,7 @@ def run(hypothesis_id: str, strategy: str, params: dict | None = None, sample: s
         if len(returns) else None, "costs": {
             k: v for k, v in costs.__dict__.items() if k != "_lookup_cache"
         }, "data_quality": quality, **ev, "statistics": stats_out,
+        "signed_flow_quality": signed_flow_quality,
         "aum_sweep": sweep_results, "capacity_max_AUM_usd": capacity_usd, "default_aum_usd": default_aum,
         "walk_forward": walk_forward_block, "pbo_cscv": pbo_block,
         "notes": notes,
