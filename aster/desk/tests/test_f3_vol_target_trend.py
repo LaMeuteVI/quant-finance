@@ -35,7 +35,7 @@ def _make_panel(n: int = 500, start: str = "2022-01-01", seed: int = 0) -> pd.Da
 def test_f3_version():
     s = VolTargetTrendEnsemble(timeframe="1d")
     assert s.name == "vol_target_trend_ensemble"
-    assert s.version == "1.0.0"
+    assert s.version == "1.1.0"
 
 
 def test_f3_no_perp_leg_returns_zeros():
