@@ -73,3 +73,7 @@ This library reflects the **2026 institutional standard** for quant finance. The
 ## Validation
 
 All 13 new SKILL.md files pass `validate_skill.py` without errors. The descriptions are within the 1024-character limit.
+
+## Aster — quant research & crypto trading agent
+
+[`aster/`](./aster/) is a Hermes agent profile built on top of this library: pre-registered research, DSR-validated backtests, a coded pre-trade risk gate with a latching kill switch, and paper-first execution. Install with `aster/install.sh`; see [`aster/README.md`](./aster/README.md).

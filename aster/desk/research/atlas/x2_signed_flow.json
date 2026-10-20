@@ -1,0 +1,181 @@
+{
+  "item": "X2",
+  "prereg": "research/notes/2026-10-20-X2-prereg.md",
+  "aum_usd": 250000.0,
+  "hold_bars": 3,
+  "gates": {
+    "min_obs": 500,
+    "sharpe_ann_min": 0.8,
+    "max_drawdown_floor": -0.35,
+    "dsr_min": 0.95,
+    "stress_sharpe_ann_min": 0.3
+  },
+  "venue": "spot (the aggTrades store is spot; charged at round_trip_bps_spot)",
+  "axes": [
+    {
+      "symbol": "BTCUSDT",
+      "bar_freq": "15min",
+      "status": "ok",
+      "n_bars": 11520,
+      "n_trades_sampled": 4000000,
+      "n_bars_invested": 7287,
+      "time_in_market": 0.6325520833333333,
+      "annualisation_bars": 35040.0,
+      "gross_pnl_ann": 3.5315976302539323,
+      "cost_drag_ann": 32.33228772083656,
+      "funding_pnl_ann": 0.0,
+      "net_pnl_ann": -28.80069009058262,
+      "vol_ann": 0.4916534047285597,
+      "sharpe_ann": -58.579254844138404,
+      "max_drawdown": -0.9999274813187058,
+      "turnover_ann": 11768.365849836304,
+      "round_trip_bps_c1b": 22.678552523786312,
+      "breakeven_gross_bps_per_hold": 7.559517507928771,
+      "quintile": {
+        "q4_minus_q0_bps": 16.521762087776693,
+        "n": 11519,
+        "q4_mean_bps": 8.276742084670618,
+        "q0_mean_bps": -8.245020003106076
+      },
+      "spearman_flow_vs_forward_ret": -0.00757388104378525,
+      "verdict": {
+        "passes": false,
+        "checks": {
+          "min_obs": true,
+          "sharpe_ann": false,
+          "max_drawdown": false,
+          "net_positive": false
+        },
+        "failed": [
+          "max_drawdown",
+          "net_positive",
+          "sharpe_ann"
+        ]
+      }
+    },
+    {
+      "symbol": "BTCUSDT",
+      "bar_freq": "1h",
+      "status": "ok",
+      "n_bars": 2880,
+      "n_trades_sampled": 4000000,
+      "n_bars_invested": 1590,
+      "time_in_market": 0.5520833333333334,
+      "annualisation_bars": 8760.0,
+      "gross_pnl_ann": 1.694929114340022,
+      "cost_drag_ann": 6.849370102103619,
+      "funding_pnl_ann": 0.0,
+      "net_pnl_ann": -5.154440987763597,
+      "vol_ann": 0.3987464935570938,
+      "sharpe_ann": -12.926611446241013,
+      "max_drawdown": -0.8355486334364304,
+      "turnover_ann": 2492.0623622422595,
+      "round_trip_bps_c1b": 22.678552523786312,
+      "breakeven_gross_bps_per_hold": 7.559517507928771,
+      "quintile": {
+        "q4_minus_q0_bps": 39.12237535102112,
+        "n": 2879,
+        "q4_mean_bps": 20.13325857037818,
+        "q0_mean_bps": -18.989116780642934
+      },
+      "spearman_flow_vs_forward_ret": 0.0017348534121872131,
+      "verdict": {
+        "passes": false,
+        "checks": {
+          "min_obs": true,
+          "sharpe_ann": false,
+          "max_drawdown": false,
+          "net_positive": false
+        },
+        "failed": [
+          "max_drawdown",
+          "net_positive",
+          "sharpe_ann"
+        ]
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "bar_freq": "15min",
+      "status": "ok",
+      "n_bars": 5664,
+      "n_trades_sampled": 4000000,
+      "n_bars_invested": 3400,
+      "time_in_market": 0.6002824858757062,
+      "annualisation_bars": 35040.0,
+      "gross_pnl_ann": 5.237603354757644,
+      "cost_drag_ann": 36.0823597517174,
+      "funding_pnl_ann": 0.0,
+      "net_pnl_ann": -30.84475639695975,
+      "vol_ann": 0.6741291464262886,
+      "sharpe_ann": -45.75496633022736,
+      "max_drawdown": -0.993552260048885,
+      "turnover_ann": 11210.024490502983,
+      "round_trip_bps_c1b": 24.28021623804825,
+      "breakeven_gross_bps_per_hold": 8.09340541268275,
+      "quintile": {
+        "q4_minus_q0_bps": 31.89675386674717,
+        "n": 5663,
+        "q4_mean_bps": 14.475246320191095,
+        "q0_mean_bps": -17.42150754655607
+      },
+      "spearman_flow_vs_forward_ret": -0.007109632139395484,
+      "verdict": {
+        "passes": false,
+        "checks": {
+          "min_obs": true,
+          "sharpe_ann": false,
+          "max_drawdown": false,
+          "net_positive": false
+        },
+        "failed": [
+          "max_drawdown",
+          "net_positive",
+          "sharpe_ann"
+        ]
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "bar_freq": "1h",
+      "status": "ok",
+      "n_bars": 1416,
+      "n_trades_sampled": 4000000,
+      "n_bars_invested": 621,
+      "time_in_market": 0.4385593220338983,
+      "annualisation_bars": 8760.0,
+      "gross_pnl_ann": 2.2896439878402317,
+      "cost_drag_ann": 6.053477251328355,
+      "funding_pnl_ann": 0.0,
+      "net_pnl_ann": -3.763833263488124,
+      "vol_ann": 0.5549685148523276,
+      "sharpe_ann": -6.782066302427352,
+      "max_drawdown": -0.5294273194027239,
+      "turnover_ann": 1881.6526359526918,
+      "round_trip_bps_c1b": 24.28021623804825,
+      "breakeven_gross_bps_per_hold": 8.09340541268275,
+      "quintile": {
+        "q4_minus_q0_bps": 82.64318396561274,
+        "n": 1415,
+        "q4_mean_bps": 36.137273205063316,
+        "q0_mean_bps": -46.50591076054941
+      },
+      "spearman_flow_vs_forward_ret": 0.046515344747722974,
+      "verdict": {
+        "passes": false,
+        "checks": {
+          "min_obs": true,
+          "sharpe_ann": false,
+          "max_drawdown": false,
+          "net_positive": false
+        },
+        "failed": [
+          "max_drawdown",
+          "net_positive",
+          "sharpe_ann"
+        ]
+      }
+    }
+  ],
+  "any_pass": false
+}

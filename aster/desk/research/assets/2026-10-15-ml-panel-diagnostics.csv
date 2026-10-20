@@ -1,0 +1,17 @@
+metric,value
+n_panel,3543.0
+n_is,2835.0
+n_oos,708.0
+oos_positive_rate,0.4209039548022599
+majority_class_oos_hit,0.57909604519774
+sign_baseline_oos_hit,0.5323354984467664
+sign_baseline_n,3541.0
+random_oos_hit,0.5042372881355932
+best_lambda,0.1
+cv_best_hit_rate,0.5731922398589064
+oos_hit_logreg,0.4350282485875706
+oos_hit_minus_majority,-0.14406779661016944
+oos_hit_minus_sign_baseline,-0.09730724985919581
+sr_hat_across_trials,0.04757819428252571
+dsr_pvalue,0.8837126426714822
+e_max_sr,0.5814406363881764

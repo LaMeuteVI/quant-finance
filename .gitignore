@@ -1,0 +1,9 @@
+# Crypto data — too large for git (2.6 GB on the klines-1m daily panel)
+aster/desk/data
+aster/desk/data/
+
+# Worktrees
+.worktrees/
+
+# Autopilot run lock (skill aster-autopilot)
+aster/desk/research/.autopilot.lock

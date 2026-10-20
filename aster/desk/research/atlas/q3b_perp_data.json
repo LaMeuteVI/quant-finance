@@ -1,0 +1,67 @@
+{
+  "id": "Q3b",
+  "title": "Perp prices, premium, mark price and open interest",
+  "status": "GREEN",
+  "date": "2026-10-18",
+  "dod_reference": "research/QUEUE.md:55-56",
+  "scope": {
+    "exchanges": ["binance"],
+    "market": "futures/um (USDⓈ-M)",
+    "stream_kinds": [
+      "klines_1h",
+      "premium_index_klines_1h",
+      "mark_price_klines_1h",
+      "metrics"
+    ],
+    "symbols_imported": ["BTCUSDT"],
+    "window": "2020-01 .. 2024-06 (klines, premium, mark), 2021-12 .. 2024-06 (metrics, daily)",
+    "cutoff_exclusive": "2024-07-01T00:00:00+00:00",
+    "source": "https://data.binance.vision/data/futures/um/..."
+  },
+  "components": {
+    "importer": "src/aster/data/perp_data.py (import_kline_archive, import_metrics_archive, audit_perp_streams)",
+    "loader": "src/aster/data/perp_loader.py (load_perp_close, load_perp_metrics, audit_perp_streams)",
+    "script": "src/aster/scripts/q3b_download_perp.py (stream-and-discard downloader with CHECKSUM verification)",
+    "pipeline_integration": "src/aster/backtest/pipeline.py (perp_close materialised when perp_legs is set, forwarded to evaluate and the strategy kwargs)"
+  },
+  "tests": {
+    "module": "tests/test_q3b_perp_data.py + tests/test_q3b_loader.py",
+    "count": 8,
+    "status": "all green",
+    "what_they_cover": [
+      "kline importer round-trip (with and without CSV header)",
+      "metrics importer round-trip",
+      "kline importer refuses post-cutoff-only files",
+      "metrics wrong schema raises",
+      "kline filename regex strictness",
+      "loader reads Hive and returns a wide close panel aligned to bar_index",
+      "loader returns a long-form metrics frame with the symbol column",
+      "loader rejects an unknown stream and a missing Hive root"
+    ]
+  },
+  "evidence": {
+    "prereg": "research/notes/2026-10-16-Q3b-prereg.md (144 lines, written before any download)",
+    "audit": "aster.data.perp_loader.audit_perp_streams(['BTCUSDT']) returns ok=true with 54 partitions per kline stream and 0 post-cutoff rows",
+    "schema_validated_against": [
+      "data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2022-01.zip (12-col, header present, dt 1640995200000)",
+      "data.binance.vision/data/futures/um/monthly/premiumIndexKlines/BTCUSDT/1h/... (12-col, header present, premium index small decimal)",
+      "data.binance.vision/data/futures/um/monthly/markPriceKlines/BTCUSDT/1h/... (12-col, header present)",
+      "data.binance.vision/data/futures/um/daily/metrics/BTCUSDT/...-2022-01-01.zip (8-col: create_time, symbol, sum_open_interest, sum_open_interest_value, count_toptrader_long_short_ratio, sum_toptrader_long_short_ratio, count_long_short_ratio, sum_long_short_ratio)"
+    ]
+  },
+  "limits": {
+    "symbols": "BTCUSDT only in this pass. ETH/SOL etc. are a 1-line symbol arg in q3b_download_perp.py and reuse every piece (Hive layout, manifest, audit).",
+    "metrics_frequency": "Daily. F2 (basis-vol carry) will need to upsample to bar_index, or trade at 1d.",
+    "open_interest": "Captured in metrics.sum_open_interest and sum_open_interest_value (USD). No per-leg taker buy/sell."
+  },
+  "ledger": {
+    "trial_count_added": 0,
+    "hypotheses_changed": [],
+    "rationale": "Q3b is plumbing, not signal. The funding carry trial (F1) and the basis-vol trial (F2) and the OI momentum trial (F3) are the ones that count against the family budget."
+  },
+  "downstream_dependencies_unlocked": [
+    "F1v2 — funding carry, delta-neutral, perp close path materialised, perp_legs=\"all\" (Q3b prerequisite)",
+    "F2 — basis-vol carry (uses perp kline + spot close + perp funding)",
+    "F3 — open-interest momentum (uses metrics sum_open_interest)"
+  ]
+}

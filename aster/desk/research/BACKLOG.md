@@ -1,0 +1,133 @@
+# Research backlog
+
+Global exploration cutoff: `2024-07-01T00:00:00Z`. Priority means dependency order, not permission to bypass preregistration or the holdout seal.
+
+1. **BTC N1 rejection review — complete.** `H-20261013-001` (60-day long/cash TSMOM) failed the pre-registered drawdown floor (-41.60% vs -35%) and is rejected without a holdout read. Do not tune it. Any 20/28/30/90-day momentum idea is a new preregistration in family `btc-daily-tsmom`, including the existing trial count.
+2. **BTC N2 — complete, no candidate.** Fixed horizons 1/3/7/14/30/60 days produced mixed point estimates, but all moving-block bootstrap intervals included zero. No new BTC hypothesis is registered. Artifact: `research/assets/2026-10-14-btc-n2.md`.
+3. **ETH N0 — complete.** Quality/liquidity dossier generated from the same pre-cutoff R2 protocol: `research/assets/2026-10-14-eth-n0.md`.
+4. **ETH N2 — complete, no candidate.** One-day reversal and 14-day continuation were nominally interesting, but the 1-day lag placebo weakens the close-timing mechanism and the 14-day bootstrap interval includes zero. No ETH hypothesis is registered. Artifact: `research/assets/2026-10-14-eth-n2.md`.
+5. **Inter-assets — complete descriptively, no candidate.** The fixed BTC/ETH daily study produced strong contemporaneous correlation but no independent residual lead–lag mechanism that survives the pre-specified stability/economic screen. Artifact: `research/assets/2026-10-14-inter-asset-btc-eth.md`. Do not convert correlation into a strategy.
+6. **BTC/ETH N3 — complete, forecast only.** HAR-RV recursively improves log-RV forecasts versus the fixed naïve benchmark across BTC and ETH, squared/absolute loss, 2023 and 2024; GARCH does not. Artifact: `research/assets/2026-10-14-btc-eth-n3-vol.md`. This is not alpha and does not authorize a strategy.
+7. **BTC/ETH N4/N5 — complete, no candidate.** Trend/vol regime labels (5 classes, 2 508 days pre-cutoff) and kline flow proxy grid (5 features × 3 horizons, 5 000 moving-block bootstraps) produced 0/15 cells retaining the joint filter on both BTC and ETH. signed_dollar is the only nominal signal and is mechanical, placebo-positive and inverse-dominated. Artifacts: `assets/2026-10-14-btc-n4-regimes.{md,csv}`, `assets/2026-10-14-btc-n5-flow.{md,csv}`, plus the matching ETH pair. No ledger hypothesis.
+8. **Axe 7 — Markov-switching Hamilton (BTC/ETH/BNB/SOL) — complete, no candidate.** 2-regime MS-AR(1) estimated by EM with forward/backward filter, loglik-ratio H0 via block bootstrap. All four assets: null p ∈ {0.30, 0.45, 0.30, 0.65}; the 2-state structure fits inside H0 once the unconditional variance is already Gaussian. Lead-lag BTC→alts per BTC regime returns no consistent forward-return gap. Artifact: `assets/2026-10-15-axe-7-{summary,regimes,leadlag}.csv`; note `notes/2026-10-15-axe-7.md`. No ledger hypothesis.
+9. **BTC/ETH N1 — complete, no candidate.** Catalogue of 8 common-TA families (MA crossovers, RSI(14), Bollinger(20,2σ), Donchian 20d, weekly pivots, Fibonacci 0.382/0.5/0.618 + 4 placebos, daily FVG 3-bar) tested on BTC and ETH at 1/3/7/14 day horizons (112 cells per asset, 5 000 circular moving-block bootstraps, BH-FDR, placebo = next-longer horizon). Result: 0 retained cells on BTC, 1 on ETH (`fvg_down_entry_h1`, mean fwd_1d -1.05%, BH q=0.026). The single survivor is mechanism-ambiguous (continuation vs exhaustion), ETH-only, and below the conservative ledger bar. Apparent edges in `*_above` and breakout signals at 3/7/14d are dominated by structural uptrend placebo. Artifacts: `assets/2026-10-14-btc-n1-ta.{md,csv}`, `assets/2026-10-14-eth-n1-ta.{md,csv}`. The ETH FVG cell is promoted to **backlog**, not the ledger. No ledger hypothesis.
+10. **Alt panel N1 — corrected rerun complete, no candidate.** The initial BNB/XRP/SOL/LINK/DOGE N1 output is quarantined as non-evidence because its MA rows used close-versus-SMA tests rather than the preregistered daily fast/slow SMA states and its terminal horizon control used 1d instead of declared 7d. Corrected sealed pre-cutoff rerun: 5 assets × 128 fixed cells = 640 (480 primary); 600 cells met the `n >= 30` inference floor, 440 primary; 0 retained. Artifacts: `assets/2026-10-15-{bnbusdt,xrpusdt,solusdt,linkusdt,dogeusdt}-n1-ta.{md,csv}` and `notes/2026-10-15-n1-alts.md`. No ledger hypothesis.
+11. **Panel N0 — complete.** BNB, XRP, SOL, LINK, DOGE, XMR dossiers generated from the same pre-cutoff R2 protocol. Coverage ≥ 99.76 % across the panel, XMR delisted 2024-02-20 (guardrail). Artifacts: `assets/2026-10-14-{symbol}-n0.md` and the combined `assets/2026-10-14-panel-n0.{md,csv}`. No signal.
+12. **Inter-asset residual factor mining — complete, no candidate.** 8-asset panel, daily log-returns on the intersection window, z-scored by asset, 1-factor PCA on the standardized matrix, residuals fed into a 56-pair × 8-lag Spearman lead-lag grid plus a 3-lookback × 4-horizon cross-sectional residual-momentum grid. Total 460 cells, 5 000 circular moving-block bootstraps per cell, BH-FDR over the whole grid. Result: 5/448 retained pairwise cells, 0/12 cross-section cells. All retained cells are at Spearman |0.08–0.12| (≈ 1 % R²), significant but **not tradable**. The contemporaneous residual correlations (|0.18–0.23|) reveal that the single market factor does not exhaust the common variance; 2–3 factors are likely needed before any panel feature can be primary. Artifact: `assets/2026-10-14-inter-residual.{md,csv}`. No ledger hypothesis.
+13. **Multi-factor residual model K=2,K=3 — complete, no candidate.** Extended the 1-factor study with K=2 and K=3 PCA on the standardized 8×8 correlation matrix, Marcenko-Pastur per-eigenvalue denoising, sign-aligned against BTC (F1), ETH (F2), BNB (F3). K=2 retained 3/448 cells (max |Spearman| 0.085); K=3 retained 6/448 (max |Spearman| 0.107, BNBUSDT → XMRUSDT lag +1d, BH q=0.0015). Cross-section residual momentum: 0/12 retained on both K. The Spearman ≈ 0.10 magnitudes translate to a gross edge of ~1 %/year on z-scored returns, **negative net of 20 bps round-trip taker cost + impact**. The 3rd factor is not sector-interpretable (mix of signs). The same BNB↔XMR lead-lag appears across all K; it is a real microstructure link, not artefact, but too small to trade. Artifacts: `assets/2026-10-14-inter-residual-k{2,3}.{md,csv}`.
+14. **Q9 — Alt-panel N2 — descriptive, no candidate (2026-10-16).**
+
+The fixed 10-symbol × 5-timeframe grid contains 50 pre-cutoff cells. Lag-1 returns are negative in 43/50 cells (mean −0.0302), absolute-return autocorrelation is positive in 50/50 cells (mean +0.3116), and Hurst is finite in 49/50 cells, range 0.5780–0.6527. This generalises the Q5 volatility-clustering / one-bar mean-reversion description but supplies no bps, mechanism or capacity. Artefact: `research/atlas/q9_intraday_n2.json`; memo: `research/memos/2026-10-16-Q9-N5.md`.
+
+Across BTC/ETH intra-asset (N1, N2, N4, N5), the corrected alt N1 panel, and inter-asset residual mining (1-factor, K=2, K=3), no tradable primary feature survived strict multi-testing, placebo control and stability filters. The structural cause is that klines 1m aggregate away the tick microstructure where the residual idiosyncratic information lives. The next axis must either (a) acquire tick microstructure data (Tardis / Kaiko / Databento) — requires Samuel's budget OK and a new post-acquisition cutoff seal, or (b) accept the null and close the klines research axis.
+15. **Q10 — Alt-panel N3 — forecast only, no candidate (2026-10-16).**
+
+On 10 alt symbols, 5,129 pseudo-OOS forecasts and 60 fixed HAR/GARCH/naive comparison cells, HAR beats the fixed naive volatility forecast in 18/20 cells after BH-FDR and is sign-stable in 18/20. The result is forecast value, not return alpha: no costs, capacity or P&L mechanism was shown. Artefact: `research/atlas/q10_volatility.json`; memo: `research/memos/2026-10-16-Q10-N5.md`.
+
+24. **Q11 — Alt-panel N4 regimes — descriptive closure, no candidate (2026-10-16).**
+
+Ten approved assets, three causal regimes and three horizons produced 870 cells; 77 were nominal at p<0.01 before correction. The fixed Hamilton cross-check remains non-significant (null p 0.30–0.65). No corrected, costed or capacity-tested feature survived as a strategy. Artefact: `research/atlas/q11_regimes.json`; memo: `research/memos/2026-10-16-Q11-N4.md`.
+
+25. **Q12 — Alt-panel N5 flow — descriptive closure, no candidate (2026-10-16).**
+
+Eight approved alt assets, four flow features and four horizons produced 128 capped descriptive cells; 5 were nominal before correction and 0 survived the cost hurdle. Artefact: `research/atlas/q12_intraday_flow.json`; memo: `research/memos/2026-10-16-Q12-N5.md`.
+
+26. **Q13 — Dependence structure on the alt panel — no pairwise candidate (2026-10-16).**
+
+The approved 8-asset alt panel (no BTC/ETH) over 423 days, MP denoising, detoning, angular clustering, and lower-quadrant tail dependence. Largest denoised eigenvalue 4.37 vs MP upper bound 68 (N/T≈0.019 ⇒ bound is degenerate; denoising uninformative). After detoning the largest off-diagonal residual ρ≈0.00. Best cluster k=2 with one outlier; allocation stable 50/50. Lower-quadrant co-crash top pairs 4.4%–5.4% vs 1% under independence. Conclusion: no denoised/detoned |ρ|>0.50 candidate; the only structure is the common market mode. Artefact: `research/atlas/q13_dependence.json`; memo: `research/memos/2026-10-16-Q13-N6.md`; preregistration: `research/notes/2026-10-16-Q13-prereg.md`.
+
+27. **Q14 — Panel and relative value on the alt panel — no candidate (2026-10-16).**
+
+The approved 8-asset alt panel, 423 days. Five pre-declared sector pairs (L1: SOL/NEAR/SUI, payments: XRP/DOGE, DeFi: AAVE/LINK) all pass ADF at p<1e-12 and KPSS at p=0.1, but the spreads have half-lives 0.63–0.71 days — below the 1-day prereg lower bound, so no pair meets the candidate bar. Panel fixed-effects on three price-only proxies (lag-1, 5-day momentum, 22-day reversal) all return p>0.6 after within-entity and within-time demeaning. Cross-sectional grid is too small (8 dates per cell) to be a candidate. No ledger hypothesis. Artefact: `research/atlas/q14_panel.json`; memo: `research/memos/2026-10-16-Q14-N6.md`; preregistration: `research/notes/2026-10-16-Q14-prereg.md`. New dependency: `statsmodels 0.15.0`.
+
+28. **Q16 — Veille digest — no candidate, replication queue empty (2026-10-16).**
+
+Consolidated digest of 10 external claims (Liu-Tsyvinski 2018, Han-Kang-Ryu 2024, Shen-Urquhart-Wang 2022, Baur 2019, Easley SSRN 4814346, He-Manela-Ross-von Wachter 2024, Kim-Hansen 2026, Zaremba 2021, van Kyle 2026 replication, Man AHL qualitative). Per-claim schema: reference, claim, period, assumed cost, ladder level, replication feasibility on R2 klines pre-cutoff. Candidate bar: real cost-aware Sharpe (≥ 10 bp/trade floor), period 2018-01 → 2024-06, replicable without new vendor. No claim meets the bar: Han et al. 28/5 TSMOM is the closest, but the desk's own BTC TSMOM 60d (H-20261013-001) was already rejected on drawdown. No new Q16a/b/c sub-items; the klines-1m pre-cutoff panel is exhausted of literature-cited candidates. Artefact: `research/atlas/q16_veille.json`; memo: `research/memos/2026-10-16-Q16-N7.md`; preregistration: `research/notes/2026-10-16-Q16-prereg.md`.
+
+29. **Q17 — Atlas and asset dossiers (former F) — index only, no candidate (2026-10-16).**
+
+Ten dossiers `research/assets/<symbol>-dossier.md` (BTCUSDT, ETHUSDT, BNBUSDT, XRPUSDT, SOLUSDT, LINKUSDT, DOGEUSDT, AAVEUSDT, SUIUSDT, NEARUSDT) with the level reached on the N0→N7 ladder at the top, plus a per-symbol pointer to the Q-axes that analysed it. Levels: BTC/ETH = N5 (full N0–N5 stack), BNB/XRP/SOL/LINK/DOGE = N1 (TA panel), AAVE/SUI/NEAR = N0 (data hydrated, no per-asset N0 dossier — they entered the pipeline at Q11/Q12/Q13/Q14). The dossier is a **view** of the on-disk atlas (axis-keyed: Q6..Q16) plus the N0..N5 per-asset artefacts; it is regenerated by `uv run python -m aster.research.q17_atlas`. Consolidated index `research/atlas/q17_atlas.json`; memo `research/memos/2026-10-16-Q17-N8.md`. Two new tests: `tests/test_q17_atlas.py` and `tests/test_q17_atlas_index.py`; full suite green.
+
+30. **Q20 — Weekly « État de la recherche » — descriptive only, no candidate (2026-10-16).**
+
+Matrix / candidates / what died and why / effort reallocation. Verdict: **no ledger hypothesis, no candidate, no holdout, no live/paper/order/key, no new download.** The klines-1m pre-cutoff panel is exhausted of primary features. The only credible next axis is tick microstructure (RED: requires Samuel's budget OK and a new cutoff seal). Other open axes: per-asset N0 dossier for AAVE/SUI/NEAR (GREEN, data hydrated), Q15 ETH `fvg_down_entry_h1` panel re-test (IDEA → needs prereg before READY), Q18/Q19 financial ML and synthesis (BLOCKED until a primary feature appears). Artefact `research/atlas/q20_state.json`; memo `research/memos/2026-10-16-Q20-N9.md`; preregistration `research/notes/2026-10-16-Q20-prereg.md`; test `tests/test_q20_state.py`.
+
+31. **Q21 — Free tick-data microstructure V2 — H-20261016-005 falsified on cost hurdle (2026-10-16).**
+
+On the existing BTCUSDT aggTrades (4 pre-cutoff partitions 2022-01..04, deterministic 2 M-row stride sample → 172 800 1-minute bars), the proper microstructure observables were computed: Kyle λ (1.39e-4, t=47.3), Amihud (5.5e-6), Roll spread (invalid, trending regime), VPIN (0.028, low), predictive Spearman of `signed_flow_t` vs `ret_{t+1}` = **+0.130**, and quintile return curve (Q0..Q4) = −1.04, −0.66, −0.03, +0.68, **+1.01 bps** (Q4 − Q0 = **+2.05 bps** gross). Net of 3× taker cost (6 bps/side round-trip) = **−3.95 bps/bar**, **fails the H-20261016-005 hurdle**. The signal is real, but **not tradable** at 1-min on liquid BTC. ETH cross-asset leg not run (ETH aggTrades not on disk; D3 GREEN, but outside Q21 V2 scope). No ledger hypothesis. Artefact `research/atlas/q21_microstructure.json`; module `src/aster/research/q21_microstructure.py` (360 lines, 9 functions); 9 unit tests in `tests/test_q21_microstructure.py` + 3 artefact tests in `tests/test_q21_artefact.py`; memo `research/memos/2026-10-16-Q21-N10.md`; preregistration `research/notes/2026-10-16-Q21-prereg.md`. Full suite 507 passed.
+
+
+16. **Continuous web scout.** Papers/SSRN/arXiv/hedge-fund claims are untrusted leads only. Each lead needs mechanism, data availability, cost/capacity check, prior-ledger check and independent replication.
+17. **Tick microstructure data acquisition (Tardis / Kaiko / Databento).** Only axis that may surface an un-arbitraged edge on the residual timescale. Requires Samuel’s budget OK and a fresh cutoff seal post-acquisition. Pre-acquisition research must remain on the existing pre-2024-07-01 klines panel.
+18. **Holdout seal — true sealed post-cutoff (item A → Q1 closure, 2026-10-16).** The 2024-04-01 → 2024-06-30 *convention* window is retired: prior research had already used it for descriptive statistics, BH-FDR, lead-lag grids and residual factor mining, so it cannot provide independent out-of-sample evidence. It now remains a contaminated pre-cutoff **dev-validation** window that exploration reads may continue to use. The true sealed holdout is the strict post-2024-07-01 window: `data/sealed/market/spot/klines_1m/` is the only writable target; `reject_sealed_path()` blocks every exploration reader (including the generic `data.store.read()`); `read_holdout(symbol, *, hypothesis_id, ledger)` is the only API that returns sealed rows, requires a SQLite-persisted `(hypothesis_id, symbol)` consumption record via `Ledger.consume_sealed_holdout()`, refuses anonymous reads, refuses unapproved symbols, and refuses a second call across a fresh process. Sealed imports use `transfer_sealed()` which writes only metadata manifests (`source`, `key`, sha256, rows, time bounds, unit — never record values) and refuses pre-cutoff partitions. The sealed store is **empty** by design today: importing the post-cutoff months requires a separately authorised import run; until then no hypothesis can pass its dev gate into holdout. Notes: `research/notes/2026-10-15-holdout-audit.md` (updated for Q1). Superseded commit `00e409b` + `0eafc39` are history only.
+19. **Q0 — Integrate the N1 correction worktree — done (2026-10-16).** Worktree `wt/aster-n1-alts` reviewed: 17 changed files, 1 symlink (`data/`), `data/` correctly ignored. Tests `test_n1_ta_alts.py` and `test_n1_ta_alts_inference.py` green, 0 retained/640 cells re-stated. Commits `542e58a` (worktree) + merge commit on `feat/aster-agent`.
+
+## 20. **Q6 — BTCUSDT tick-flow V1 — descriptive, no strategy hypothesis (2026-10-16).**
+
+Q6 uses the existing pre-cutoff BTCUSDT aggTrades store (4 partitions, 2022-01→2022-04) and 50-BTC volume bars on a deterministic 10% sample. It finds positive lag-1 signed-flow autocorrelation (+0.172) and symmetric extreme-flow next-bar returns (+0.014% / −0.014%). This is a microstructure observation, not a net-of-cost strategy; no ledger hypothesis is registered. Artifact: `research/atlas/q6_intraday_flow.json`; memo: `research/memos/2026-10-16-Q6-N5.md`. ETH, VPIN and kline-proxy comparison remain open variants, not silently inferred.
+
+21. **Q7 — Intraday lead-lag V1 — no candidate (2026-10-16).**
+
+The 640-cell raw/residual grid produced 104 raw and 59 residual BH + block-bootstrap survivors, but zero exceeded the optimistic 100k-USDT cost hurdle and only 5 residual cells had common half-year sign. The prereg residual-survivor prediction (<5%) was falsified (18.4%), so the null is not a statement that no statistical dependence exists; it is a statement that the dependence is not economically tradable in this sample. Artefact: `research/atlas/q7_intraday_leadlag.json`; memo: `research/memos/2026-10-16-Q7-N5.md`.
+
+22. **Q8 — Funding/carry V1 — descriptive, no strategy hypothesis (2026-10-16).**
+
+The 12-symbol Q3 funding store contains 4,929 aligned 8-hour fixing rows. Mean funding is +1.234 bps/fixing; median positive-fixing fraction is 84.1%; mean lag-1 persistence is 0.737. Extreme funding predicts future funding-rate persistence, but Q8 V1 has no premium, perp-price, open-interest, borrow or basis-risk panel, so the annualised carry quote is not a net strategy return. Artefact: `research/atlas/q8_funding_carry.json`; memo: `research/memos/2026-10-16-Q8-N5.md`.
+
+- Reference: `research/atlas/costs.md`; aggTrades primary `is_buyer_maker`, tick-rule control; sensitivities x1/x3/x10.
+- Current public snapshot: `research/atlas/current-orderbook-snapshot.csv`, authorised operational validation only.
+- High-low estimators: diagnostic stress proxies for thin alts only; prohibited as liquid-major spread inputs.
+
+No new strategy hypothesis is registered from BTC/ETH N2 alone. The next stage is a multi-factor residual model on the 8-asset panel (backlog item 12); a strategy requires its own memo and ledger preregistration.
+
+31. **Q21 — Tick microstructure V2 (BTC 1min only) — descriptive only, no candidate (2026-10-16).**
+
+BTCUSDT aggTrades Q4 (2 M-row deterministic stride, 172 800 1min bars). All observables (Kyle λ t = 47.3, Amihud, Roll, VPIN, signed-flow Spearman, Q4−Q0 quintile) computed. H-20261016-005 falsification bar (Q4−Q0 gross > 60 bps) NOT cleared: Q4−Q0 = 2.05 bps gross, cost 60 bps ⇒ net −57.95 bps. **No candidate, no ledger hypothesis, no holdout, no live, no paper, no order, no key, no new download.** Artefact: `research/atlas/q21_microstructure.json`; memo: `research/memos/2026-10-16-Q21-N10.md`; module: `src/aster/research/q21_microstructure.py`; tests: `tests/test_q21_microstructure.py` + `tests/test_q21_artefact.py`.
+
+32. **Q22 — Tick microstructure V3: 5m/15m bars + ETH leg (D3 GREEN) — descriptive only, no candidate (2026-10-16).**
+
+ETHUSDT aggTrades 2022-01..02 imported via `aster.data.aggtrades.import_archive` (40.9 M raw rows ⇒ 2 × 2 M-row deterministic stride samples for analysis). ZIPs were stream-and-discarded via `/tmp` (deleted after Parquet write, never persisted as a 28 GB block). 8 axes tested: BTC/ETH × {1m, 5m, 15m} + BTC↔ETH cross-asset lead-lag at {5m, 15m}.
+
+| Axis | n_bars | Spearman | Q4−Q0 gross bps | Net (60 bps cost) | Candidate? |
+|---|---:|---:|---:|---:|---|
+| BTC 1min  | 172 800 | 0.130 | 2.05  | −57.95 | no |
+| BTC 5min  |  34 560 | 0.158 | 4.13  | −55.87 | no |
+| BTC 15min |  11 520 | 0.180 | 7.16  | −52.84 | no |
+| ETH 1min  |  84 960 | 0.167 | 2.49  | −57.51 | no |
+| ETH 5min  |  16 992 | 0.238 | 6.59  | −53.41 | no |
+| ETH 15min |   5 664 | **0.268** | **14.37** | −45.63 | no |
+
+Cross-asset signed-flow lead-lag (BTC↔ETH) at 5m and 15m is **symmetric and flat** (ρ ≈ 0.07 at 5m, 0.09 at 15m, no lead-lag structure). H-20261022-001 (signed-flow Spearman × Q4−Q0 > 60 bps) **falsified** on all 6 axes. H-20261022-002 (BTC→ETH lead-lag ρ > 0.05 at lag = +1) **falsified as a directional signal** (only contemporaneous co-movement). No ledger hypothesis, no candidate, no holdout, no live, no paper, no order, no key, no spend. Artefact: `research/atlas/q22_microstructure.json`; memo: `research/memos/2026-10-16-Q22-N11.md`; module: `src/aster/research/q22_microstructure_v3.py`; tests: `tests/test_q22_microstructure.py` + `tests/test_q22_artefact.py`.
+
+## Falsified-on-coverage (2026-10-19, autopilot stop)
+
+Pre-cutoff coverage check complete (`research/DECISIONS.md` §3). Cell-by-cell verdict:
+
+| Cell | Status | Source |
+|---|---|---|
+| Horizons 1m-1w | **COUVERTE** | Q5 V1 (5 TF), Q9, Q21, Q22 |
+| Bars time + information | **COUVERTE** | Q4 |
+| Flow (taker ratio, signed cumul, Kyle λ, Amihud, Roll, VPIN) | **COUVERTE** | Q6, Q12, Q21, Q22 |
+| Seasonality (hour UTC, weekday, fixing hours) | **COUVERTE funding**, **VIDE spot** | Q5-V2 (BH-falsifié spot 0/212; funding autocorr mean 0.785 sur 5 symboles) |
+| Jumps + post-jump + CUSUM + SADF | **Jumps+CUSUM VIDES, SADF REPLETI** | Q5-V3 (BTC SADF +8.51, ETH +4.71; jumps 0.017 % des bars 5m; CUSUM 0/6 sustained) |
+| Volatility (GARCH/EGARCH/HAR-RV) | **COUVERTE** | Q10 |
+| Regimes (threshold/Markov/HMM) | **COUVERTE** | Q11 |
+| Perps (funding/basis/OI) | **COUVERTE** | Q3, Q3b, Q8 |
+| Inter-asset (lead-lag/panel) | **COUVERTE** | Q7, Q13, Q14 |
+| Literature | **COUVERTE** | Q16 |
+| Second venue check | **RED** (D3 paid data) | — |
+| F-track (funding carry, crowding-premium, vol-target tsmom) | **3/3 FALSIFIÉES** | F1v2 (`c8b1e88`), F2 (`2d71a19`), F3 (`18cd2a2`) |
+| Q19 N7 synthesis | **0 live candidate** | `18cd2a2` |
+
+**Conclusion** : toutes les cellules faisables sur Binance Vision gratuit pré-cutoff sont couvertes ; tous les F-strategies du track sont falsifiés ; aucun candidat live.
+
+**Options pour Samuel (RED par DECISIONS.md §1)** :
+1. **Clôturer le programme de recherche** : la couverture est complète sur les axes gratuits ; les axes payants sont RED (D3) ; aucun F-candidate n'a passé les gates.
+2. **Ouvrir une nouvelle famille sur une hypothèse spéculative** (ex. cross-sectional funding reversal, BTC-FVG panel re-test Q15 IDEA) — RED : requires Samuel's approval since these are out-of-track and may not have prior empirical support.
+3. **Re-tester la famille `btc-daily-tsmom` avec un filtre de régime** : il reste 3 essais dans cette famille (max 5) ; un filtre bear-market pourrait faire passer DD ou Sharpe — RED-lit : requires Samuel's go on a new F-hypothesis with a clear mechanism rationale.
+
+**Recommandation** : option 1 (clôture). Le coverage check + le track F-3/3-falsifié remplissent le critère du protocole (`aster-autopilot` : « when the coverage check is complete and the remaining axes are all explicitly RED, the autopilot has reached a valid stopping state »). Les options 2 et 3 sont des paris spéculatifs hors coverage.
+
+**État technique** : 577 tests verts, 1 skipped (Q5-V3 atlas nécessite le store R2). Aucun holdout lu, aucun live, paper, ordre, clé. Commit `98ad73e` pinné sur `origin/feat/aster-agent`.
+
+

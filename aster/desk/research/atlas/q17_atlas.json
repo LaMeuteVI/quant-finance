@@ -1,0 +1,36 @@
+{
+  "protocol": {
+    "cutoff_exclusive": "2024-07-01T00:00:00Z",
+    "scope": "one dossier per asset (BTC, ETH, BNB, XRP, SOL, LINK, DOGE, AAVE, SUI, NEAR) with the N0..N7 level reached and a per-symbol pointer to the Q-axes that analysed it",
+    "status": "index_only",
+    "no_holdout": true,
+    "no_live": true,
+    "no_paper": true,
+    "no_order": true,
+    "no_key": true,
+    "no_new_download": true
+  },
+  "dossiers": {
+    "BTCUSDT": {"path": "research/assets/btcusdt-dossier.md", "level_reached": "N5", "axes": ["Q6", "Q7", "Q8", "Q9", "Q10", "Q11"]},
+    "ETHUSDT": {"path": "research/assets/ethusdt-dossier.md", "level_reached": "N5", "axes": ["Q6", "Q7", "Q8", "Q9", "Q10", "Q11"]},
+    "BNBUSDT": {"path": "research/assets/bnbusdt-dossier.md", "level_reached": "N1", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "XRPUSDT": {"path": "research/assets/xrpusdt-dossier.md", "level_reached": "N1", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "SOLUSDT": {"path": "research/assets/solusdt-dossier.md", "level_reached": "N1", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "LINKUSDT": {"path": "research/assets/linkusdt-dossier.md", "level_reached": "N1", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "DOGEUSDT": {"path": "research/assets/dogeusdt-dossier.md", "level_reached": "N1", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "AAVEUSDT": {"path": "research/assets/aaveusdt-dossier.md", "level_reached": "N0 (data hydrated, no per-asset N0 dossier)", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "SUIUSDT": {"path": "research/assets/suiusdt-dossier.md", "level_reached": "N0 (data hydrated, no per-asset N0 dossier)", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]},
+    "NEARUSDT": {"path": "research/assets/nearusdt-dossier.md", "level_reached": "N0 (data hydrated, no per-asset N0 dossier)", "axes": ["Q9", "Q11", "Q12", "Q13", "Q14"]}
+  },
+  "ladder": {
+    "N0": "raw data hydration (klines 1m)",
+    "N1": "TA panel (32 signals x 4 horizons)",
+    "N2": "multi-timeframe descriptive",
+    "N3": "volatility product (HAR-RV / VRP)",
+    "N4": "regime grid (cross-sectional)",
+    "N5": "causal flow features (kline flow)",
+    "N6": "primary-feature ML (out-of-sample)",
+    "N7": "synthesis & preregistration of mature hypotheses"
+  },
+  "verdict": "no candidate, no ledger hypothesis, no backtest, no holdout, no live/paper/order/key, no new download"
+}

@@ -1,0 +1,7 @@
+symbol,captured_at_utc,bid,ask,quoted_spread_bps,source,purpose
+BTC/USDT,2026-10-13T17:05:07.476599+00:00,83283.75,83283.76,0.0012007143523681551,ccxt public binance fetch_order_book,operational_validation_not_holdout
+ETH/USDT,2026-10-13T17:05:07.476599+00:00,2508.47,2508.48,0.03986485813180629,ccxt public binance fetch_order_book,operational_validation_not_holdout
+BNB/USDT,2026-10-13T17:05:07.476599+00:00,743.49,743.5,0.13449989576245844,ccxt public binance fetch_order_book,operational_validation_not_holdout
+SOL/USDT,2026-10-13T17:05:07.476599+00:00,107.32,107.33,0.9317493594227921,ccxt public binance fetch_order_book,operational_validation_not_holdout
+XRP/USDT,2026-10-13T17:05:07.476599+00:00,1.3671,1.3672,0.7314486340195954,ccxt public binance fetch_order_book,operational_validation_not_holdout
+DOGE/USDT,2026-10-13T17:05:07.476599+00:00,0.08433,0.08434,1.1857473172462352,ccxt public binance fetch_order_book,operational_validation_not_holdout

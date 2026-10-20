@@ -1,0 +1,61 @@
+{
+  "protocol": "Q21 V2 (D3 GREEN)",
+  "bar_freq": "1min",
+  "by_symbol_disk": {
+    "BTCUSDT": {
+      "n_partitions": 4,
+      "partitions": [
+        "symbol=BTCUSDT/year=2022/month=01/part-0.parquet",
+        "symbol=BTCUSDT/year=2022/month=02/part-0.parquet",
+        "symbol=BTCUSDT/year=2022/month=03/part-0.parquet",
+        "symbol=BTCUSDT/year=2022/month=04/part-0.parquet"
+      ]
+    }
+  },
+  "results": {
+    "BTCUSDT": {
+      "n_trades": 2000000,
+      "n_bars": 172800,
+      "kyle_lambda": {
+        "lambda": 0.0001385568944420423,
+        "t_stat": 47.25561766070538,
+        "n": 172799,
+        "valid": true
+      },
+      "amihud": {
+        "mean": 5.465674478211523e-06,
+        "spearman_abs_to_next_abs": -0.04082843872060824,
+        "n": 172799,
+        "valid": true
+      },
+      "roll_spread": {
+        "roll_spread_bps": null,
+        "cov": 9.57241853220265e-08,
+        "n": 172799,
+        "valid": false
+      },
+      "vpin": {
+        "vpin": 0.028013019797865503,
+        "n_buckets": 49,
+        "valid": true
+      },
+      "predictive_signed_flow": {
+        "spearman": 0.13042393201855304,
+        "n": 172798,
+        "valid": true
+      },
+      "quintile_return": {
+        "quintiles": {
+          "Q0": -1.0373049918177921,
+          "Q1": -0.6647947037830868,
+          "Q2": -0.031434580160421485,
+          "Q3": 0.6754866619346707,
+          "Q4": 1.0146030697965713,
+          "Q_max_minus_Q_min": 2.0519080616143635,
+          "n": 172798
+        },
+        "valid": true
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Merged into ~/.hermes/profiles/aster/config.yaml by install.sh (your model/provider settings are kept).
+# __ASTER_DESK__ and __SKILLS__ are replaced with absolute paths at install time.
+
+terminal:
+  cwd: "__ASTER_DESK__"          # the agent works inside the desk; AGENTS.md is loaded from here
+
+# skills.external_dirs (your book-to-skill library, read in place) is added by install.sh,
+# which detects Livres/Skills/<category>/ or the flat quant-finance repo root.
+
+delegation:
+  max_concurrent_children: 4     # scout + 2-3 researchers in parallel, then the skeptic
+
+security:
+  # Agent writes to these files always require your approval (basename fnmatch).
+  protected_instruction_files: true
+  protected_instruction_extra_patterns:
+    - "risk_limits.yaml"
+    - "*_policy.md"
+    - "research_protocol.md"
+    - "backtest_standard.md"
+    - "gate.py"
+    - "router.py"
+    - "brokers.py"
+    - "journal.py"
+    - ".env"
