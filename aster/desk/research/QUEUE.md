@@ -6,6 +6,20 @@
 >
 > Every exploration item: preregistration note first, pre-cutoff data only, FDR over the whole grid, placebo, effect size with interval, net-of-cost reading against `research/atlas/costs.md`, `uv run pytest -q` green, MAP/BACKLOG updated, commit pushed.
 
+## Review 2026-10-20 b (Claude, for Samuel): the holdout request is premature
+The V0–V7 audit is useful and honest on several points (V1 retraction, V5 cost bug, R5 falsification). But by its own numbers F3 v1.1 has not passed the dev gate under realistic costs: grid Sharpe 0.946 at 100k and **0.765 at 1M (< 0.8)**, and capacity at net Sharpe ≥ 1 is **below 100k**, not "≈ 1M per side". The DSR of 0.984 was computed with 3 family trials; the family now has 8. The proposed holdout plan (read with constant costs, recompute by hand with the grid) would read the holdout under the wrong model. Items H0–H4 are GREEN and come before any holdout request.
+
+- **H0 — GridCostModel as the pipeline default.** `READY`
+  `pipeline.run` and the AUM sweep use `GridCostModel(research/atlas/cost-grid.csv)` by default; `ConstantCostModel` only on explicit request. Test: a default run reports grid costs. This makes the dev gate stricter, not weaker.
+- **H1 — One counted dev trial of F3 v1.1 under the grid, at a declared AUM.** `READY` after H0
+  Same strategy, same params, same 5-major panel. Declare the AUM in the preregistration addendum **before** running: 250 000 USD (the book Samuel can realistically fund at first; edit only if Samuel says otherwise). Record it as a trial in `btc-daily-tsmom`. Report every dev gate and the DSR with the **true** family trial count (all runs recorded in the ledger for this family, diagnostics included). If any dev gate fails, F3 v1.1 is not a candidate: write the lesson, no holdout.
+- **H2 — Finish V2 and V4.** `READY`
+  V2: truncation test on ≥ 300 dates (97 is not 300), plus the rebalance-weekday shift (add a `rebalance_weekday` parameter; Mon/Wed/Fri) and lag 2: Sharpe within ±0.2. V4: the PBO matrix on ±25 % of the three v1.1 parameters (reject if PBO > 0.3). Not optional before a holdout read.
+- **H3 — Fix inconsistent numbers.** `READY`
+  V3 reports vol 10.4 % and mean 0.057 %/day for F3 (that is a Sharpe near 2.0, not 1.046) while the dev report says vol 19.9 %. Recompute V3 on the exact `returns.csv` of the H1 trial, excluding the cold-start years 2017–2019 consistently in both strategy and benchmarks. State the effective dev window (the book is flat until 2020).
+- **H4 — Holdout request, preregistered in the ledger.** `READY` after H1–H3, only if H1 passes
+  The holdout is the full sealed window `[2024-07-01, last sealed bar]` (about 27 months, not 7), read once through `desk backtest --sample holdout` with the H1 cost model and AUM. Pass/fail = the desk's `holdout_gates` in `config/desk.yaml` (Sharpe ≥ 0.5 × preregistered Sharpe, PSR ≥ 0.80, drawdown floor), written in the ledger before the read. No criterion invented in chat, no recomputation after the read. Then the RED request to Samuel.
+
 ## Review 2026-10-20 (Claude, for Samuel): F3 v1.1 audit before any holdout read
 F3 v1.1 (`H-20261020-004`) passed the dev gates, but the holdout can be read only once: a bug found afterwards would burn it. Every item below is GREEN and must be DONE before Aster asks Samuel for the holdout (RED). Items run in this order; a failure in V1–V4 sends F3 back to diagnosis, not to the holdout.
 
